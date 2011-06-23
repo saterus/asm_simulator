@@ -2,6 +2,8 @@ package edu.osu.cse.mmxi;
 
 public class Interpreter {
 	public Memory m;
+	public Interpreter() { this(new Memory()); }
+	public Interpreter(Memory _m) { m = _m; }
 	public void read(short inst) {
 		switch (inst >> 12 & 0xf) {
 			case 0: branch(inst >> 9 & 0x7, inst & 0x1ff); break;
@@ -39,7 +41,7 @@ public class Interpreter {
 		m.p = m.r[dr] > 0;
 	}
 	public void addImm(int dr, int sr, int imm) {
-		imm = imm << 29 >> 29; // sign extend imm
+		imm = imm << 27 >> 27; // sign extend imm
 		m.r[dr] = (short)(m.r[sr] + imm);
 		m.n = m.r[dr] < 0;
 		m.z = m.r[dr] == 0;
@@ -128,17 +130,19 @@ public class Interpreter {
 					Loader.error("Warning: R0 does not contain a character");
 				System.out.print((char)(m.r[0] & 0x7f));
 				break;
-			case 0x22: // write the null-terminated string pointed to by R0 to the console
+			case 0x22: // OUT
+				break; // write the null-terminated string pointed to by R0 to the console
+			case 0x23: // PUTS
+				break; // print a prompt on screen and read a single character from the prompt
+			case 0x25: // HALT: halt execution
+				m.halt = true;
 				break;
-			case 0x23: // print a prompt on screen and read a single character from the prompt
-				break;
-			case 0x25: // HALT
-				break;
-			case 0x31: // write the value of R0 to the console as a decimal integer
-				break;
-			case 0x33: // print a prompt on screen and read a decimal from the prompt
-				break;
-			case 0x43: // store a random number in R0
+			case 0x31: // OUTN
+				System.out.println(m.r[0]);
+				break; // write the value of R0 to the console as a decimal integer
+			case 0x33: // INN
+				break; // print a prompt on screen and read a decimal from the prompt
+			case 0x43: // RND: store a random number in R0
 				m.r[0]=(short)(Double.doubleToRawLongBits(1+Math.random()) & 0xffffL);
 				break;
 			default:

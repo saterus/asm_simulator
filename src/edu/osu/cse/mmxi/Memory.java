@@ -2,9 +2,9 @@ package edu.osu.cse.mmxi;
 
 public class Memory {
 	public short[][] memory = new short[0x80][];
-	public boolean n, z, p;
+	public boolean n = false, z = true, p = false, halt = false;
 	public short[] r = new short[8];
-	public short pc;
+	public short pc = 0;
 	public short getMem(short index) {
 		return getMem((byte)(index >> 9 & 0x7f), (short)(index & 0x1ff));
 	}
