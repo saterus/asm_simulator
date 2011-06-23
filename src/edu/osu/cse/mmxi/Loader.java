@@ -7,23 +7,31 @@ public class Loader {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		if (args.length != 1)
+			error("program requires exactly one argument: the file to be processed");
+		Simulator sim = new Simulator();
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
-				new FileInputStream(new File(".",args[1]))));
+				new FileInputStream(new File(".",args[0]))));
 			String line = br.readLine();
-			String name;
-			int begin = 0, len = 0, exec = 0;
+			if (line != null && line.length()>0)
+				line = line.split(" ")[0];
 			boolean foundH = false, foundE = false;
-			for (int i=1; line!=null; i++, line = br.readLine()) {
-				if (line.length() == 0) continue;
+			for (int i=1; line!=null; i++) {
+				if (line.length() == 0) {
+					line = br.readLine();
+					if (line != null && line.length()>0)
+						line = line.split(" ")[0];
+					continue;
+				}
 				switch (line.charAt(0)) {
 				case 'H': case 'h':
 					if (line.length() != 15)
 						error("On line "+i+": malformed header");
-					name = line.substring(1, 7);
+					sim.name = line.substring(1, 7);
 					try {
-						begin = Integer.parseInt(line.substring(7, 11), 16);
-						len = Integer.parseInt(line.substring(11), 16);
+						sim.begin = Integer.parseInt(line.substring(7, 11), 16);
+						sim.len = Integer.parseInt(line.substring(11), 16);
 					} catch (NumberFormatException e) {
 						error("On line "+i+": malformed header");
 					}
@@ -40,21 +48,26 @@ public class Loader {
 					} catch (NumberFormatException e) {
 						error("On line "+i+": malformed text record");
 					}
-					if (loc < begin || loc >= begin + len)
+					if (loc < sim.begin || loc >= sim.begin + sim.len)
 						error("On line "+i+": text record out of reserved space");
-					// load <loc, dat> into memory here
+					else {
+						sim.m.setMem((short)loc, (short)dat);
+					}
 					break;
 				case 'E': case 'e':
 					if (!foundH) error("parser error: header not first record");
 					if (line.length() != 5)
 						error("On line "+i+": malformed execution record");
+					int ex = 0;
 					try {
-						exec = Integer.parseInt(line.substring(1), 16);
+						ex = Integer.parseInt(line.substring(1), 16);
 					} catch (NumberFormatException e) {
 						error("On line "+i+": malformed execution record");
 					}
-					if (exec < begin || exec >= begin + len)
+					if (ex < sim.begin || ex >= sim.begin + sim.len)
 						error("On line "+i+": executing out of reserved space");
+					else
+						sim.exec = ex;
 					foundE = true;
 					break;
 				default:
@@ -65,9 +78,11 @@ public class Loader {
 		} catch (IOException e) {
 			error("I/O error while trying to load file or file not found");
 		}
+		sim.execute();
 	}
 
 	public static void error(String msg) {
 		System.err.println(msg);
+		System.exit(1);
 	}
 }

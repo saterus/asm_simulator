@@ -2,6 +2,8 @@ package edu.osu.cse.mmxi;
 
 public class Interpreter {
 	public Memory m;
+	public Interpreter() { this(new Memory()); }
+	public Interpreter(Memory _m) { m = _m; }
 	public void read(short inst) {
 		switch (inst >> 12 & 0xf) {
 			case 0: branch(inst >> 9 & 0x7, inst & 0x1ff); break;
