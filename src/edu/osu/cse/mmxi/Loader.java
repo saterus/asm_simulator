@@ -73,6 +73,9 @@ public class Loader {
 				default:
 					error("On line "+i+": Unknown record type");
 				}
+				line = br.readLine();
+				if (line != null && line.length()>0)
+					line = line.split(" ")[0];
 			}
 			if (!foundE) error("parser error: no execution record found");
 		} catch (IOException e) {

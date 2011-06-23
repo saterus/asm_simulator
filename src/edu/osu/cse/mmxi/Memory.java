@@ -2,7 +2,7 @@ package edu.osu.cse.mmxi;
 
 public class Memory {
 	public short[][] memory = new short[0x80][];
-	public boolean n = false, z = true, p = false;
+	public boolean n = false, z = true, p = false, halt = false;
 	public short[] r = new short[8];
 	public short pc = 0;
 	public short getMem(short index) {

@@ -16,7 +16,12 @@ public class Simulator {
 				Loader.error("FATAL ERROR: execution has left allocated space");
 			short inst = m.getMem(m.pc++);
 			interp.read(inst);
-			interp.debug();
+			if (m.halt) {
+				System.out.println("Halted after "+i+" steps. Final system state:");
+				interp.debug();
+				break;
+			}
+			// interp.debug();
 		}
 	}
 }
