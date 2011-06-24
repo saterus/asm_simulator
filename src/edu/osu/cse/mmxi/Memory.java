@@ -2,9 +2,6 @@ package edu.osu.cse.mmxi;
 
 public class Memory {
 	public short[][] memory = new short[0x80][];
-	public boolean n = false, z = true, p = false, halt = false;
-	public short[] r = new short[8];
-	public short pc = 0;
 	public long seed = System.nanoTime();
 	public short getMem(short index) {
 		return getMem((byte)(index >> 9 & 0x7f), (short)(index & 0x1ff));
@@ -18,7 +15,7 @@ public class Memory {
 	public void setMem(byte page, short off, short val) {
 		getPage(page)[off] = val;
 	}
-	public short[] getPage(byte page) {
+	private short[] getPage(byte page) {
 		if (memory[page] == null) {
 			memory[page] = new short[0x200];
 			long rand = 0;
