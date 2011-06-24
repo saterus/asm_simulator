@@ -143,7 +143,10 @@ public class Interpreter {
 			case 0x33: // INN
 				break; // print a prompt on screen and read a decimal from the prompt
 			case 0x43: // RND: store a random number in R0
-				m.r[0]=(short)(Double.doubleToRawLongBits(1+Math.random()) & 0xffffL);
+				m.seed ^= (m.seed << 21);
+				m.seed ^= (m.seed >>> 35);
+				m.seed ^= (m.seed << 4);
+				m.r[0]=(short)(m.seed & 0xffff);
 				break;
 			default:
 				Loader.error("FATAL ERROR: unknown trap vector 0x"+Integer.toHexString(vector));
