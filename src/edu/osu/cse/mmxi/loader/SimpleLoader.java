@@ -5,103 +5,78 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
+import edu.osu.cse.mmxi.loader.parser.Error;
+import edu.osu.cse.mmxi.loader.parser.Exec;
+import edu.osu.cse.mmxi.loader.parser.Header;
+import edu.osu.cse.mmxi.loader.parser.ObjectFileParser;
+import edu.osu.cse.mmxi.loader.parser.ParseException;
+import edu.osu.cse.mmxi.loader.parser.Text;
+import edu.osu.cse.mmxi.loader.parser.Token;
 import edu.osu.cse.mmxi.machine.Machine;
-import edu.osu.cse.mmxi.machine.memory.MemoryException;
+import edu.osu.cse.mmxi.machine.Register.RegisterType;
 
 public class SimpleLoader {
 
-    public static void load(final String file, final Machine m)
+    public static void load(final String path, final Machine machine)
+            throws ParseException, IOException {
 
-    throws MemoryException, ParseException, IOException {
+        final File file = new File(".", path);
 
-        final BufferedReader br = new BufferedReader(new InputStreamReader(
-                new FileInputStream(new File(".", file))));
-
-        String line = br.readLine();
-
-        if (line != null && line.length() > 0) {
-            line = line.split(" ")[0];
+        if (!file.isFile()) {
+            throw new IOException("Pathname does not refer to a file: " + path);
         }
 
-        boolean foundH = false, foundE = false;
-
-        for (int i = 1; line != null; i++) {
-
-            if (line.length() == 0) {
-                line = br.readLine();
-                if (line != null && line.length() > 0) {
-                    line = line.split(" ")[0];
-                }
-                continue;
-            }
-
-            switch (line.charAt(0)) {
-            case 'H':
-            case 'h':
-                if (line.length() != 15) {
-                    throw new ParseException("On line " + i + ": malformed header");
-                }
-                final String name = line.substring(1, 7);
-                int begin,
-                len;
-                try {
-                    begin = Integer.parseInt(line.substring(7, 11), 16);
-                    len = Integer.parseInt(line.substring(11), 16);
-                    p = new Program(name, begin, len, m);
-                } catch (final NumberFormatException e) {
-                    throw new ParseException("On line " + i + ": malformed header");
-                }
-                foundH = true;
-                break;
-            case 'T':
-            case 't':
-                if (!foundH) {
-                    throw new ParseException("parser error: header not first record");
-                }
-                if (line.length() != 9) {
-                    throw new ParseException("On line " + i + ": malformed text record");
-                }
-                int loc = 0,
-                dat = 0;
-                try {
-                    loc = Integer.parseInt(line.substring(1, 5), 16);
-                    dat = Integer.parseInt(line.substring(5), 16);
-                } catch (final NumberFormatException e) {
-                    throw new ParseException("On line " + i + ": malformed text record");
-                }
-                p.setMemory((short) loc, (short) dat);
-                break;
-            case 'E':
-            case 'e':
-                if (!foundH) {
-                    throw new ParseException("parser error: header not first record");
-                }
-                if (line.length() != 5) {
-                    throw new ParseException("On line " + i
-                            + ": malformed execution record");
-                }
-                int ex = 0;
-                try {
-                    ex = Integer.parseInt(line.substring(1), 16);
-                } catch (final NumberFormatException e) {
-                    throw new ParseException("On line " + i
-                            + ": malformed execution record");
-                }
-                m.r.pc = (short) ex;
-                foundE = true;
-                break;
-            default:
-                throw new ParseException("On line " + i + ": Unknown record type");
-            }
-            line = br.readLine();
-            if (line != null && line.length() > 0) {
-                line = line.split(" ")[0];
-            }
+        if (!file.canRead()) {
+            throw new IOException("File " + path + " is not readable.");
         }
 
-        if (!foundE) {
-            throw new ParseException("parser error: no execution record found");
+        if (file.length() <= 0) {
+            throw new IOException("File " + path + " is empty.");
+        }
+
+        final BufferedReader fileReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(file)));
+
+        final ObjectFileParser parser = new ObjectFileParser(fileReader);
+
+        final List<Token> tokens = parser.parse();
+
+        final List<Error> errors = new ArrayList<Error>();
+        for (final Token t : tokens) {
+            if (t instanceof Error) {
+                errors.add((Error) t);
+            }
+
+            System.out.println("Token: " + t.toString());
+        }
+
+        if (errors.size() > 0) {
+            for (final Error e : errors) {
+                // TODO: Handle in UI or something
+                System.out.println(e);
+            }
+        } else {
+
+            for (final Token t : tokens) {
+
+                if (t instanceof Text) {
+                    machine.setMemory(t.getAddress(), t.getValue());
+
+                } else if (t instanceof Header) {
+                    // we currently do absolutely nothing with header information.
+                    continue;
+
+                } else if (t instanceof Exec) {
+                    machine.getRegister(RegisterType.PC).setRegisterValue(t.getAddress());
+
+                } else {
+                    throw new ParseException("Token of unexpected type: "
+                            + t.getClass().toString());
+                }
+            }
         }
 
     }
