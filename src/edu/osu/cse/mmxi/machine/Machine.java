@@ -28,15 +28,17 @@ public class Machine {
     }
 
     /**
-     * Retrieves the 16-bit word stored at the relative memory offset of the current page
-     * of the Machine's memory.
+     * Retrieves the 16-bit word stored at the absolute memory address in the Machine.
      * 
-     * @param relativeOffset
-     *            the ith word of the current page.
-     * @return the contents of the ith word of the current page.
+     * A memory address is given by a 16-bit quantity where the upper 7 bits denote the
+     * page number and the lower 9 bits denote the offset within that page.
+     * 
+     * @param absoluteAddress
+     *            16-bit representation of the absolute memory address.
+     * @return the contents of the address.
      */
-    public short getMemory(final short relativeOffset) {
-        return this.memory.getMemory(relativeOffset);
+    public short getMemory(final short absoluteAddress) {
+        return this.memory.getMemory(absoluteAddress);
     }
 
     /**
@@ -54,16 +56,19 @@ public class Machine {
     }
 
     /**
-     * Sets the contents of the 16-bit word stored at the relative memory offset of the
-     * current page to a 16-bit value of the Machine's memory.
+     * Sets the contents of the 16-bit word stored at the absolute memory address of the
+     * current page to a 16-bit value in the Machine.
      * 
-     * @param relativeOffset
-     *            the ith word of the current page.
+     * A memory address is given by a 16-bit quantity where the upper 7 bits denote the
+     * page number and the lower 9 bits denote the offset within that page.
+     * 
+     * @param absoluteAddress
+     *            16-bit representation of the absolute memory address.
      * @param value
      *            a 16-bit value to be stored in memory.
      */
-    public void setMemory(final short relativeOffset, final short value) {
-        this.memory.setMemory(relativeOffset, value);
+    public void setMemory(final short absoluteAddress, final short value) {
+        this.memory.setMemory(absoluteAddress, value);
     }
 
     /**
@@ -111,5 +116,9 @@ public class Machine {
         this.halted = false;
         return this.alu.executeNextInstruction(((PCRegister) this.registers
                 .get(RegisterType.PC)).nextInstruction());
+    }
+
+    public Register getRegister(final RegisterType r) {
+        return this.registers.get(r);
     }
 }

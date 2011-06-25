@@ -20,4 +20,26 @@ public class Register {
         this.type = type;
         this.registerValue = initialValue;
     }
+
+    /**
+     * @return the registerValue
+     */
+    public short getRegisterValue() {
+        return this.registerValue;
+    }
+
+    /**
+     * @param registerValue
+     *            the registerValue to set
+     */
+    public void setRegisterValue(final short registerValue) {
+        this.registerValue = registerValue;
+    }
+
+    /**
+     * @return the type
+     */
+    public RegisterType getType() {
+        return this.type;
+    }
 }
