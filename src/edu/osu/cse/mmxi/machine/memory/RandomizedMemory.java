@@ -24,9 +24,9 @@ public class RandomizedMemory implements Memory {
     }
 
     @Override
-    public short getMemory(final short relativeOffset) {
-        return this.getMemory((byte) (relativeOffset >> 9 & 0x7f),
-                (short) (relativeOffset & 0x1ff));
+    public short getMemory(final short absoluteAddress) {
+        return this.getMemory((byte) (absoluteAddress >> 9 & 0x7f),
+                (short) (absoluteAddress & 0x1ff));
     }
 
     @Override

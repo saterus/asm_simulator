@@ -3,17 +3,23 @@ package edu.osu.cse.mmxi.machine.memory;
 /**
  * A representation of random access memory within a hardware computer system. Memory is
  * divided into pages and then further into words. Words are 16-bit Java `shorts`.
+ * 
+ * A memory address is given by a 16-bit quantity where the upper 7 bits denote the page
+ * number and the lower 9 bits denote the offset within that page.
  */
 public interface Memory {
 
     /**
-     * Retrieves the 16-bit word stored at the relative memory offset of the current page.
+     * Retrieves the 16-bit word stored at the absolute memory address.
      * 
-     * @param relativeOffset
-     *            the ith word of the current page.
-     * @return the contents of the ith word of the current page.
+     * A memory address is given by a 16-bit quantity where the upper 7 bits denote the
+     * page number and the lower 9 bits denote the offset within that page.
+     * 
+     * @param absoluteAddress
+     *            16-bit representation of the absolute memory address.
+     * @return the contents of the address.
      */
-    public abstract short getMemory(short relativeOffset);
+    public abstract short getMemory(short absoluteAddress);
 
     /**
      * Retrieves the 16-bit word stored at the relative memory offset of the indicated
@@ -28,15 +34,18 @@ public interface Memory {
     public abstract short getMemory(byte page, short pageOffset);
 
     /**
-     * Sets the contents of the 16-bit word stored at the relative memory offset of the
+     * Sets the contents of the 16-bit word stored at the absolute memory address of the
      * current page to a 16-bit value.
      * 
-     * @param relativeOffset
-     *            the ith word of the current page.
+     * A memory address is given by a 16-bit quantity where the upper 7 bits denote the
+     * page number and the lower 9 bits denote the offset within that page.
+     * 
+     * @param absoluteAddress
+     *            16-bit representation of the absolute memory address.
      * @param value
      *            a 16-bit value to be stored in memory.
      */
-    public abstract void setMemory(short relativeOffset, short value);
+    public abstract void setMemory(short absoluteAddress, short value);
 
     /**
      * Sets the contents of the 16-bit word stored at the relative memory offset of the
