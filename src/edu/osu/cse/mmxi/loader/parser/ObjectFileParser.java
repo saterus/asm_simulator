@@ -116,6 +116,12 @@ public class ObjectFileParser {
         return this.tokens;
     }
 
+    /**
+     * Converts a single line of text containing an ObjectFile Record into a Token.
+     * 
+     * @param line
+     * @return a token corresponding to the data parsed from the line.
+     */
     private Token tokensizeLine(final String line) {
         try {
             switch (this.parseLineType(line.charAt(0))) {
@@ -139,6 +145,13 @@ public class ObjectFileParser {
         return new Error(this.lineNumber + ": Tokenization failed. Line: " + line);
     }
 
+    /**
+     * Determines the type of record stored within a line of text by examining the first
+     * character.
+     * 
+     * @param firstChar
+     * @return a LineType categorization.
+     */
     private LineType parseLineType(final char firstChar) {
         switch (firstChar) {
         case 'H':
@@ -157,6 +170,14 @@ public class ObjectFileParser {
         }
     }
 
+    /**
+     * Parses a Text Record from a line based on the Text Record Format.
+     * 
+     * @param line
+     * @return the token parsed from the line
+     * @throws ParseException
+     *             if the line does not conform to the format.
+     */
     private Token parseTextLine(final String line) throws ParseException {
         this.foundText = true;
 
@@ -190,6 +211,14 @@ public class ObjectFileParser {
         return new Text((short) address, (short) value);
     }
 
+    /**
+     * Parses a Header Record from a line based on the Header Record Format.
+     * 
+     * @param line
+     * @return the token parsed from the line
+     * @throws ParseException
+     *             if the line does not conform to the format.
+     */
     private Token parseHeader(final String line) throws ParseException {
         this.foundHeader = true;
 
@@ -217,6 +246,14 @@ public class ObjectFileParser {
         return new Header(name, (short) beginAddress, (short) lengthOffset);
     }
 
+    /**
+     * Parses a Exec Record from a line based on the Exec Record Format.
+     * 
+     * @param line
+     * @return the token parsed from the line
+     * @throws ParseException
+     *             if the line does not conform to the format.
+     */
     private Token parseExec(final String line) throws ParseException {
         this.foundExec = true;
 
@@ -247,6 +284,13 @@ public class ObjectFileParser {
         return new Exec((short) address);
     }
 
+    /**
+     * Takes a line and strips, whitespace, and comments from it.
+     * 
+     * @param rawLine
+     *            unprocessed line straight from the stream
+     * @return a line ready for more parsing
+     */
     private String parseLine(final String rawLine) {
 
         String line = rawLine;
