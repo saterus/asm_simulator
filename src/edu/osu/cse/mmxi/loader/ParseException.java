@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi;
+package edu.osu.cse.mmxi.loader;
 
 public class ParseException extends Exception {
 	public ParseException() {}

@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi;
+package edu.osu.cse.mmxi.ui;
 
 public class UI {
 	public void error(String msg) {
