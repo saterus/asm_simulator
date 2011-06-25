@@ -79,5 +79,7 @@ public class SimpleLoader {
             }
         }
 
+        // TODO: Close the File/Reader/whatever properly.
+
     }
 }

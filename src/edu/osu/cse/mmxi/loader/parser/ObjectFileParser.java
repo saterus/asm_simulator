@@ -5,8 +5,48 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Check where we are throwing ParseExceptions. Build Error tokens instead, maybe.
+// Some of them would make sense to just record the error and move on. Others are fatal
+// errors that halt the parser and subsequently, the loader.
+
+/**
+ * Parses and tokenizes a ObjectFile for consumption by the Loader.
+ * 
+ * The Parser fundamentally splits the ObjectFile into 3 parts: the HeaderRecord, the
+ * TextRecords, and the ExecRecord. If any of these is missing, the parser fails. There
+ * must be exactly one HeaderRecord, at least one TextRecord, and exactly one ExecRecord,
+ * in that order exclusively.
+ * 
+ * HeaderRecords contain basic information about the program being loaded. 15 ASCII
+ * characters wide, optionally followed by a space and code comments. <code>
+ * Format: 0: 'H'
+ *       1-6: [Hex] Name.
+ *      7-10: [Hex] Beginning absolute memory address.
+ *     11-14: [Hex] Length of the block of memory being initially allocated for the program.
+ * </code>
+ * 
+ * TextRecords contain the actual instructions and data being loaded for the program. 9
+ * ASCII characters wide, optionally followed by a space and code comments. <code>
+ * Format: 0: 'T'
+ *       1-4: [Hex] Absolute memory address of the data.
+ *       5-8: [Hex] Value of the address.
+ * </code>
+ * 
+ * ExecRecords contain the initial value for the PC Register, where to begin the program.
+ * 5 ASCII characters wide, optionally followed by a space and code comments. <code>
+ * Format: 0: 'E'
+ *       1-4: [Hex] Absolute memory address of the beginning of the program.
+ * </code>
+ * 
+ * @see MMXI Programmer's Guide for sample ObjectFiles.
+ * 
+ * @note In the event of most parse failures, the parser should continue on with the rest
+ *       of the file. The failures are recorded and get reported as a group of all the
+ *       parse errors in the file.
+ */
 public class ObjectFileParser {
 
+    // TODO: Discuss the horrible type heirarchy of Token and remember LineType.
     private enum LineType {
         Header, Text, Exec, Error
     };
@@ -18,42 +58,59 @@ public class ObjectFileParser {
     private boolean              foundText     = false;
     private boolean              foundExec     = false;
 
-    /** |6: name | 4: begin address | 4: segment length | 1: Newline | */
+    /** [Bits in Hex Rep.] | 6: name | 4: begin address | 4: segment length | */
     private final static int     HEADER_LENGTH = 14;
 
-    /** |7: page | 9: address | 1: Newline | */
+    /** [Bits in Hex Rep.] | 7: page | 9: address | */
     private final static int     TEXT_LENGTH   = 8;
 
-    /** |4: initial exec address | 1: Newline | */
+    /** [Bits in Hex Rep.] | 4: initial exec address | */
     private final static int     EXEC_LENGTH   = 4;
 
     private int                  lineNumber;
 
+    /**
+     * The ObjectFileParser is built around processing an InputStream
+     * 
+     * @param reader
+     *            BufferedReader wrapper over an InputStream containing an ObjectFile.
+     */
     public ObjectFileParser(final BufferedReader reader) {
         this.lineNumber = 0;
         this.reader = reader;
         this.tokens = new ArrayList<Token>();
     }
 
-    public List<Token> parse() {
+    /**
+     * Reads the stream line by line, parsing the line by its appropriate format, and
+     * tokenizing the results.
+     * 
+     * @return list of Tokens obtained from parsing the Stream.
+     * @throws IOException
+     */
+    public List<Token> parse() throws IOException {
 
-        try {
-            String line = this.reader.readLine();
+        String line = this.reader.readLine();
 
-            while (line != null) {
+        while (line != null) {
 
-                if (this.emptyLine(line)) { // skip blank lines
-                    continue;
-                }
+            if (!this.emptyLine(line)) { // TODO: Skip or Tokenize blank lines? Skipping.
 
                 this.tokens.add(this.tokensizeLine(line));
-
-                this.lineNumber++;
-                line = this.parseLine(this.reader.readLine());
             }
 
-        } catch (final IOException ex) {
+            this.lineNumber++;
+            line = this.parseLine(this.reader.readLine());
+        }
 
+        if (this.tokens.size() == 0) {
+            this.tokens.add(new Error("Parsing completed, no tokens found! Empty file?"));
+        }
+
+        if (!this.foundText) {
+            this.tokens.add(new Error("Object File did not contain any Text records!"));
+        } else if (!this.foundExec) {
+            this.tokens.add(new Error("Object File did not contain an Exec record!"));
         }
 
         return this.tokens;
