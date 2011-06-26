@@ -1,0 +1,81 @@
+HQUINE_1000005E // Quine
+//   1010    DATA xxxx // current loc (cl) (filled by prog)
+T10110001 // DATA 0001 // constants (c[.])
+T1012000A // DATA 000A //  | \n
+T1013003A // DATA 003A //  |
+T10140054 // DATA 0054 // -+ T
+T10150048 // DATA 0048 // string "HQUINE_"
+T10160051 // DATA 0051 //  |
+T10170055 // DATA 0055 //  |
+T10180049 // DATA 0049 //  |
+T1019004E // DATA 004E //  |
+T101A0045 // DATA 0045 //  | E
+T101B005F // DATA 005F //  |
+T101C0000 // DATA 0000 // -+
+T101D1000 // DATA 1000 // header start (hs)
+T101E005E // DATA 005E // header len (hl)
+T101F105D // DATA 105D // end of text (et)
+T10201021 // DATA 1021 // exec (ex)
+T10212011 // LD R0, x11     // a = 1 
+T1022E200 // LEA R1, x0 {   // b = *m[0]; do {
+T10237040 // STR R0, R1, x0 //   m[b] = a
+T10241261 // ADD R1, R1, #1 //   b++
+T10251000 // ADD R0, R0, R0 //   a *= 2
+T10260A23 // BRnp 23 }      // } while (a != 0)
+T1027E015 // LEA R0, x15 // "HQUINE_" string
+T1028F022 // TRAP PUTS
+T10292C1D // LD R6, x1D // hs
+T102A4847 // JSR x47
+T102B2C1E // LD R6, x1E // hl
+T102C4847 // JSR x47
+T102D2012 // LD R0, x12 // c[A]
+T102EF021 // TRAP OUT
+T102FE411 // LEA R2, x11 {
+T10303410 // ST R2, x10
+T10312014 // LD R0, x14 // c[54]
+T1032F021 // TRAP OUT
+T10332C10 // LD R6, x10
+T10344847 // JSR x47
+T10352410 // LD R2, x10
+T10366C80 // LDR R6, R2, x0
+T10374847 // JSR x47
+T10382012 // LD R0, x12 // c[A]
+T1039F021 // TRAP OUT
+T103A2410 // LD R2, x10
+T103B14A1 // ADD R2, R2, #1
+T103C261F // LD R3, x1F // et
+T103D96C0 // NOT R3, R3
+T103E16C2 // ADD R3, R3, R2
+T103F0830 // BRn 30 }
+T1040201A // LD R0, x1A // c[45]
+T1041F021 // TRAP OUT
+T10422C20 // LD R6, x20 // ex
+T10434847 // JSR x47
+T10442012 // LD R0, x12 // c[A]
+T1045F021 // TRAP OUT
+T1046F025 // TRAP HALT
+                              // hex in R6
+T1047E20F // LEA R1, xF {     // b = *m[15]; do {
+T10485020 // AND R0, R0, #0   //   a = 0
+T10491423 // ADD R2, R0, #3 { //   c = 3; do {
+T104A6640 // LDR R3, R1, x0   //     d = m[b]
+T104B58C6 // AND R4, R3, R6   //     e = g & c
+T104C0451 // BRz 51 {         //     if (g & c != 0) {
+T104DE600 // LEA R3, x0       //       d = *m[0]
+T104E16C2 // ADD R3, R3, R2   //       d += c
+T104F66C0 // LDR R3, R3, x0   //       d = m[c]
+T10501003 // ADD R0, R0, R3 } //       a += m[c] }
+T1051127F // ADD R1, R1, #-1  //     b--
+T105214BF // ADD R2, R2, #-1  //     c--
+T1053064A // BRzp 4A }        //   } while (c >= 0)
+T10541036 // ADD R0, R0, #-A  //   a -= 10
+T10550857 // BRn 57 {         //   if (a >= 0)
+T10561027 // ADD R0, R0, #7 } //     a += 7
+T10572413 // LD R2, x13       //   c = 58
+T10581002 // ADD R0, R0, R2   //   a += c
+T1059F021 // TRAP OUT         //   print(a)
+T105A9640 // NOT R3, R1       //   d = ~b
+T105B56EF // AND R3, R3, #F   //   d = ~b & 0xf
+T105C0A48 // BRnp 48 }        // } while (d != 0)
+T105DD000 // RET
+E1021
