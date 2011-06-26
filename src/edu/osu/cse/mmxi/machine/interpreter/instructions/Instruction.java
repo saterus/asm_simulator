@@ -109,11 +109,12 @@ public interface Instruction {
     }
 
     public static class BRx implements Instruction {
-        private final byte nzp, pgoff;
+        private final byte  nzp;
+        private final short pgoff;
 
         public BRx(final int _nzp, final int _pgoff) {
             nzp = (byte) _nzp;
-            pgoff = (byte) _pgoff;
+            pgoff = (short) _pgoff;
         }
 
         @Override
@@ -152,11 +153,11 @@ public interface Instruction {
 
     public static class JSR implements Instruction {
         private final boolean l;
-        private final byte    pgoff;
+        private final short   pgoff;
 
         public JSR(final boolean _l, final int _pgoff) {
             l = _l;
-            pgoff = (byte) _pgoff;
+            pgoff = (short) _pgoff;
         }
 
         @Override
@@ -200,11 +201,12 @@ public interface Instruction {
     }
 
     public static class LD implements Instruction {
-        private final byte dr, pgoff;
+        private final byte  dr;
+        private final short pgoff;
 
         public LD(final int _dr, final int _pgoff) {
             dr = (byte) _dr;
-            pgoff = (byte) _pgoff;
+            pgoff = (short) _pgoff;
         }
 
         @Override
@@ -222,11 +224,12 @@ public interface Instruction {
     }
 
     public static class LDI implements Instruction {
-        private final byte dr, pgoff;
+        private final byte  dr;
+        private final short pgoff;
 
         public LDI(final int _dr, final int _pgoff) {
             dr = (byte) _dr;
-            pgoff = (byte) _pgoff;
+            pgoff = (short) _pgoff;
         }
 
         @Override
@@ -269,11 +272,12 @@ public interface Instruction {
     }
 
     public static class LEA implements Instruction {
-        private final byte dr, pgoff;
+        private final byte  dr;
+        private final short pgoff;
 
         public LEA(final int _dr, final int _pgoff) {
             dr = (byte) _dr;
-            pgoff = (byte) _pgoff;
+            pgoff = (short) _pgoff;
         }
 
         @Override
@@ -325,11 +329,12 @@ public interface Instruction {
     }
 
     public static class ST implements Instruction {
-        private final byte sr, pgoff;
+        private final byte  sr;
+        private final short pgoff;
 
         public ST(final int _sr, final int _pgoff) {
             sr = (byte) _sr;
-            pgoff = (byte) _pgoff;
+            pgoff = (short) _pgoff;
         }
 
         @Override
@@ -346,11 +351,12 @@ public interface Instruction {
     }
 
     public static class STI implements Instruction {
-        private final byte sr, pgoff;
+        private final byte  sr;
+        private final short pgoff;
 
         public STI(final int _sr, final int _pgoff) {
             sr = (byte) _sr;
-            pgoff = (byte) _pgoff;
+            pgoff = (short) _pgoff;
         }
 
         @Override
