@@ -6,11 +6,7 @@ package edu.osu.cse.mmxi.machine.memory;
  */
 public class RandomizedMemory implements Memory {
 
-    // TODO: Remove the random bit-shift and bitwise-ANDs and put them into methods.
-    // Possibly into some sort of MemoryUtilities class.
-
     public short[][]        memory;
-    public long             seed;
 
     public final static int DEFAULT_NUM_PAGES = 0x80;
 
@@ -19,30 +15,29 @@ public class RandomizedMemory implements Memory {
     }
 
     public RandomizedMemory(final int numPages) {
-        this.memory = new short[numPages][];
-        this.seed = System.nanoTime();
+        memory = new short[numPages][];
     }
 
     @Override
     public short getMemory(final short absoluteAddress) {
-        return this.getMemory((byte) (absoluteAddress >> 9 & 0x7f),
-                (short) (absoluteAddress & 0x1ff));
+        return this.getMemory(MemoryUtilities.pageAddress(absoluteAddress),
+                MemoryUtilities.addressOffset(absoluteAddress));
     }
 
     @Override
     public short getMemory(final byte page, final short pageOffset) {
-        return this.getPage(page)[pageOffset];
+        return getPage(page)[pageOffset];
     }
 
     @Override
-    public void setMemory(final short relativeOffset, final short value) {
-        this.setMemory((byte) (relativeOffset >> 9 & 0x7f),
-                (short) (relativeOffset & 0x1ff), value);
+    public void setMemory(final short absoluteAddress, final short value) {
+        this.setMemory(MemoryUtilities.pageAddress(absoluteAddress),
+                MemoryUtilities.addressOffset(absoluteAddress), value);
     }
 
     @Override
     public void setMemory(final byte page, final short pageOffset, final short value) {
-        this.getPage(page)[pageOffset] = value;
+        getPage(page)[pageOffset] = value;
     }
 
     /**
@@ -53,20 +48,11 @@ public class RandomizedMemory implements Memory {
      * @return the words of memory that make up the ith page.
      */
     private short[] getPage(final byte page) {
-        if (this.memory[page] == null) {
-            this.memory[page] = new short[0x200];
-            long rand = 0;
-            for (int i = 0; i < 0x200; i++) {
-                if (rand == 0) {
-                    this.seed ^= this.seed << 21;
-                    this.seed ^= this.seed >>> 35;
-                    this.seed ^= this.seed << 4;
-                    rand = this.seed;
-                }
-                this.memory[page][i] = (short) (rand & 0xffffL);
-                rand >>= 32;
-            }
+        if (memory[page] == null) {
+            memory[page] = new short[0x200];
+            for (int i = 0; i < 0x200; i++)
+                memory[page][i] = MemoryUtilities.randomShort();
         }
-        return this.memory[page];
+        return memory[page];
     }
 }

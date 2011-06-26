@@ -1,6 +1,7 @@
 package edu.osu.cse.mmxi.machine.memory;
 
 public class MemoryUtilities {
+    public static long seed = System.nanoTime(), rand = 0;
 
     public static byte pageAddress(final short s) {
         return (byte) (s >> 9 & 0x7f);
@@ -11,6 +12,18 @@ public class MemoryUtilities {
     }
 
     public static String shortToHex(final short s) {
-        return String.format("%x", s);
+        return String.format("%X", s + 0x20000).substring(1);
+    }
+
+    public static short randomShort() {
+        if (rand == 0) {
+            seed ^= seed << 21;
+            seed ^= seed >>> 35;
+            seed ^= seed << 4;
+            rand = seed;
+        }
+        final short s = (short) (rand & 0xffffL);
+        rand >>= 32;
+        return s;
     }
 }
