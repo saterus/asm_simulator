@@ -2,44 +2,37 @@ package edu.osu.cse.mmxi.machine;
 
 public class Register {
 
-    public enum RegisterType {
-        Z, N, P, // Zero Negative Positive Flags
-        PC, // Program Counter
-        R0, R1, R2, R3, R4, R5, R6, R7
-        // General Purpose Registers
-    };
+    protected short registerValue;
 
-    protected short              registerValue;
-    protected final RegisterType type;
-
-    public Register(final RegisterType type) {
-        this(type, (short) 0);
+    public Register() {
+        this((short) 0);
     }
 
-    public Register(final RegisterType type, final short initialValue) {
-        this.type = type;
-        this.registerValue = initialValue;
+    public Register(final short initialValue) {
+        registerValue = initialValue;
     }
 
     /**
      * @return the registerValue
      */
-    public short getRegisterValue() {
-        return this.registerValue;
+    public short getValue() {
+        return registerValue;
     }
 
     /**
-     * @param registerValue
+     * @param newValue
      *            the registerValue to set
      */
-    public void setRegisterValue(final short registerValue) {
-        this.registerValue = registerValue;
+    public void setValue(final short newValue) {
+        registerValue = newValue;
     }
 
     /**
-     * @return the type
+     * Retrieves the value from the register, then increments it as an atomic operation.
+     * 
+     * @return the old value of the register.
      */
-    public RegisterType getType() {
-        return this.type;
+    public short increment() {
+        return registerValue++;
     }
 }

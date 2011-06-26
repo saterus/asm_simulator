@@ -1,9 +1,5 @@
 package edu.osu.cse.mmxi.machine;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import edu.osu.cse.mmxi.machine.Register.RegisterType;
 import edu.osu.cse.mmxi.machine.interpreter.ALU;
 import edu.osu.cse.mmxi.machine.interpreter.Interpreter;
 import edu.osu.cse.mmxi.machine.memory.Memory;
@@ -11,20 +7,28 @@ import edu.osu.cse.mmxi.machine.memory.RandomizedMemory;
 
 public class Machine {
 
-    private final Map<RegisterType, Register> registers;
-    private final Memory                      memory;
-    private final ALU                         alu;
+    private final Register[]    registers;
+    private final Register      pc;
+    private final FlagsRegister nzp;
+    private final Memory        memory;
+    private final ALU           alu;
 
-    private int                               clockCount;
-    private boolean                           halted;
+    private int                 clockCount;
+    private boolean             halted;
 
     public Machine() {
-        this.clockCount = 0;
-        this.halted = false;
+        clockCount = 0;
+        halted = false;
 
-        this.registers = new HashMap<RegisterType, Register>();
-        this.memory = new RandomizedMemory();
-        this.alu = new Interpreter(this);
+        registers = new Register[8];
+        for (int i = 0; i < 8; i++) {
+            registers[i] = new Register();
+        }
+        pc = new Register();
+        nzp = new FlagsRegister();
+        memory = new RandomizedMemory();
+        alu = new Interpreter(this);
+        halted = false;
     }
 
     /**
@@ -38,7 +42,7 @@ public class Machine {
      * @return the contents of the address.
      */
     public short getMemory(final short absoluteAddress) {
-        return this.memory.getMemory(absoluteAddress);
+        return memory.getMemory(absoluteAddress);
     }
 
     /**
@@ -52,7 +56,7 @@ public class Machine {
      * @return the contents of the ith word of the jth page.
      */
     public short getMemory(final byte page, final short pageOffset) {
-        return this.memory.getMemory(page, pageOffset);
+        return memory.getMemory(page, pageOffset);
     }
 
     /**
@@ -68,7 +72,7 @@ public class Machine {
      *            a 16-bit value to be stored in memory.
      */
     public void setMemory(final short absoluteAddress, final short value) {
-        this.memory.setMemory(absoluteAddress, value);
+        memory.setMemory(absoluteAddress, value);
     }
 
     /**
@@ -83,26 +87,25 @@ public class Machine {
      *            a 16-bit value to be stored in memory.
      */
     public void setMemory(final byte page, final short pageOffset, final short value) {
-        this.memory.setMemory(page, pageOffset, value);
+        memory.setMemory(page, pageOffset, value);
     }
 
     /**
-     * A Trap[HALT] will cause the Machine to stop running.
+     * A TRAP HALT will cause the Machine to stop running.
      * 
-     * @return the halted-ness of the Machine.
+     * @return whether the Machine no longer intends to continue processing instructions.
      */
     public boolean hasHalted() {
-        return this.halted;
+        return halted;
     }
 
     /**
-     * The number of instructions that have been
-     * executethis.registers.get(RegisterType.PC).d since the Machine began.
+     * The number of instructions that have been executed since the Machine began.
      * 
      * The clock count is incremented with each clock cycle.
      */
     public int clockCount() {
-        return this.clockCount();
+        return clockCount;
     }
 
     /**
@@ -112,13 +115,31 @@ public class Machine {
      */
     public String stepClock() {
 
-        this.clockCount++;
-        this.halted = false;
-        return this.alu.executeNextInstruction(((PCRegister) this.registers
-                .get(RegisterType.PC)).nextInstruction());
+        clockCount++;
+        return alu.executeNextInstruction(nextInstruction());
     }
 
-    public Register getRegister(final RegisterType r) {
-        return this.registers.get(r);
+    public Register getRegister(final int index) {
+        return registers[index];
     }
+
+    public Register getPCRegister() {
+        return pc;
+    }
+
+    public FlagsRegister getFlags() {
+        return nzp;
+    }
+
+    /**
+     * Retrieves the value from the PC Register, then increments it as an atomic
+     * operation.
+     * 
+     * @return the relative memory offset from the current page of the next instruction to
+     *         be executed.
+     */
+    public short nextInstruction() {
+        return pc.increment();
+    }
+
 }

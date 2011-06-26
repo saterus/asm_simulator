@@ -16,7 +16,6 @@ import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.loader.parser.Text;
 import edu.osu.cse.mmxi.loader.parser.Token;
 import edu.osu.cse.mmxi.machine.Machine;
-import edu.osu.cse.mmxi.machine.Register.RegisterType;
 
 public class SimpleLoader {
 
@@ -70,7 +69,7 @@ public class SimpleLoader {
                     continue;
 
                 } else if (t instanceof Exec) {
-                    machine.getRegister(RegisterType.PC).setRegisterValue(t.getAddress());
+                    machine.getPCRegister().setValue(t.getAddress());
 
                 } else {
                     throw new ParseException("Token of unexpected type: "
