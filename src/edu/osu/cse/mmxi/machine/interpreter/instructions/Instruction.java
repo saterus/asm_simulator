@@ -391,7 +391,7 @@ public interface Instruction {
 
         @Override
         public String toString() {
-            return "AND R" + sr + ", R" + br + ", x" + MemoryUtilities.sShortToHex(index);
+            return "STR R" + sr + ", R" + br + ", x" + MemoryUtilities.sShortToHex(index);
         }
     }
 
@@ -407,11 +407,18 @@ public interface Instruction {
             switch (vector) {
             case 0x21: // OUT: write the char in R0 to the console
                 if ((m.getRegister(0).getValue() & 0xff80) != 0)
-                    m.error("Warning: R0 does not contain a character");
+                    m.warn("Warning: R0 does not contain a character");
                 m.print("" + (char) (m.getRegister(0).getValue() & 0x7f));
                 break;
-            case 0x22: // TODO: PUTS: write the null-terminated string pointed to by R0 to
-                break; // the console
+            case 0x22: // PUTS: write the null-terminated string pointed to by R0 to the
+                       // console
+                short i = m.getRegister(0).getValue();
+                short s = m.getMemory(i++);
+                while (s != 0) {
+                    m.print("" + (char) (s & 0x7f));
+                    s = m.getMemory(i++);
+                }
+                break;
             case 0x23: // TODO: IN: print a prompt on screen and read a single character
                 break; // from the prompt
             case 0x25: // HALT: halt execution

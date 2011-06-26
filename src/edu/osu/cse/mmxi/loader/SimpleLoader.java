@@ -19,7 +19,7 @@ public class SimpleLoader {
     public static boolean checkBounds = false;
 
     public static void load(final String path, final Machine machine)
-            throws ParseException, IOException {
+        throws ParseException, IOException {
 
         final File file = new File(".", path);
 
@@ -33,7 +33,7 @@ public class SimpleLoader {
             throw new IOException("File " + path + " is empty.");
 
         final BufferedReader fileReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(file)));
+            new FileInputStream(file)));
 
         final ObjectFileParser parser = new ObjectFileParser(fileReader);
 
@@ -42,16 +42,16 @@ public class SimpleLoader {
         final Exec exec = parser.getParsedExec();
         final List<Text> text = parser.getParsedTexts();
 
-        System.out.println(header.toString());
-        for (final Text t : text)
-            System.out.println(t.toString());
-        System.out.println(exec.toString());
-
         if (errors.size() > 0)
             for (final Error e : errors)
                 // TODO: Handle in UI or something
                 System.out.println(e);
         else {
+            System.out.println(header.toString());
+            for (final Text t : text)
+                System.out.println(t.toString());
+            System.out.println(exec.toString());
+
             // we currently do absolutely nothing with header information.
 
             for (final Text t : text)

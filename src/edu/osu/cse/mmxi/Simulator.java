@@ -10,7 +10,7 @@ import edu.osu.cse.mmxi.ui.UI;
 
 public final class Simulator {
 
-    private final static int MAX_CLOCK_COUNT = 10000;
+    private final static int MAX_CLOCK_COUNT = 100000;
 
     /**
      * The Simulator begins stepping the Machine's clock.
@@ -26,11 +26,14 @@ public final class Simulator {
      */
     public static void startClockLoop(final Machine machine) {
 
-        machine.print(" PC");
-        for (int i = 0; i < 8; i++)
-            machine.print("   R" + i);
-        machine.print("  inst\n");
         while (machine.clockCount() < MAX_CLOCK_COUNT && !machine.hasHalted()) {
+            if (machine.clockCount() % 20 == 0) {
+                machine.print(" PC");
+                for (int i = 0; i < 8; i++)
+                    machine.print("   R" + i);
+                machine.print("  inst\n");
+            }
+
             machine.print(MemoryUtilities.uShortToHex(machine.getPCRegister().getValue())
                 + " ");
             for (int i = 0; i < 8; i++)

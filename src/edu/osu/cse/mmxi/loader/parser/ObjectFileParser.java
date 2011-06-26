@@ -80,7 +80,7 @@ public class ObjectFileParser {
      */
     public List<Error> parse() throws IOException {
 
-        String line = reader.readLine();
+        String line = parseLine(reader.readLine());
 
         while (line != null) {
             if (line.length() > 0)
@@ -119,7 +119,7 @@ public class ObjectFileParser {
                 exec = parseExec(line);
             else
                 errors.add(new Error(lineNumber,
-                        "Unrecognized or malformed record. Line: " + line));
+                    "Unrecognized or malformed record. Line: " + line));
         } catch (final ParseException e) {
             errors.add(new Error(lineNumber, e.getMessage()));
         }
@@ -137,7 +137,7 @@ public class ObjectFileParser {
         // It's not necessary to check for a good string here, because we
         // already have, with the pattern matching earlier.
         return new Text(lineNumber, (short) Integer.parseInt(line.substring(1, 5), 16),
-                (short) Integer.parseInt(line.substring(5), 16));
+            (short) Integer.parseInt(line.substring(5), 16));
     }
 
     /**

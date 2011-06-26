@@ -22,7 +22,7 @@ public class InstructionParser {
         case ST:
             return new Instruction.ST(inst >> 9 & 0x7, inst & 0x1ff);
         case JSR:
-            return new Instruction.JSR((inst & 0x400) != 0, inst & 0x1ff);
+            return new Instruction.JSR((inst & 0x800) != 0, inst & 0x1ff);
         case AND:
             if ((inst & 0x20) == 0)
                 return new Instruction.AND(inst >> 9 & 0x7, inst >> 6 & 0x7, inst & 0x7);
@@ -42,7 +42,7 @@ public class InstructionParser {
         case STI:
             return new Instruction.STI(inst >> 9 & 0x7, inst & 0x1ff);
         case JSRR:
-            return new Instruction.JSRR((inst & 0x400) != 0, inst >> 6 & 0x7, inst & 0x3f);
+            return new Instruction.JSRR((inst & 0x800) != 0, inst >> 6 & 0x7, inst & 0x3f);
         case RET:
             return new Instruction.RET();
         case LEA:
