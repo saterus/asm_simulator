@@ -2,37 +2,47 @@ package edu.osu.cse.mmxi.loader.parser;
 
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 
-public class Header implements Token {
+public class Header extends Token {
 
     private final String name;
-    private final short  address;
-    private final short  value;
+    private final short  begin;
+    private final short  length;
 
-    public Header(final String name, final short beginAddress, final short lengthOffset) {
+    public Header(final int line, final String name, final short beginAddress,
+            final short lengthOffset) {
+        super(line);
         this.name = name;
-        this.address = beginAddress;
-        this.value = lengthOffset;
+        begin = beginAddress;
+        length = lengthOffset;
     }
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
-    @Override
-    public short getAddress() {
-        return this.address;
+    public short getBegin() {
+        return begin;
     }
 
-    @Override
-    public short getValue() {
-        return this.value;
+    public short getLength() {
+        return length;
     }
 
     @Override
     public String toString() {
-        return "Header: (" + this.name + ", 0x"
-                + MemoryUtilities.shortToHex(this.address) + ", 0x"
-                + MemoryUtilities.shortToHex(this.value) + ")";
+        return "Header, line " + lineNumber + ": (" + name + ", 0x"
+                + MemoryUtilities.shortToHex(begin) + ", 0x"
+                + MemoryUtilities.shortToHex(length) + ")";
     }
 
+    /**
+     * Tests whether a given address is in the segment defined by this header.
+     * 
+     * @param address
+     *            the address in memory
+     * @return if the address is between begin and begin + length, treated cyclically.
+     */
+    public boolean isWithinBounds(final short address) {
+        return (address - begin & 0xffff) < length;
+    }
 }

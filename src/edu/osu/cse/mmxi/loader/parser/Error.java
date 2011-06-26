@@ -1,30 +1,28 @@
 package edu.osu.cse.mmxi.loader.parser;
 
-public class Error implements Token {
+public class Error extends Token {
 
     private final String message;
 
     public Error(final String m) {
-        this.message = m;
+        this(0, m);
+    }
+
+    public Error(final int line, final String m) {
+        super(line);
+        message = m;
     }
 
     public String getMessage() {
-        return this.message;
-    }
-
-    @Override
-    public short getAddress() {
-        return 0;
-    }
-
-    @Override
-    public short getValue() {
-        return 0;
+        return message;
     }
 
     @Override
     public String toString() {
-        return "Error: " + this.message;
+        if (lineNumber == 0)
+            return "Error: " + message;
+        else
+            return "Error, line " + lineNumber + ": " + message;
     }
 
 }

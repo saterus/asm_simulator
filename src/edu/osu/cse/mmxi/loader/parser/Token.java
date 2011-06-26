@@ -1,9 +1,13 @@
 package edu.osu.cse.mmxi.loader.parser;
 
-public interface Token {
+public class Token {
+    protected final int lineNumber;
 
-    public short getAddress();
+    public Token(final int line) {
+        lineNumber = line;
+    }
 
-    public short getValue();
-
+    public int getLine() {
+        return lineNumber;
+    }
 }
