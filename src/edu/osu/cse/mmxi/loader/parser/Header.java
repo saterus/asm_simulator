@@ -9,7 +9,7 @@ public class Header extends Token {
     private final short  length;
 
     public Header(final int line, final String name, final short beginAddress,
-            final short lengthOffset) {
+        final short lengthOffset) {
         super(line);
         this.name = name;
         begin = beginAddress;
@@ -31,8 +31,8 @@ public class Header extends Token {
     @Override
     public String toString() {
         return "Header, line " + lineNumber + ": (" + name + ", 0x"
-                + MemoryUtilities.shortToHex(begin) + ", 0x"
-                + MemoryUtilities.shortToHex(length) + ")";
+            + MemoryUtilities.uShortToHex(begin) + ", 0x"
+            + MemoryUtilities.uShortToHex(length) + ")";
     }
 
     /**

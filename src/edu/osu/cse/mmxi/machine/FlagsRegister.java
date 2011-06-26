@@ -44,16 +44,21 @@ public class FlagsRegister extends Register {
     }
 
     private void setFlag(final int index, final boolean val) {
-        if (val) {
+        if (val)
             registerValue |= 1 << index;
-        } else {
+        else
             registerValue &= ~(1 << index);
-        }
     }
 
-    public void setFlags(final short register) {
-        setN(register < 0);
-        setZ(register == 0);
-        setP(register > 0);
+    public void setFlags(final Register register) {
+        final short s = register.getValue();
+        setN(s < 0);
+        setZ(s == 0);
+        setP(s > 0);
+    }
+
+    @Override
+    public String toString() {
+        return "FLAGS " + (getN() ? "n" : "") + (getZ() ? "z" : "") + (getN() ? "p" : "");
     }
 }

@@ -8,11 +8,18 @@ public class MemoryUtilities {
     }
 
     public static short addressOffset(final short s) {
-        return (byte) (s & 0x1ff);
+        return (short) (s & 0x1ff);
     }
 
-    public static String shortToHex(final short s) {
+    public static String uShortToHex(final short s) {
         return String.format("%X", s + 0x20000).substring(1);
+    }
+
+    public static String sShortToHex(final short s) {
+        if (s < 0)
+            return "-" + String.format("%X", -s);
+        else
+            return String.format("%X", s);
     }
 
     public static short randomShort() {
@@ -23,7 +30,7 @@ public class MemoryUtilities {
             rand = seed;
         }
         final short s = (short) (rand & 0xffffL);
-        rand >>= 32;
+        rand >>>= 16;
         return s;
     }
 }

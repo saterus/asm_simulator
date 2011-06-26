@@ -5,6 +5,7 @@ import java.io.IOException;
 import edu.osu.cse.mmxi.loader.SimpleLoader;
 import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.machine.Machine;
+import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
 
 public final class Simulator {
@@ -25,11 +26,22 @@ public final class Simulator {
      */
     public static void startClockLoop(final Machine machine) {
 
+        machine.print(" PC");
+        for (int i = 0; i < 8; i++)
+            machine.print("   R" + i);
+        machine.print("  inst\n");
         while (machine.clockCount() < MAX_CLOCK_COUNT && !machine.hasHalted()) {
-
+            machine.print(MemoryUtilities.uShortToHex(machine.getPCRegister().getValue())
+                + " ");
+            for (int i = 0; i < 8; i++)
+                machine.print(MemoryUtilities.uShortToHex(machine.getRegister(i)
+                    .getValue()) + " ");
+            machine.print(MemoryUtilities.uShortToHex(machine.getMemory(machine
+                .getPCRegister().getValue())) + " ");
             final String instructionDetails = machine.stepClock();
             // TODO: if tracing/stepping, print instruction details and machine stats
             // if stepping, pause for user.
+            machine.print(instructionDetails + "\n");
         }
     }
 
@@ -37,7 +49,7 @@ public final class Simulator {
     public static void processArgs(final String[] args) {
         if (args.length != 1) {
             System.err
-                    .println("program requires exactly one argument: the file to be processed");
+                .println("program requires exactly one argument: the file to be processed");
             System.exit(1);
             // TODO: exiting here might be harsher than we want.
         }
@@ -60,6 +72,6 @@ public final class Simulator {
             cli.error("I/O Error: " + e.getMessage());
         }
 
-        // startClockLoop(machine);
+        startClockLoop(machine);
     }
 }

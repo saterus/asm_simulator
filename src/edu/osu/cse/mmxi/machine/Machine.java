@@ -21,9 +21,8 @@ public class Machine {
         halted = false;
 
         registers = new Register[8];
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 8; i++)
             registers[i] = new Register();
-        }
         pc = new Register();
         nzp = new FlagsRegister();
         memory = new RandomizedMemory();
@@ -100,6 +99,13 @@ public class Machine {
     }
 
     /**
+     * Called by TRAP HALT to cause the Machine to stop running.
+     */
+    public void halt() {
+        halted = true;
+    }
+
+    /**
      * The number of instructions that have been executed since the Machine began.
      * 
      * The clock count is incremented with each clock cycle.
@@ -142,4 +148,19 @@ public class Machine {
         return pc.increment();
     }
 
+    // Temporary method until this call is piped thru UI
+    public void print(final String s) {
+        System.out.print(s);
+    }
+
+    // Temporary method until this call is piped thru UI
+    public void warn(final String s) {
+        System.err.print(s);
+    }
+
+    // Temporary method until this call is piped thru UI
+    public void error(final String s) {
+        System.err.print(s);
+        System.exit(1);
+    }
 }

@@ -17,7 +17,7 @@ public class Exec extends Token {
 
     @Override
     public String toString() {
-        return "Exec, line " + lineNumber + ": 0x" + MemoryUtilities.shortToHex(address);
+        return "Exec, line " + lineNumber + ": 0x" + MemoryUtilities.uShortToHex(address);
     }
 
 }

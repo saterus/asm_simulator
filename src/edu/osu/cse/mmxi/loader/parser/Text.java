@@ -23,8 +23,9 @@ public class Text extends Token {
 
     @Override
     public String toString() {
-        return "Text, line " + lineNumber + ": (0x" + MemoryUtilities.shortToHex(address)
-                + ", 0x" + MemoryUtilities.shortToHex(value) + ")";
+        return "Text, line " + lineNumber + ": (0x"
+            + MemoryUtilities.uShortToHex(address) + ", 0x"
+            + MemoryUtilities.uShortToHex(value) + ")";
     }
 
 }

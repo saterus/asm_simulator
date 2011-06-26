@@ -1,11 +1,13 @@
 package edu.osu.cse.mmxi.machine;
 
+import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
+
 public class Register {
 
     protected short registerValue;
 
     public Register() {
-        this((short) 0);
+        this(MemoryUtilities.randomShort());
     }
 
     public Register(final short initialValue) {
