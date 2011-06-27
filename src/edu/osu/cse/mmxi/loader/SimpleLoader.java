@@ -16,8 +16,6 @@ import edu.osu.cse.mmxi.loader.parser.Text;
 import edu.osu.cse.mmxi.machine.Machine;
 
 public class SimpleLoader {
-    public static boolean checkBounds = false;
-
     public static void load(final String path, final Machine machine)
         throws ParseException, IOException {
 
@@ -55,12 +53,12 @@ public class SimpleLoader {
             // we currently do absolutely nothing with header information.
 
             for (final Text t : text)
-                if (checkBounds && !header.isWithinBounds(t.getAddress()))
+                if (!header.isWithinBounds(t.getAddress()))
                     errors.add(new Error(t.getLine(), "Text address out of bounds"));
                 else
                     machine.setMemory(t.getAddress(), t.getValue());
 
-            if (checkBounds && !header.isWithinBounds(exec.getAddress()))
+            if (!header.isWithinBounds(exec.getAddress()))
                 errors.add(new Error(exec.getLine(), "Execution address out of bounds"));
             else
                 machine.getPCRegister().setValue(exec.getAddress());

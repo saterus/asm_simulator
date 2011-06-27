@@ -11,7 +11,8 @@ import edu.osu.cse.mmxi.ui.UI;
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    private final static int MAX_CLOCK_COUNT = 100000;
+    private final static int     MAX_CLOCK_COUNT = 100000;
+    private final static boolean printTrace      = false;
 
     /**
      * <p>
@@ -37,28 +38,33 @@ public final class Simulator {
 
         while (machine.clockCount() < MAX_CLOCK_COUNT && !machine.hasHalted()) {
 
-            if (machine.clockCount() % 20 == 0) {
-                machine.print(" PC");
-                for (int i = 0; i < 8; i++)
-                    machine.print("   R" + i);
-                machine.print("  inst\n");
-            }
+            if (printTrace) {
+                if (machine.clockCount() % 20 == 0) {
+                    machine.print(" PC");
+                    for (int i = 0; i < 8; i++)
+                        machine.print("   R" + i);
+                    machine.print("  nzp inst\n");
+                }
 
-            machine.print(MemoryUtilities.uShortToHex(machine.getPCRegister().getValue())
-                + " ");
-            for (int i = 0; i < 8; i++)
-                machine.print(MemoryUtilities.uShortToHex(machine.getRegister(i)
+                machine.print(MemoryUtilities.uShortToHex(machine.getPCRegister()
                     .getValue()) + " ");
+                for (int i = 0; i < 8; i++)
+                    machine.print(MemoryUtilities.uShortToHex(machine.getRegister(i)
+                        .getValue()) + " ");
+                machine.print((machine.getFlags().getN() ? "n" : "-")
+                    + (machine.getFlags().getZ() ? "z" : "-")
+                    + (machine.getFlags().getP() ? "p" : "-") + " ");
 
-            machine.print(MemoryUtilities.uShortToHex(machine.getMemory(machine
-                .getPCRegister().getValue())) + " ");
+                machine.print(MemoryUtilities.uShortToHex(machine.getMemory(machine
+                    .getPCRegister().getValue())) + " ");
+            }
 
             final String instructionDetails = machine.stepClock();
 
             // TODO: if tracing/stepping, print instruction details and machine stats
             // if stepping, pause for user.
-            machine.print(instructionDetails + "\n");
-            machine.print("\n");
+            if (printTrace)
+                machine.print(instructionDetails + "\n");
         }
     }
 
