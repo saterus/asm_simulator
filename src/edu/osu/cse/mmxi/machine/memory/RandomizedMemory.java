@@ -2,7 +2,8 @@ package edu.osu.cse.mmxi.machine.memory;
 
 /**
  * An implementation of physical memory where all words in all pages are initialized to
- * random bytes instead of zeros.
+ * random bytes instead of zeros. RandomizedMemory is stored internally as a short[][] for
+ * efficient random access to pages and words.
  */
 public class RandomizedMemory implements Memory {
 
@@ -21,7 +22,7 @@ public class RandomizedMemory implements Memory {
     @Override
     public short getMemory(final short absoluteAddress) {
         return this.getMemory(MemoryUtilities.pageAddress(absoluteAddress),
-                MemoryUtilities.addressOffset(absoluteAddress));
+            MemoryUtilities.addressOffset(absoluteAddress));
     }
 
     @Override
@@ -32,7 +33,7 @@ public class RandomizedMemory implements Memory {
     @Override
     public void setMemory(final short absoluteAddress, final short value) {
         this.setMemory(MemoryUtilities.pageAddress(absoluteAddress),
-                MemoryUtilities.addressOffset(absoluteAddress), value);
+            MemoryUtilities.addressOffset(absoluteAddress), value);
     }
 
     @Override

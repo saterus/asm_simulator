@@ -1,11 +1,15 @@
 package edu.osu.cse.mmxi.machine.memory;
 
 /**
+ * <p>
  * A representation of random access memory within a hardware computer system. Memory is
  * divided into pages and then further into words. Words are 16-bit Java `shorts`.
+ * </p>
  * 
+ * <p>
  * A memory address is given by a 16-bit quantity where the upper 7 bits denote the page
  * number and the lower 9 bits denote the offset within that page.
+ * </p>
  */
 public interface Memory {
 

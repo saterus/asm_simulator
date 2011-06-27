@@ -10,39 +10,55 @@ import java.util.List;
 // errors that halt the parser and subsequently, the loader.
 
 /**
+ * <p>
  * Parses and tokenizes a ObjectFile for consumption by the Loader.
+ * </p>
  * 
+ * <p>
  * The Parser fundamentally splits the ObjectFile into 3 parts: the HeaderRecord, the
  * TextRecords, and the ExecRecord. If any of these is missing, the parser fails. There
  * must be exactly one HeaderRecord, at least one TextRecord, and exactly one ExecRecord,
  * in that order exclusively.
+ * </p>
  * 
+ * <p>
  * HeaderRecords contain basic information about the program being loaded. 15 ASCII
- * characters wide, optionally followed by a space and code comments. <code>
+ * characters wide, optionally followed by a space and code comments.
+ * </p>
+ * 
+ * <pre>
  * Format: 0: 'H'
  *       1-6: [Hex] Name.
  *      7-10: [Hex] Beginning absolute memory address.
  *     11-14: [Hex] Length of the block of memory being initially allocated for the program.
- * </code>
+ * </pre>
  * 
  * TextRecords contain the actual instructions and data being loaded for the program. 9
- * ASCII characters wide, optionally followed by a space and code comments. <code>
+ * ASCII characters wide, optionally followed by a space and code comments.
+ * 
+ * <pre>
  * Format: 0: 'T'
  *       1-4: [Hex] Absolute memory address of the data.
  *       5-8: [Hex] Value of the address.
- * </code>
+ * </pre>
  * 
  * ExecRecords contain the initial value for the PC Register, where to begin the program.
- * 5 ASCII characters wide, optionally followed by a space and code comments. <code>
+ * 5 ASCII characters wide, optionally followed by a space and code comments.
+ * 
+ * <pre>
  * Format: 0: 'E'
  *       1-4: [Hex] Absolute memory address of the beginning of the program.
- * </code>
+ * </pre>
  * 
- * @see MMXI Programmer's Guide for sample ObjectFiles.
+ * <p>
+ * Also see MMXI Programmer's Guide for sample ObjectFiles.
+ * </p>
  * 
- * @note In the event of most parse failures, the parser should continue on with the rest
- *       of the file. The failures are recorded and get reported as a group of all the
- *       parse errors in the file.
+ * <p>
+ * In the event of most parse failures, the parser should continue on with the rest of the
+ * file. The failures are recorded and get reported as a group of all the parse errors in
+ * the file.
+ * </p>
  */
 public class ObjectFileParser {
 
