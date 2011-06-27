@@ -1,1 +1,8 @@
+edu.osu.cse.mmxi
+edu.osu.cse.mmxi.loader
 edu.osu.cse.mmxi.loader.parser
+edu.osu.cse.mmxi.machine
+edu.osu.cse.mmxi.machine.interpreter
+edu.osu.cse.mmxi.machine.interpreter.instructions
+edu.osu.cse.mmxi.machine.memory
+edu.osu.cse.mmxi.ui
