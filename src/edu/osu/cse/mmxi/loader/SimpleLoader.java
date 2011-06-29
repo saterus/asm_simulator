@@ -42,8 +42,7 @@ public class SimpleLoader {
 
         if (errors.size() > 0)
             for (final Error e : errors)
-                // TODO: Handle in UI or something
-                System.out.println(e);
+                machine.ui.warn(e.toString());
         else {
             // System.out.println(header.toString());
             // for (final Text t : text)

@@ -12,8 +12,7 @@ import edu.osu.cse.mmxi.ui.UI.UIMode;
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    private static int           MAX_CLOCK_COUNT = 9999; // counts inclusively, so this
-                                                          // is max 10000
+    private static int           MAX_CLOCK_COUNT = 10000;
     private final static boolean printTrace      = false;
 
     /**
@@ -38,26 +37,25 @@ public final class Simulator {
      */
     public static void startClockLoop(final Machine machine) {
 
-        while (machine.clockCount() <= MAX_CLOCK_COUNT && !machine.hasHalted()) {
-
+        clockloop: while (!machine.hasHalted()) {
             if (printTrace) {
                 if (machine.clockCount() % 20 == 0) {
-                    machine.print(" PC");
+                    machine.ui.print(" PC");
                     for (int i = 0; i < 8; i++)
-                        machine.print("   R" + i);
-                    machine.print("  nzp inst\n");
+                        machine.ui.print("   R" + i);
+                    machine.ui.print("  nzp inst\n");
                 }
 
-                machine.print(MemoryUtilities.uShortToHex(machine.getPCRegister()
+                machine.ui.print(MemoryUtilities.uShortToHex(machine.getPCRegister()
                     .getValue()) + " ");
                 for (int i = 0; i < 8; i++)
-                    machine.print(MemoryUtilities.uShortToHex(machine.getRegister(i)
+                    machine.ui.print(MemoryUtilities.uShortToHex(machine.getRegister(i)
                         .getValue()) + " ");
-                machine.print((machine.getFlags().getN() ? "n" : "-")
+                machine.ui.print((machine.getFlags().getN() ? "n" : "-")
                     + (machine.getFlags().getZ() ? "z" : "-")
                     + (machine.getFlags().getP() ? "p" : "-") + " ");
 
-                machine.print(MemoryUtilities.uShortToHex(machine.getMemory(machine
+                machine.ui.print(MemoryUtilities.uShortToHex(machine.getMemory(machine
                     .getPCRegister().getValue())) + " ");
             }
 
@@ -66,8 +64,25 @@ public final class Simulator {
             // TODO: if tracing/stepping, print instruction details and machine stats
             // if stepping, pause for user.
             if (printTrace)
-                machine.print(instructionDetails + "\n");
+                machine.ui.print(instructionDetails + "\n");
+
+            if (machine.clockCount() > MAX_CLOCK_COUNT) {
+                String ans = machine.ui.prompt(
+                    "Clock limit " + MAX_CLOCK_COUNT + " reached. Continue? ")
+                    .toLowerCase();
+                while (true)
+                    if (ans.equals("y") || ans.equals("yes")) {
+                        MAX_CLOCK_COUNT *= 2;
+                        break;
+                    } else if (ans.equals("") || ans.equals("n") || ans.equals("no"))
+                        break clockloop;
+                    else
+                        ans = machine.ui.prompt("Please answer 'yes' or 'no'. ")
+                            .toLowerCase();
+            }
         }
+        machine.ui
+            .print("Machine halted after " + (machine.clockCount() - 1) + " steps.");
     }
 
     /**
@@ -130,12 +145,12 @@ public final class Simulator {
                 try {
                     if (word.length() > 2
                         && word.substring(0, 2).toLowerCase().equals("0x"))
-                        MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16) - 1;
+                        MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16);
                     else
-                        MAX_CLOCK_COUNT = Integer.parseInt(word) - 1;
+                        MAX_CLOCK_COUNT = Integer.parseInt(word);
                 } catch (final NumberFormatException e) {
                     error = true;
-                    System.err.println("--max-clock-ticks argument "
+                    ui.warn("--max-clock-ticks argument "
                         + "in invalid format; ignoring...");
                 }
             } else if (word.length() > 1 && word.charAt(0) == '-')
@@ -151,7 +166,7 @@ public final class Simulator {
                         error |= setMode(ui, UIMode.STEP);
                     else {
                         error = true;
-                        System.err.println("Unknown command --" + word + "; ignoring...");
+                        ui.warn("Unknown command --" + word + "; ignoring...");
                     }
                 } else
                     for (int j = 1; j < word.length(); j++)
@@ -178,19 +193,18 @@ public final class Simulator {
                 file = word;
             else {
                 error = true;
-                System.err.println("More than one file given; ignoring \"" + word
-                    + "\"...");
+                ui.warn("More than one file given; ignoring \"" + word + "\"...");
             }
         }
         if (file == null) {
             error = true;
-            System.err.println("No files given!");
+            ui.warn("No files given!");
         }
         if (error) {
-            System.err.println("Proper syntax:");
-            System.err.println("java Simulator [-c num|--max-clock-ticks num]");
-            System.err.println("               [-s|-t|-q|--step|--trace|--quiet]");
-            System.err.println("               file.txt");
+            ui.warn("Proper syntax:");
+            ui.warn("java Simulator [-c num|--max-clock-ticks num]");
+            ui.warn("               [-s|-t|-q|--step|--trace|--quiet]");
+            ui.warn("               file.txt");
         }
         if (file == null)
             System.exit(1);
@@ -206,8 +220,7 @@ public final class Simulator {
         boolean error = false;
         if (!ui.setMode(mode)) {
             error = true;
-            System.err.println("More than one mode setting found. Setting " + mode
-                + " mode...");
+            ui.warn("More than one mode setting found. Setting " + mode + " mode...");
         }
         return error;
     }
@@ -217,7 +230,7 @@ public final class Simulator {
         final UI cli = new UI();
         final String file = processArgs(args, cli);
 
-        final Machine machine = new Machine();
+        final Machine machine = new Machine(cli);
 
         try {
 

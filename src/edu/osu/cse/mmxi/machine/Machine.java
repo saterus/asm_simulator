@@ -4,6 +4,7 @@ import edu.osu.cse.mmxi.machine.interpreter.ALU;
 import edu.osu.cse.mmxi.machine.interpreter.Interpreter;
 import edu.osu.cse.mmxi.machine.memory.Memory;
 import edu.osu.cse.mmxi.machine.memory.RandomizedMemory;
+import edu.osu.cse.mmxi.ui.UI;
 
 public class Machine {
 
@@ -16,9 +17,12 @@ public class Machine {
     private int                 clockCount;
     private boolean             halted;
 
-    public Machine() {
-        clockCount = 0;
+    public UI                   ui;
+
+    public Machine(final UI _ui) {
+        clockCount = 1;
         halted = false;
+        ui = _ui;
 
         registers = new Register[8];
         for (int i = 0; i < 8; i++)
@@ -146,21 +150,5 @@ public class Machine {
      */
     public short nextInstruction() {
         return pc.increment();
-    }
-
-    // Temporary method until this call is piped thru UI
-    public void print(final String s) {
-        System.out.print(s);
-    }
-
-    // Temporary method until this call is piped thru UI
-    public void warn(final String s) {
-        System.err.print(s);
-    }
-
-    // Temporary method until this call is piped thru UI
-    public void error(final String s) {
-        System.err.print(s);
-        System.exit(1);
     }
 }

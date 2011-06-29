@@ -136,12 +136,12 @@ public interface Instruction {
     public static class DBUG implements Instruction {
         @Override
         public boolean execute(final Machine m) {
-            m.print("PC " + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
+            m.ui.print("PC " + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
                 + "\n");
             for (int i = 0; i < 8; i++)
-                m.print("R" + i + " "
+                m.ui.print("R" + i + " "
                     + MemoryUtilities.uShortToHex(m.getRegister(i).getValue()) + "\n");
-            m.print(m.getFlags().toString());
+            m.ui.print(m.getFlags().toString());
             return false;
         }
 
@@ -407,33 +407,38 @@ public interface Instruction {
             switch (vector) {
             case 0x21: // OUT: write the char in R0 to the console
                 if ((m.getRegister(0).getValue() & 0xff80) != 0)
-                    m.warn("Warning: R0 does not contain a character");
-                m.print("" + (char) (m.getRegister(0).getValue() & 0x7f));
+                    m.ui.warn("Warning: R0 does not contain a character");
+                m.ui.print("" + (char) (m.getRegister(0).getValue() & 0x7f));
                 break;
             case 0x22: // PUTS: write the null-terminated string pointed to by R0 to the
                        // console
                 short i = m.getRegister(0).getValue();
                 short s = m.getMemory(i++);
                 while (s != 0) {
-                    m.print("" + (char) (s & 0x7f));
+                    m.ui.print("" + (char) (s & 0x7f));
                     s = m.getMemory(i++);
                 }
                 break;
-            case 0x23: // TODO: IN: print a prompt on screen and read a single character
-                break; // from the prompt
+            case 0x23: // IN: print a prompt on screen and read a single character from
+                       // the prompt
+                m.ui.print("Enter a character: ");
+                m.getRegister(0).setValue(m.ui.getChar());
+                break;
             case 0x25: // HALT: halt execution
                 m.halt();
                 break;
             case 0x31: // OUTN: write the value of R0 to the console as a decimal integer
-                m.print(m.getRegister(0).getValue() + "\n");
+                m.ui.print(m.getRegister(0).getValue() + "\n");
                 break;
-            case 0x33: // TODO: INN: print a prompt on screen and read a decimal from the
+            case 0x33: // INN: print a prompt on screen and read a decimal from the
+                m.ui.print("Enter a number: ");
+                m.getRegister(0).setValue(m.ui.getShort());
                 break; // prompt
             case 0x43: // RND: store a random number in R0
                 m.getRegister(0).setValue(MemoryUtilities.randomShort());
                 break;
             default:
-                m.warn("Warning: unknown trap vector 0x"
+                m.ui.warn("Warning: unknown trap vector 0x"
                     + MemoryUtilities.sShortToHex(vector));
             }
             return false;
