@@ -221,8 +221,6 @@ public final class Simulator {
     public static void main(final String[] args) {
 
         final String file = processArgs(args);
-        System.out.println("Mode " + MODE + ", max " + (MAX_CLOCK_COUNT + 1) + "; file "
-            + file);
 
         final UI cli = new UI();
         final Machine machine = new Machine();

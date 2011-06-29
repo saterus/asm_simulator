@@ -45,10 +45,10 @@ public class SimpleLoader {
                 // TODO: Handle in UI or something
                 System.out.println(e);
         else {
-            System.out.println(header.toString());
-            for (final Text t : text)
-                System.out.println(t.toString());
-            System.out.println(exec.toString());
+            // System.out.println(header.toString());
+            // for (final Text t : text)
+            // System.out.println(t.toString());
+            // System.out.println(exec.toString());
 
             // we currently do absolutely nothing with header information.
 
