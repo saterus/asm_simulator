@@ -6,14 +6,24 @@ public class UI {
         QUIET, TRACE, STEP
     };
 
-    private final UIMode mode;
+    private UIMode mode;
 
     public UI() {
-        this(UIMode.QUIET);
+        this(null);
     }
 
-    public UI(final UIMode mode) {
-        this.mode = mode;
+    public UI(final UIMode _mode) {
+        mode = _mode;
+    }
+
+    public boolean setMode(final UIMode _mode) {
+        final boolean ret = mode == null;
+        mode = _mode;
+        return ret;
+    }
+
+    public UIMode getMode() {
+        return mode;
     }
 
     public void error(final String msg) {

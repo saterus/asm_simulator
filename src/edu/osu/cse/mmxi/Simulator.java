@@ -7,17 +7,13 @@ import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
+import edu.osu.cse.mmxi.ui.UI.UIMode;
 
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    private static final int     QUIET           = 1;
-    private static final int     TRACE           = 2;
-    private static final int     STEP            = 3;
-
     private static int           MAX_CLOCK_COUNT = 9999; // counts inclusively, so this
                                                           // is max 10000
-    private static int           MODE            = 0;
     private final static boolean printTrace      = false;
 
     /**
@@ -124,7 +120,7 @@ public final class Simulator {
      * @param args
      *            the arguments in the command line
      */
-    public static String processArgs(final String[] args) {
+    public static String processArgs(final String[] args, final UI ui) {
         boolean clockMode = false, error = false;
         String file = null;
         words: for (int i = 0; i < args.length; i++) {
@@ -148,11 +144,11 @@ public final class Simulator {
                     if (word.equals("max-clock-ticks"))
                         clockMode = true;
                     else if (word.equals("quiet"))
-                        error |= setMode(QUIET);
+                        error |= setMode(ui, UIMode.QUIET);
                     else if (word.equals("trace"))
-                        error |= setMode(TRACE);
+                        error |= setMode(ui, UIMode.TRACE);
                     else if (word.equals("step"))
-                        error |= setMode(STEP);
+                        error |= setMode(ui, UIMode.STEP);
                     else {
                         error = true;
                         System.err.println("Unknown command --" + word + "; ignoring...");
@@ -169,13 +165,13 @@ public final class Simulator {
                                 continue words;
                             }
                         case 'q':
-                            error |= setMode(QUIET);
+                            error |= setMode(ui, UIMode.QUIET);
                             break;
                         case 't':
-                            error |= setMode(TRACE);
+                            error |= setMode(ui, UIMode.TRACE);
                             break;
                         case 's':
-                            error |= setMode(STEP);
+                            error |= setMode(ui, UIMode.STEP);
                             break;
                         }
             else if (file == null)
@@ -198,31 +194,29 @@ public final class Simulator {
         }
         if (file == null)
             System.exit(1);
-        if (MODE == 0)
-            MODE = 1;
+        if (ui.getMode() == null)
+            ui.setMode(UIMode.QUIET);
         if (MAX_CLOCK_COUNT < -1) // // // // // // Using this value means that the
             MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
                                                  // will always be true due to overflow
         return file;
     }
 
-    private static boolean setMode(final int mode) {
-        final String[] modes = { "quiet", "trace", "step" };
+    private static boolean setMode(final UI ui, final UIMode mode) {
         boolean error = false;
-        if (MODE != 0) {
+        if (!ui.setMode(mode)) {
             error = true;
-            System.err.println("More than one mode setting found. Setting "
-                + modes[mode - 1] + " mode...");
+            System.err.println("More than one mode setting found. Setting " + mode
+                + " mode...");
         }
-        MODE = mode;
         return error;
     }
 
     public static void main(final String[] args) {
 
-        final String file = processArgs(args);
-
         final UI cli = new UI();
+        final String file = processArgs(args, cli);
+
         final Machine machine = new Machine();
 
         try {
