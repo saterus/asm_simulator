@@ -68,8 +68,46 @@ public final class Simulator {
         }
     }
 
-    // TODO Handle optional flag for [--step/--trace/--quiet] mode
+    /**
+     * <p>
+     * This function reads the command line arguments passed in, and parses them to
+     * extract the file to be processed and any ther optional arguments.
+     * </p>
+     * 
+     * <p>
+     * The format of the instruction is:
+     * </p>
+     * 
+     * <pre>
+     *    java Simulator [-c<i>num</i>|--max-clock-ticks <i>num</i>]
+     *                   [-s|-t|-q|--step|--trace|--quiet]
+     *                   <i>file.txt</i>
+     * </pre>
+     * 
+     * <p>
+     * The <code>--max-clock-ticks</code> argument (short name <code>-c</code>) sets the
+     * maximum number of instructions to be executed before quitting (assuming a
+     * <code>TRAP HALT</code> command hasn't already been executed). If this limit is
+     * reached, a prompt is given to optionally allow continued operation of the program.
+     * The default value for <i>num</i> is 10000. If a negative value is given for
+     * <i>num</i>, the machine is never halted.
+     * </p>
+     * 
+     * <p>
+     * The <code>--step</code>, <code>--trace</code>, and <code>--quiet</code> modes
+     * (short names <code>-s</code>, <code>-t</code>, and <code>-q</code>) are mutually
+     * exclusive and control the operation of the machine. In quiet mode, all instructions
+     * are executed normally and the only output is that driven by the program. In trace
+     * mode, every instruction, along with the current register state, is printed as it is
+     * executed, for debugging purposes. In step mode, a detailed view of the register
+     * states and the current page of memory is printed after every instruction, and the
+     * machine stops and waits for a command to continue each time.
+     * </p>
+     * 
+     * @param args
+     */
     public static void processArgs(final String[] args) {
+
         if (args.length != 1) {
             System.err
                 .println("program requires exactly one argument: the file to be processed");
