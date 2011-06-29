@@ -11,7 +11,13 @@ import edu.osu.cse.mmxi.ui.UI;
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    private final static int     MAX_CLOCK_COUNT = 100000;
+    private static final int     QUIET           = 1;
+    private static final int     TRACE           = 2;
+    private static final int     STEP            = 3;
+
+    private static int           MAX_CLOCK_COUNT = 9999; // counts inclusively, so this
+                                                          // is max 10000
+    private static int           MODE            = 0;
     private final static boolean printTrace      = false;
 
     /**
@@ -36,7 +42,7 @@ public final class Simulator {
      */
     public static void startClockLoop(final Machine machine) {
 
-        while (machine.clockCount() < MAX_CLOCK_COUNT && !machine.hasHalted()) {
+        while (machine.clockCount() <= MAX_CLOCK_COUNT && !machine.hasHalted()) {
 
             if (printTrace) {
                 if (machine.clockCount() % 20 == 0) {
@@ -104,28 +110,126 @@ public final class Simulator {
      * machine stops and waits for a command to continue each time.
      * </p>
      * 
+     * <p>
+     * Sample valid command line strings:
+     * </p>
+     * 
+     * <pre>
+     *    java Simulator prog.txt
+     *    java Simulator -c100000 prog.txt
+     *    java Simulator -s prog.txt -c 100000
+     *    java Simulator --max-clock-ticks 100000 prog.txt --step
+     * </pre>
+     * 
      * @param args
+     *            the arguments in the command line
      */
-    public static void processArgs(final String[] args) {
-
-        if (args.length != 1) {
-            System.err
-                .println("program requires exactly one argument: the file to be processed");
-            System.exit(1);
-            // TODO: exiting here might be harsher than we want.
+    public static String processArgs(final String[] args) {
+        boolean clockMode = false, error = false;
+        String file = null;
+        words: for (int i = 0; i < args.length; i++) {
+            String word = args[i];
+            if (clockMode) {
+                clockMode = false;
+                try {
+                    if (word.length() > 2
+                        && word.substring(0, 2).toLowerCase().equals("0x"))
+                        MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16) - 1;
+                    else
+                        MAX_CLOCK_COUNT = Integer.parseInt(word) - 1;
+                } catch (final NumberFormatException e) {
+                    error = true;
+                    System.err.println("--max-clock-ticks argument "
+                        + "in invalid format; ignoring...");
+                }
+            } else if (word.length() > 1 && word.charAt(0) == '-')
+                if (word.length() > 2 && word.charAt(1) == '-') {
+                    word = word.substring(2);
+                    if (word.equals("max-clock-ticks"))
+                        clockMode = true;
+                    else if (word.equals("quiet"))
+                        error |= setMode(QUIET);
+                    else if (word.equals("trace"))
+                        error |= setMode(TRACE);
+                    else if (word.equals("step"))
+                        error |= setMode(STEP);
+                    else {
+                        error = true;
+                        System.err.println("Unknown command --" + word + "; ignoring...");
+                    }
+                } else
+                    for (int j = 1; j < word.length(); j++)
+                        switch (word.charAt(j)) {
+                        case 'c':
+                            clockMode = true;
+                            if (j == word.length() - 1)
+                                break;
+                            else {
+                                args[i--] = word.substring(j + 1);
+                                continue words;
+                            }
+                        case 'q':
+                            error |= setMode(QUIET);
+                            break;
+                        case 't':
+                            error |= setMode(TRACE);
+                            break;
+                        case 's':
+                            error |= setMode(STEP);
+                            break;
+                        }
+            else if (file == null)
+                file = word;
+            else {
+                error = true;
+                System.err.println("More than one file given; ignoring \"" + word
+                    + "\"...");
+            }
         }
+        if (file == null) {
+            error = true;
+            System.err.println("No files given!");
+        }
+        if (error) {
+            System.err.println("Proper syntax:");
+            System.err.println("java Simulator [-c num|--max-clock-ticks num]");
+            System.err.println("               [-s|-t|-q|--step|--trace|--quiet]");
+            System.err.println("               file.txt");
+        }
+        if (file == null)
+            System.exit(1);
+        if (MODE == 0)
+            MODE = 1;
+        if (MAX_CLOCK_COUNT < -1) // // // // // // Using this value means that the
+            MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
+                                                 // will always be true due to overflow
+        return file;
+    }
+
+    private static boolean setMode(final int mode) {
+        final String[] modes = { "quiet", "trace", "step" };
+        boolean error = false;
+        if (MODE != 0) {
+            error = true;
+            System.err.println("More than one mode setting found. Setting "
+                + modes[mode - 1] + " mode...");
+        }
+        MODE = mode;
+        return error;
     }
 
     public static void main(final String[] args) {
 
-        processArgs(args);
+        final String file = processArgs(args);
+        System.out.println("Mode " + MODE + ", max " + (MAX_CLOCK_COUNT + 1) + "; file "
+            + file);
 
         final UI cli = new UI();
         final Machine machine = new Machine();
 
         try {
 
-            SimpleLoader.load(args[0], machine);
+            SimpleLoader.load(file, machine);
 
         } catch (final ParseException e) {
             cli.error(e.getMessage());
