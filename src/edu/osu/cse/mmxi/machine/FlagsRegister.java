@@ -1,5 +1,7 @@
 package edu.osu.cse.mmxi.machine;
 
+import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
+
 /**
  * A specific Register that comes with an atomic operation for retrieving and incrementing
  * the Program Counter as an atomic operation.
@@ -8,10 +10,12 @@ public class FlagsRegister extends Register {
 
     public FlagsRegister() {
         this(false, false, false);
+        final int i = MemoryUtilities.randomShort() % 3;
+        registerValue = (short) (1 << i);
     }
 
     public FlagsRegister(final boolean initialN, final boolean initialZ,
-            final boolean initialP) {
+        final boolean initialP) {
         super((short) ((initialN ? 4 : 0) + (initialZ ? 4 : 0) + (initialP ? 4 : 0)));
     }
 

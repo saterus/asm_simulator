@@ -50,8 +50,6 @@ public class SimpleLoader {
             // System.out.println(t.toString());
             // System.out.println(exec.toString());
 
-            // we currently do absolutely nothing with header information.
-
             for (final Text t : text)
                 if (!header.isWithinBounds(t.getAddress()))
                     errors.add(new Error(t.getLine(), "Text address out of bounds"));
