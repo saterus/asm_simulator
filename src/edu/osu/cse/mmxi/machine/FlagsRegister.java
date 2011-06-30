@@ -1,5 +1,6 @@
 package edu.osu.cse.mmxi.machine;
 
+import edu.osu.cse.mmxi.machine.Machine.FillMode;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 
 /**
@@ -8,10 +9,12 @@ import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
  */
 public class FlagsRegister extends Register {
 
-    public FlagsRegister() {
+    public FlagsRegister(final FillMode fill) {
         this(false, false, false);
-        final int i = MemoryUtilities.randomShort() % 3;
-        registerValue = (short) (1 << i);
+        if (fill == FillMode.RAND)
+            registerValue = (short) (1 << MemoryUtilities.randomShort() % 3);
+        else
+            registerValue = (short) (fill == FillMode.ZERO ? 2 : 1);
     }
 
     public FlagsRegister(final boolean initialN, final boolean initialZ,

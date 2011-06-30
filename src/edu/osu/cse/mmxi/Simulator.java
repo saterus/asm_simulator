@@ -5,6 +5,7 @@ import java.io.IOException;
 import edu.osu.cse.mmxi.loader.SimpleLoader;
 import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.machine.Machine;
+import edu.osu.cse.mmxi.machine.Machine.FillMode;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
 import edu.osu.cse.mmxi.ui.UI.UIMode;
@@ -12,8 +13,7 @@ import edu.osu.cse.mmxi.ui.UI.UIMode;
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    private static int           MAX_CLOCK_COUNT = 10000;
-    private final static boolean printTrace      = false;
+    private static int MAX_CLOCK_COUNT = 10000;
 
     /**
      * <p>
@@ -35,39 +35,94 @@ public final class Simulator {
      * each clock step.
      * </p>
      */
-    public static void startClockLoop(final Machine machine) {
+    public static void startClockLoop(final Machine m) {
 
-        clockloop: while (!machine.hasHalted()) {
-            if (printTrace) {
-                if (machine.clockCount() % 20 == 0) {
-                    machine.ui.print(" PC");
+        clockloop: while (!m.hasHalted()) {
+            if (m.ui.getMode() == UIMode.TRACE) {
+                if (m.clockCount() % 20 == 1) {
+                    m.ui.print(" PC");
                     for (int i = 0; i < 8; i++)
-                        machine.ui.print("   R" + i);
-                    machine.ui.print("  nzp inst\n");
+                        m.ui.print("   R" + i);
+                    m.ui.print("  nzp inst\n");
                 }
 
-                machine.ui.print(MemoryUtilities.uShortToHex(machine.getPCRegister()
-                    .getValue()) + " ");
+                m.ui.print(MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
+                    + " ");
                 for (int i = 0; i < 8; i++)
-                    machine.ui.print(MemoryUtilities.uShortToHex(machine.getRegister(i)
-                        .getValue()) + " ");
-                machine.ui.print((machine.getFlags().getN() ? "n" : "-")
-                    + (machine.getFlags().getZ() ? "z" : "-")
-                    + (machine.getFlags().getP() ? "p" : "-") + " ");
+                    m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(i).getValue())
+                        + " ");
+                m.ui.print((m.getFlags().getN() ? "n" : "-")
+                    + (m.getFlags().getZ() ? "z" : "-")
+                    + (m.getFlags().getP() ? "p" : "-") + " ");
 
-                machine.ui.print(MemoryUtilities.uShortToHex(machine.getMemory(machine
-                    .getPCRegister().getValue())) + " ");
+                m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
+                    .getValue())) + " ");
+            } else if (m.ui.getMode() == UIMode.STEP) {
+                short pc = (short) (m.getPCRegister().getValue() & 0xfff8);
+                if (pc != 0)
+                    pc -= 8;
+                for (int i = 0; i < 4; i++) {
+                    m.ui.print("R" + 2 * i + ": ");
+                    m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i)
+                        .getValue()) + "  ");
+                    m.ui.print("R" + (2 * i + 1) + ": ");
+                    m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i + 1)
+                        .getValue()) + "   ");
+                    m.ui.print(MemoryUtilities.uShortToHex((short) (pc + 8 * i)) + " | ");
+                    for (int j = 0; j < 8; j++)
+                        m.ui.print(MemoryUtilities.uShortToHex(m.getMemory((short) (pc
+                            + 8 * i + j)))
+                            + " ");
+                    m.ui.print("\n");
+                }
             }
 
-            final String instructionDetails = machine.stepClock();
+            final String instructionDetails = m.stepClock();
 
-            // TODO: if tracing/stepping, print instruction details and machine stats
-            // if stepping, pause for user.
-            if (printTrace)
-                machine.ui.print(instructionDetails + "\n");
+            if (m.ui.getMode() == UIMode.TRACE)
+                m.ui.print(instructionDetails + "\n");
+            else if (m.ui.getMode() == UIMode.STEP) {
+                m.ui.print("\n           PC: "
+                    + MemoryUtilities.uShortToHex(m.getPCRegister().getValue()) + "  ");
+                m.ui.print((m.getFlags().getN() ? "n" : "-")
+                    + (m.getFlags().getZ() ? "z" : "-")
+                    + (m.getFlags().getP() ? "p" : "-") + "  ");
+                m.ui.print(MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
+                    + ": ");
+                m.ui.print(instructionDetails + "\n\n");
+                while (true) {
+                    final String s = m.ui.prompt("Press ENTER to step, "
+                        + "or a hex address to view memory:\n> ");
+                    if (s.length() != 0) {
+                        int addr = -1;
+                        while (true) {
+                            try {
+                                addr = Integer.parseInt(s, 16);
+                                if ((addr & 0xffff0000) != 0)
+                                    addr = -1;
+                            } catch (final NumberFormatException e) {
+                            }
+                            if (addr < 0)
+                                m.ui.prompt("Invalid hex or number out of range.\n> ");
+                            else
+                                break;
+                        }
+                        for (int i = 0; i < 8; i++) {
+                            m.ui.print(MemoryUtilities
+                                .uShortToHex((short) (addr + 16 * i)) + " | ");
+                            for (int j = 0; j < 16; j++)
+                                m.ui.print(MemoryUtilities.uShortToHex(m
+                                    .getMemory((short) (addr + 16 * i + j))) + " ");
+                            m.ui.print("\n");
+                        }
+                        m.ui.print("\n");
+                    } else
+                        break;
+                }
+            }
 
-            if (machine.clockCount() > MAX_CLOCK_COUNT) {
-                String ans = machine.ui.prompt(
+            if (m.clockCount() > MAX_CLOCK_COUNT && m.ui.getMode() != UIMode.STEP) {
+                String ans = m.ui.prompt(
                     "Clock limit " + MAX_CLOCK_COUNT + " reached. Continue? ")
                     .toLowerCase();
                 while (true)
@@ -77,12 +132,10 @@ public final class Simulator {
                     } else if (ans.equals("") || ans.equals("n") || ans.equals("no"))
                         break clockloop;
                     else
-                        ans = machine.ui.prompt("Please answer 'yes' or 'no'. ")
-                            .toLowerCase();
+                        ans = m.ui.prompt("Please answer 'yes' or 'no'. ").toLowerCase();
             }
         }
-        machine.ui
-            .print("Machine halted after " + (machine.clockCount() - 1) + " steps.");
+        m.ui.print("Machine halted after " + (m.clockCount() - 1) + " steps.");
     }
 
     /**
@@ -96,13 +149,14 @@ public final class Simulator {
      * </p>
      * 
      * <pre>
-     *    java Simulator [-c<i>num</i>|--max-clock-ticks <i>num</i>]
+     *    java Simulator [-c<i>num</i>|--max-clock-count <i>num</i>]
      *                   [-s|-t|-q|--step|--trace|--quiet]
+     *                   [-z|-f|-r|--zero|--fill|--rand]
      *                   <i>file.txt</i>
      * </pre>
      * 
      * <p>
-     * The <code>--max-clock-ticks</code> argument (short name <code>-c</code>) sets the
+     * The <code>--max-clock-count</code> argument (short name <code>-c</code>) sets the
      * maximum number of instructions to be executed before quitting (assuming a
      * <code>TRAP HALT</code> command hasn't already been executed). If this limit is
      * reached, a prompt is given to optionally allow continued operation of the program.
@@ -122,20 +176,28 @@ public final class Simulator {
      * </p>
      * 
      * <p>
+     * The <code>--zero</code>, <code>--fill</code> and <code>--rand</code> flags (short
+     * names <code>-z</code>, <code>-f</code>, and <code>-r</code>) are mutually exclusive
+     * and control whether to randomize memory, the registers, and the condition codes,
+     * fill them with an easily recognizable repeated hex code ('ED6E'), or zero them all.
+     * The default behavior is <code>--rand</code>.
+     * </p>
+     * 
+     * <p>
      * Sample valid command line strings:
      * </p>
      * 
      * <pre>
      *    java Simulator prog.txt
-     *    java Simulator -c100000 prog.txt
-     *    java Simulator -s prog.txt -c 100000
-     *    java Simulator --max-clock-ticks 100000 prog.txt --step
+     *    java Simulator -zc100000 prog.txt
+     *    java Simulator -rs prog.txt -c 100000
+     *    java Simulator -f --max-clock-count 100000 prog.txt --step
      * </pre>
      * 
      * @param args
      *            the arguments in the command line
      */
-    public static String processArgs(final String[] args, final UI ui) {
+    public static String processArgs(final String[] args, final Machine m) {
         boolean clockMode = false, error = false;
         String file = null;
         words: for (int i = 0; i < args.length; i++) {
@@ -150,23 +212,29 @@ public final class Simulator {
                         MAX_CLOCK_COUNT = Integer.parseInt(word);
                 } catch (final NumberFormatException e) {
                     error = true;
-                    ui.warn("--max-clock-ticks argument "
+                    m.ui.warn("--max-clock-count argument "
                         + "in invalid format; ignoring...");
                 }
             } else if (word.length() > 1 && word.charAt(0) == '-')
                 if (word.length() > 2 && word.charAt(1) == '-') {
                     word = word.substring(2);
-                    if (word.equals("max-clock-ticks"))
+                    if (word.equals("max-clock-count"))
                         clockMode = true;
                     else if (word.equals("quiet"))
-                        error |= setMode(ui, UIMode.QUIET);
+                        error |= setMode(m.ui, UIMode.QUIET);
                     else if (word.equals("trace"))
-                        error |= setMode(ui, UIMode.TRACE);
+                        error |= setMode(m.ui, UIMode.TRACE);
                     else if (word.equals("step"))
-                        error |= setMode(ui, UIMode.STEP);
+                        error |= setMode(m.ui, UIMode.STEP);
+                    else if (word.equals("zero"))
+                        error |= setFill(m, FillMode.ZERO);
+                    else if (word.equals("fill"))
+                        error |= setFill(m, FillMode.FILL);
+                    else if (word.equals("rand"))
+                        error |= setFill(m, FillMode.RAND);
                     else {
                         error = true;
-                        ui.warn("Unknown command --" + word + "; ignoring...");
+                        m.ui.warn("Unknown command --" + word + "; ignoring...");
                     }
                 } else
                     for (int j = 1; j < word.length(); j++)
@@ -180,36 +248,46 @@ public final class Simulator {
                                 continue words;
                             }
                         case 'q':
-                            error |= setMode(ui, UIMode.QUIET);
+                            error |= setMode(m.ui, UIMode.QUIET);
                             break;
                         case 't':
-                            error |= setMode(ui, UIMode.TRACE);
+                            error |= setMode(m.ui, UIMode.TRACE);
                             break;
                         case 's':
-                            error |= setMode(ui, UIMode.STEP);
+                            error |= setMode(m.ui, UIMode.STEP);
+                            break;
+                        case 'z':
+                            error |= setFill(m, FillMode.ZERO);
+                            break;
+                        case 'f':
+                            error |= setFill(m, FillMode.FILL);
+                            break;
+                        case 'r':
+                            error |= setFill(m, FillMode.RAND);
                             break;
                         }
             else if (file == null)
                 file = word;
             else {
                 error = true;
-                ui.warn("More than one file given; ignoring \"" + word + "\"...");
+                m.ui.warn("More than one file given; ignoring \"" + word + "\"...");
             }
         }
         if (file == null) {
             error = true;
-            ui.warn("No files given!");
+            m.ui.warn("No files given!");
         }
         if (error) {
-            ui.warn("Proper syntax:");
-            ui.warn("java Simulator [-c num|--max-clock-ticks num]");
-            ui.warn("               [-s|-t|-q|--step|--trace|--quiet]");
-            ui.warn("               file.txt");
+            m.ui.warn("Proper syntax:");
+            m.ui.warn("java Simulator [-c num|--max-clock-ticks num]");
+            m.ui.warn("               [-s|-t|-q|--step|--trace|--quiet]");
+            m.ui.warn("               [-z|-f|-r|--zero|--fill|--rand]");
+            m.ui.warn("               file.txt");
         }
         if (file == null)
             System.exit(1);
-        if (ui.getMode() == null)
-            ui.setMode(UIMode.QUIET);
+        if (m.ui.getMode() == null)
+            m.ui.setMode(UIMode.QUIET);
         if (MAX_CLOCK_COUNT < -1) // // // // // // Using this value means that the
             MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
                                                  // will always be true due to overflow
@@ -225,21 +303,27 @@ public final class Simulator {
         return error;
     }
 
+    private static boolean setFill(final Machine m, final FillMode fill) {
+        // KNOWN BUG: No way to track or detect multiple conflicting settings with this
+        // design, so a -fzfrrfrzfr option will cause long loading times and cause no
+        // warnings.
+        m.reset(fill);
+        return false;
+    }
+
     public static void main(final String[] args) {
 
-        final UI cli = new UI();
-        final String file = processArgs(args, cli);
-
-        final Machine machine = new Machine(cli);
+        final Machine machine = new Machine();
+        final String file = processArgs(args, machine);
 
         try {
 
             SimpleLoader.load(file, machine);
 
         } catch (final ParseException e) {
-            cli.error(e.getMessage());
+            machine.ui.error(e.getMessage());
         } catch (final IOException e) {
-            cli.error("I/O Error: " + e.getMessage());
+            machine.ui.error("I/O Error: " + e.getMessage());
         }
 
         startClockLoop(machine);

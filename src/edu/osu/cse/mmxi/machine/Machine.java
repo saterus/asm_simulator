@@ -2,36 +2,47 @@ package edu.osu.cse.mmxi.machine;
 
 import edu.osu.cse.mmxi.machine.interpreter.ALU;
 import edu.osu.cse.mmxi.machine.interpreter.Interpreter;
+import edu.osu.cse.mmxi.machine.memory.FillMemory;
 import edu.osu.cse.mmxi.machine.memory.Memory;
 import edu.osu.cse.mmxi.machine.memory.RandomizedMemory;
 import edu.osu.cse.mmxi.ui.UI;
 
 public class Machine {
 
-    private final Register[]    registers;
-    private final Register      pc;
-    private final FlagsRegister nzp;
-    private final Memory        memory;
-    private final ALU           alu;
+    private final Register[] registers;
+    private Register         pc;
+    private FlagsRegister    nzp;
+    private Memory           memory;
+    private final ALU        alu;
 
-    private int                 clockCount;
-    private boolean             halted;
+    private int              clockCount;
+    private boolean          halted;
 
-    public UI                   ui;
+    public UI                ui;
 
-    public Machine(final UI _ui) {
+    public enum FillMode {
+        ZERO, FILL, RAND
+    };
+
+    public Machine() {
+        ui = new UI();
+        registers = new Register[8];
+        alu = new Interpreter(this);
+        reset(FillMode.RAND);
+    }
+
+    public void reset(final FillMode fill) {
         clockCount = 1;
         halted = false;
-        ui = _ui;
 
-        registers = new Register[8];
         for (int i = 0; i < 8; i++)
-            registers[i] = new Register();
-        pc = new Register();
-        nzp = new FlagsRegister();
-        memory = new RandomizedMemory();
-        alu = new Interpreter(this);
-        halted = false;
+            registers[i] = new Register(fill);
+        pc = new Register(fill);
+        nzp = new FlagsRegister(fill);
+        if (fill == FillMode.RAND)
+            memory = new RandomizedMemory();
+        else
+            memory = new FillMemory(fill == FillMode.FILL ? (short) 0xED6E : 0);
     }
 
     /**
