@@ -11,7 +11,7 @@ public class FlagsRegister extends Register {
     public FlagsRegister(final int fill) {
         this(false, false, false);
         if (fill == -1)
-            registerValue = (short) (1 << MemoryUtilities.randomShort() % 3);
+            registerValue = (short) (1 << (MemoryUtilities.randomShort() & 0xFFFF) % 3);
         else
             setFlags((short) fill);
     }
