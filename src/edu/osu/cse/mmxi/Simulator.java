@@ -58,6 +58,7 @@ public final class Simulator {
 
                 m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
                     .getValue())) + " ");
+                m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n");
             } else if (m.ui.getMode() == UIMode.STEP) {
                 short mem;
                 if (memTrack == -1)
@@ -87,16 +88,9 @@ public final class Simulator {
                 m.ui.print((m.getFlags().getN() ? "n" : "-")
                     + (m.getFlags().getZ() ? "z" : "-")
                     + (m.getFlags().getP() ? "p" : "-") + "  ");
-            }
-
-            final String instructionDetails = m.stepClock();
-
-            if (m.ui.getMode() == UIMode.TRACE)
-                m.ui.print(instructionDetails + "\n");
-            else if (m.ui.getMode() == UIMode.STEP) {
                 m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
                     .getValue())) + ": ");
-                m.ui.print(instructionDetails + "\n\n");
+                m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n\n");
                 while (true) {
                     String s = m.ui.prompt("Press ENTER to step, "
                         + "or a hex address or 'pc' to track memory:\n> ");
@@ -119,7 +113,6 @@ public final class Simulator {
                             else
                                 break;
                         }
-                        short mem;
                         if (memTrack == -1)
                             mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
                         else
@@ -156,6 +149,8 @@ public final class Simulator {
                     else
                         ans = m.ui.prompt("Please answer 'yes' or 'no'. ").toLowerCase();
             }
+
+            m.stepClock();
         }
         m.ui.print("Machine halted after " + (m.clockCount() - 1) + " steps.");
     }

@@ -13,7 +13,7 @@ public class Machine {
     private Register         pc;
     private FlagsRegister    nzp;
     private Memory           memory;
-    private final ALU        alu;
+    public final ALU         alu;
 
     private int              clockCount;
     private boolean          halted;
@@ -134,10 +134,10 @@ public class Machine {
      * 
      * @return the Instruction details of the executed Instruction.
      */
-    public String stepClock() {
+    public void stepClock() {
 
         clockCount++;
-        return alu.executeNextInstruction(nextInstruction());
+        alu.executeNextInstruction(nextInstruction());
     }
 
     public Register getRegister(final int index) {
