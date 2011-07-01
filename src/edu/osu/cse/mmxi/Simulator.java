@@ -13,7 +13,7 @@ import edu.osu.cse.mmxi.ui.UI.UIMode;
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    private static int MAX_CLOCK_COUNT = 10000;
+    public static int MAX_CLOCK_COUNT = 10000;
 
     /**
      * <p>
@@ -287,7 +287,9 @@ public final class Simulator {
                 m.ui.warn("More than one file given; ignoring \"" + word + "\"...");
             }
         }
-        if (file == null) {
+        if (m.ui.getMode() == null)
+            m.ui.setMode(UIMode.QUIET);
+        if (file == null && m.ui.getMode() != UIMode.STEP) {
             error = true;
             m.ui.warn("No files given!");
         }
@@ -298,10 +300,8 @@ public final class Simulator {
             m.ui.warn("               [-z|-f|-r|--zero|--fill|--rand]");
             m.ui.warn("               file.txt");
         }
-        if (file == null)
+        if (file == null && m.ui.getMode() != UIMode.STEP)
             System.exit(1);
-        if (m.ui.getMode() == null)
-            m.ui.setMode(UIMode.QUIET);
         if (MAX_CLOCK_COUNT < -1) // // // // // // Using this value means that the
             MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
                                                  // will always be true due to overflow
@@ -329,17 +329,17 @@ public final class Simulator {
 
         final Machine machine = new Machine();
         final String file = processArgs(args, machine);
-
-        try {
-
-            SimpleLoader.load(file, machine);
-
-        } catch (final ParseException e) {
-            machine.ui.error(e.getMessage());
-        } catch (final IOException e) {
-            machine.ui.error("I/O Error: " + e.getMessage());
-        }
-
-        startClockLoop(machine);
+        if (file != null)
+            try {
+                SimpleLoader.load(file, machine);
+            } catch (final ParseException e) {
+                machine.ui.error(e.getMessage());
+            } catch (final IOException e) {
+                machine.ui.error("I/O Error: " + e.getMessage());
+            }
+        if (machine.ui.getMode() == UIMode.STEP)
+            new Console(machine);
+        else
+            startClockLoop(machine);
     }
 }
