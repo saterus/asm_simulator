@@ -305,7 +305,7 @@ public final class Simulator {
             System.exit(1);
         if (m.ui.getMode() == null)
             m.ui.setMode(UIMode.QUIET);
-        if (MAX_CLOCK_COUNT < -1) // // // // // // Using this value means that the
+        if (MAX_CLOCK_COUNT < 0) // /// // // // // Using this value means that the
             MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
                                                  // will always be true due to overflow
         return file;
