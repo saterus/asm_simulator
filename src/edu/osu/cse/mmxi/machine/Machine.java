@@ -20,10 +20,6 @@ public class Machine {
 
     public UI                ui;
 
-    public enum FillMode {
-        ZERO, FILL, RAND
-    };
-
     public Machine() {
         ui = new UI();
         registers = new Register[8];

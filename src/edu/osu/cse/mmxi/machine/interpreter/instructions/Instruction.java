@@ -128,8 +128,12 @@ public interface Instruction {
 
         @Override
         public String toString() {
-            return "BR" + ((nzp & 4) != 0 ? "n" : "") + ((nzp & 2) != 0 ? "z" : "")
-                + ((nzp & 1) != 0 ? "p" : "") + " x" + MemoryUtilities.sShortToHex(pgoff);
+            if (nzp == 0)
+                return pgoff == 0 ? "NOP" : "DATA " + MemoryUtilities.uShortToHex(pgoff);
+            else
+                return "BR" + ((nzp & 4) != 0 ? "n" : "") + ((nzp & 2) != 0 ? "z" : "")
+                    + ((nzp & 1) != 0 ? "p" : "") + " x"
+                    + MemoryUtilities.sShortToHex(pgoff);
         }
     }
 
