@@ -1,23 +1,13 @@
 package edu.osu.cse.mmxi.machine;
 
-import edu.osu.cse.mmxi.machine.Machine.FillMode;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 
 public class Register {
 
     protected short registerValue;
 
-    public Register(final FillMode fill) {
-        switch (fill) {
-        case ZERO:
-            registerValue = 0;
-            break;
-        case FILL:
-            registerValue = (short) 0xED6E;
-            break;
-        case RAND:
-            registerValue = MemoryUtilities.randomShort();
-        }
+    public Register(final int fill) {
+        registerValue = fill == -1 ? MemoryUtilities.randomShort() : (short) fill;
     }
 
     public Register(final short initialValue) {
