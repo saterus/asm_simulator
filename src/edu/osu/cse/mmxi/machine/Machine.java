@@ -28,10 +28,10 @@ public class Machine {
         ui = new UI();
         registers = new Register[8];
         alu = new Interpreter(this);
-        reset(FillMode.RAND);
+        reset(-1);
     }
 
-    public void reset(final FillMode fill) {
+    public void reset(final int fill) {
         clockCount = 1;
         halted = false;
 
@@ -39,10 +39,10 @@ public class Machine {
             registers[i] = new Register(fill);
         pc = new Register(fill);
         nzp = new FlagsRegister(fill);
-        if (fill == FillMode.RAND)
+        if (fill == -1)
             memory = new RandomizedMemory();
         else
-            memory = new FillMemory(fill == FillMode.FILL ? (short) 0xED6E : 0);
+            memory = new FillMemory((short) fill);
     }
 
     /**

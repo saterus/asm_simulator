@@ -5,7 +5,6 @@ import java.io.IOException;
 import edu.osu.cse.mmxi.loader.SimpleLoader;
 import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.machine.Machine;
-import edu.osu.cse.mmxi.machine.Machine.FillMode;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
 import edu.osu.cse.mmxi.ui.UI.UIMode;
@@ -14,6 +13,7 @@ import edu.osu.cse.mmxi.ui.UI.UIMode;
 public final class Simulator {
 
     public static int MAX_CLOCK_COUNT = 10000;
+    private static final int FILL            = 0xED6E;
 
     /**
      * <p>
@@ -167,11 +167,11 @@ public final class Simulator {
                     else if (word.equals("step"))
                         error |= setMode(m.ui, UIMode.STEP);
                     else if (word.equals("zero"))
-                        error |= setFill(m, FillMode.ZERO);
+                        error |= setFill(m, 0);
                     else if (word.equals("fill"))
-                        error |= setFill(m, FillMode.FILL);
+                        error |= setFill(m, FILL);
                     else if (word.equals("rand"))
-                        error |= setFill(m, FillMode.RAND);
+                        error |= setFill(m, -1);
                     else {
                         error = true;
                         m.ui.warn("Unknown command --" + word + "; ignoring...");
@@ -197,13 +197,13 @@ public final class Simulator {
                             error |= setMode(m.ui, UIMode.STEP);
                             break;
                         case 'z':
-                            error |= setFill(m, FillMode.ZERO);
+                            error |= setFill(m, 0);
                             break;
                         case 'f':
-                            error |= setFill(m, FillMode.FILL);
+                            error |= setFill(m, FILL);
                             break;
                         case 'r':
-                            error |= setFill(m, FillMode.RAND);
+                            error |= setFill(m, -1);
                             break;
                         }
             else if (file == null)
@@ -243,7 +243,7 @@ public final class Simulator {
         return error;
     }
 
-    private static boolean setFill(final Machine m, final FillMode fill) {
+    private static boolean setFill(final Machine m, final int fill) {
         // KNOWN BUG: No way to track or detect multiple conflicting settings with this
         // design, so a -fzfrrfrzfr option will cause long loading times and cause no
         // warnings.
