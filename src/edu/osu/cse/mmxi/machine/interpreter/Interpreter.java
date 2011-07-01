@@ -11,9 +11,19 @@ public class Interpreter implements ALU {
     }
 
     @Override
-    public String executeNextInstruction(final short s) {
+    public void executeNextInstruction(final short s) {
         final Instruction i = InstructionParser.parseInstruction(m.getMemory(s));
         i.execute(m);
+    }
+
+    @Override
+    public String readInstruction(final short inst) {
+        final Instruction i = InstructionParser.parseInstruction(inst);
         return i.toString();
+    }
+
+    @Override
+    public String readInstructionAt(final short mem) {
+        return readInstruction(m.getMemory(mem));
     }
 }

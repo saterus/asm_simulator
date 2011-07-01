@@ -58,12 +58,16 @@ public final class Simulator {
 
                 m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
                     .getValue())) + " ");
+                m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n");
             } else if (m.ui.getMode() == UIMode.STEP) {
                 short mem;
                 if (memTrack == -1)
                     mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
                 else
                     mem = (short) memTrack;
+                m.ui.print("\n                           ");
+                for (int j = 0; j < 8; j++)
+                    m.ui.print(" --" + (mem + j & 7) + "-");
                 m.ui.print("\n");
                 for (int i = 0; i < 4; i++) {
                     m.ui.print("R" + 2 * i + ": ");
@@ -79,13 +83,6 @@ public final class Simulator {
                             + " ");
                     m.ui.print("\n");
                 }
-            }
-
-            final String instructionDetails = m.stepClock();
-
-            if (m.ui.getMode() == UIMode.TRACE)
-                m.ui.print(instructionDetails + "\n");
-            else if (m.ui.getMode() == UIMode.STEP) {
                 m.ui.print("\n          PC: "
                     + MemoryUtilities.uShortToHex(m.getPCRegister().getValue()) + "  ");
                 m.ui.print((m.getFlags().getN() ? "n" : "-")
@@ -93,7 +90,7 @@ public final class Simulator {
                     + (m.getFlags().getP() ? "p" : "-") + "  ");
                 m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
                     .getValue())) + ": ");
-                m.ui.print(instructionDetails + "\n\n");
+                m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n\n");
                 while (true) {
                     String s = m.ui.prompt("Press ENTER to step, "
                         + "or a hex address or 'pc' to track memory:\n> ");
@@ -116,11 +113,15 @@ public final class Simulator {
                             else
                                 break;
                         }
-                        short mem;
                         if (memTrack == -1)
                             mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
                         else
                             mem = (short) memTrack;
+                        m.ui.print("\n      ");
+                        for (int j = 0; j < 16; j++)
+                            m.ui.print(" --"
+                                + Integer.toHexString(mem + j & 15).toUpperCase() + "-");
+                        m.ui.print("\n");
                         for (int i = 0; i < 8; i++) {
                             m.ui.print(MemoryUtilities
                                 .uShortToHex((short) (mem + 16 * i)) + " | ");
@@ -148,6 +149,8 @@ public final class Simulator {
                     else
                         ans = m.ui.prompt("Please answer 'yes' or 'no'. ").toLowerCase();
             }
+
+            m.stepClock();
         }
         m.ui.print("Machine halted after " + (m.clockCount() - 1) + " steps.");
     }
