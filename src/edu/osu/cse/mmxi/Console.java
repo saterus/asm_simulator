@@ -10,11 +10,12 @@ import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 
 public class Console {
-    private final Machine            m;
-    private int                      maxClock;
-    private int                      memTrack;
-    private String                   file;
-    private final Map<Short, Object> breakpoints;
+    private final Machine             m;
+    private int                       maxClock;
+    private int                       memTrack;
+    private String                    file;
+    private final Map<Short, Object>  breakpoints;
+    private final Map<Integer, Short> watchpoints;
 
     public Console(final Machine _m, final String _file) {
         m = _m;
@@ -22,6 +23,7 @@ public class Console {
         memTrack = -1;
         file = null;
         breakpoints = new TreeMap<Short, Object>();
+        watchpoints = new TreeMap<Integer, Short>();
         m.ui.print("McMoxel MMXI Emulator\n");
         m.ui.print("Version 2");
         if (file != null)
@@ -53,6 +55,8 @@ public class Console {
             step(true, words);
         else if (words[0].equals("track"))
             track(words);
+        else if ("watch".startsWith(words[0]))
+            watch(words);
         else if (words[0].length() > 1) {
             if ("disasm".startsWith(words[0]))
                 disasm(words);
@@ -298,7 +302,7 @@ public class Console {
             m.ui.print((m.getFlags().getN() ? "n" : "-")
                 + (m.getFlags().getZ() ? "z" : "-") + (m.getFlags().getP() ? "p" : "-")
                 + "]");
-        } else if (words[1].matches("[rR]\\d")) {
+        } else if (words[1].matches("[rR][0-7]")) {
             final int rnum = words[1].charAt(1) - '0';
             if (value != -1)
                 m.getRegister(rnum).setValue((short) value);
@@ -373,6 +377,74 @@ public class Console {
         }
     }
 
+    private void watch(final String... words) {
+        final boolean del = words.length > 1 && words[1].equals("-d");
+        final boolean delAll = words.length > 1 && words[1].equals("-D");
+        if (delAll) {
+            watchpoints.clear();
+            m.ui.print("All watchpoints cleared.");
+            return;
+        }
+        if (words.length <= (del ? 2 : 1)) {
+            if (watchpoints.size() == 0)
+                m.ui.print("No watchpoints are set. Use 'watch [addr]' to set a watchpoints.");
+            else {
+                m.ui.print("Watchpoints are set on:\n");
+                for (final Map.Entry<Integer, Short> e : watchpoints.entrySet()) {
+                    final int b = e.getKey();
+                    if (b < 0)
+                        m.ui.print("\n      R"
+                            + (b + 8)
+                            + ":    "
+                            + MemoryUtilities
+                                .uShortToHex(m.getRegister(b + 8).getValue()));
+                    else {
+                        final short inst = m.getMemory((short) b);
+                        m.ui.print("\n    " + MemoryUtilities.uShortToHex((short) b)
+                            + ":   [" + MemoryUtilities.uShortToHex(inst) + "] "
+                            + m.alu.readInstruction(inst));
+                    }
+                }
+            }
+            return;
+        }
+        int pt;
+        String addr = words[del ? 2 : 1];
+        if (addr.matches("[rR][0-7]"))
+            pt = words[del ? 2 : 1].charAt(1) - '8';
+        else
+            try {
+                if (addr.startsWith("0x") || addr.startsWith("0X"))
+                    addr = addr.substring(2);
+                else if (addr.startsWith("x") || addr.startsWith("X"))
+                    addr = addr.substring(1);
+                pt = Integer.parseInt(addr, 16);
+                if (pt < 0)
+                    throw new NumberFormatException();
+            } catch (final NumberFormatException e) {
+                m.ui.print("'target' must be a hex address of memory or a register reference.");
+                help("help", "watch");
+                return;
+            }
+
+        if (watchpoints.containsKey(pt)) {
+            if (del)
+                watchpoints.remove(pt);
+            else if (pt < 0)
+                m.ui.print("A watchpoint is already set on register " + (pt + 8) + ".\n");
+            else
+                m.ui.print("A watchpoint is already set on address "
+                    + MemoryUtilities.uShortToHex((short) pt) + "\n");
+        } else if (!del)
+            watchpoints.put(pt,
+                pt < 0 ? m.getRegister(pt + 8).getValue() : m.getMemory((short) pt));
+        else if (pt < 0)
+            m.ui.print("No watchpoints set on register " + (pt + 8) + ".\n");
+        else
+            m.ui.print("No watchpoints set on address "
+                + MemoryUtilities.uShortToHex((short) pt) + ".\n");
+    }
+
     private int runMachine(final int steps) {
         for (int i = 0; i < steps; i++) {
             m.stepClock();
@@ -388,6 +460,23 @@ public class Console {
                         + MemoryUtilities.uShortToHex(pc));
                     return 3;
                 }
+            for (final Map.Entry<Integer, Short> e : watchpoints.entrySet()) {
+                final int k = e.getKey();
+                final short v = k < 0 ? m.getRegister(k + 8).getValue() : m
+                    .getMemory((short) k);
+                if (v != e.getValue()) {
+                    if (k < 0)
+                        m.ui.print("Watchpoint triggered on register " + (k + 8));
+                    else
+                        m.ui.print("Watchpoint triggered on memory location "
+                            + MemoryUtilities.uShortToHex((short) k));
+                    m.ui.print(": value changed from "
+                        + MemoryUtilities.uShortToHex(e.getValue()) + " to "
+                        + MemoryUtilities.uShortToHex(v));
+                    e.setValue(v);
+                    return 4;
+                }
+            }
             if (m.hasHalted()) {
                 m.ui.print("Program exited normally after " + (m.clockCount() - 1)
                     + " steps.");
@@ -435,7 +524,7 @@ public class Console {
     private int readAddr(String s) {
         if (s.equalsIgnoreCase("pc"))
             return m.getPCRegister().getValue();
-        else if (s.matches("[rR]\\d"))
+        else if (s.matches("[rR][0-7]"))
             return m.getRegister(s.charAt(1) - '0').getValue();
         else {
             int radix = 10;
