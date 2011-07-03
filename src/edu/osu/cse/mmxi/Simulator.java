@@ -3,7 +3,6 @@ package edu.osu.cse.mmxi;
 import java.io.IOException;
 
 import edu.osu.cse.mmxi.loader.SimpleLoader;
-import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
@@ -12,7 +11,7 @@ import edu.osu.cse.mmxi.ui.UI.UIMode;
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    private static int       MAX_CLOCK_COUNT = 10000;
+    public static int MAX_CLOCK_COUNT = 10000;
     private static final int FILL            = 0xED6E;
 
     /**
@@ -36,8 +35,6 @@ public final class Simulator {
      * </p>
      */
     public static void startClockLoop(final Machine m) {
-
-        int memTrack = -1;
         clockloop: while (!m.hasHalted()) {
             if (m.ui.getMode() == UIMode.TRACE) {
                 if (m.clockCount() % 20 == 1) {
@@ -59,84 +56,9 @@ public final class Simulator {
                 m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
                     .getValue())) + " ");
                 m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n");
-            } else if (m.ui.getMode() == UIMode.STEP) {
-                short mem;
-                if (memTrack == -1)
-                    mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
-                else
-                    mem = (short) memTrack;
-                m.ui.print("\n                           ");
-                for (int j = 0; j < 8; j++)
-                    m.ui.print(" --" + (mem + j & 7) + "-");
-                m.ui.print("\n");
-                for (int i = 0; i < 4; i++) {
-                    m.ui.print("R" + 2 * i + ": ");
-                    m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i)
-                        .getValue()) + "  ");
-                    m.ui.print("R" + (2 * i + 1) + ": ");
-                    m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i + 1)
-                        .getValue()) + "   ");
-                    m.ui.print(MemoryUtilities.uShortToHex((short) (mem + 8 * i)) + " | ");
-                    for (int j = 0; j < 8; j++)
-                        m.ui.print(MemoryUtilities.uShortToHex(m.getMemory((short) (mem
-                            + 8 * i + j)))
-                            + " ");
-                    m.ui.print("\n");
-                }
-                m.ui.print("\n          PC: "
-                    + MemoryUtilities.uShortToHex(m.getPCRegister().getValue()) + "  ");
-                m.ui.print((m.getFlags().getN() ? "n" : "-")
-                    + (m.getFlags().getZ() ? "z" : "-")
-                    + (m.getFlags().getP() ? "p" : "-") + "  ");
-                m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
-                    .getValue())) + ": ");
-                m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n\n");
-                while (true) {
-                    String s = m.ui.prompt("Press ENTER to step, "
-                        + "or a hex address or 'pc' to track memory:\n> ");
-                    if (s.length() != 0) {
-                        memTrack = -2;
-                        while (true) {
-                            try {
-                                if (s.equalsIgnoreCase("pc"))
-                                    memTrack = -1;
-                                else {
-                                    memTrack = Integer.parseInt(s, 16);
-                                    if ((memTrack & 0xffff0000) != 0)
-                                        memTrack = -2;
-                                }
-                            } catch (final NumberFormatException e) {
-                            }
-                            if (memTrack == -2)
-                                s = m.ui.prompt("Invalid hex or "
-                                    + "number out of range.\n> ");
-                            else
-                                break;
-                        }
-                        if (memTrack == -1)
-                            mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
-                        else
-                            mem = (short) memTrack;
-                        m.ui.print("\n      ");
-                        for (int j = 0; j < 16; j++)
-                            m.ui.print(" --"
-                                + Integer.toHexString(mem + j & 15).toUpperCase() + "-");
-                        m.ui.print("\n");
-                        for (int i = 0; i < 8; i++) {
-                            m.ui.print(MemoryUtilities
-                                .uShortToHex((short) (mem + 16 * i)) + " | ");
-                            for (int j = 0; j < 16; j++)
-                                m.ui.print(MemoryUtilities.uShortToHex(m
-                                    .getMemory((short) (mem + 16 * i + j))) + " ");
-                            m.ui.print("\n");
-                        }
-                        m.ui.print("\n");
-                    } else
-                        break;
-                }
             }
 
-            if (m.clockCount() > MAX_CLOCK_COUNT && m.ui.getMode() != UIMode.STEP) {
+            if (m.clockCount() > MAX_CLOCK_COUNT) {
                 String ans = m.ui.prompt(
                     "Clock limit " + MAX_CLOCK_COUNT + " reached. Continue? ")
                     .toLowerCase();
@@ -290,7 +212,9 @@ public final class Simulator {
                 m.ui.warn("More than one file given; ignoring \"" + word + "\"...");
             }
         }
-        if (file == null) {
+        if (m.ui.getMode() == null)
+            m.ui.setMode(UIMode.QUIET);
+        if (file == null && m.ui.getMode() != UIMode.STEP) {
             error = true;
             m.ui.warn("No files given!");
         }
@@ -301,10 +225,8 @@ public final class Simulator {
             m.ui.warn("               [-z|-f|-r|--zero|--fill|--rand]");
             m.ui.warn("               file.txt");
         }
-        if (file == null)
+        if (file == null && m.ui.getMode() != UIMode.STEP)
             System.exit(1);
-        if (m.ui.getMode() == null)
-            m.ui.setMode(UIMode.QUIET);
         if (MAX_CLOCK_COUNT < 0) // /// // // // // Using this value means that the
             MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
                                                  // will always be true due to overflow
@@ -332,17 +254,17 @@ public final class Simulator {
 
         final Machine machine = new Machine();
         final String file = processArgs(args, machine);
+        if (machine.ui.getMode() == UIMode.STEP)
+            new Console(machine, file);
+        else {
+            if (file != null)
+                try {
+                    SimpleLoader.load(file, machine);
+                } catch (final IOException e) {
+                    machine.ui.error("I/O Error: " + e.getMessage());
+                }
 
-        try {
-
-            SimpleLoader.load(file, machine);
-
-        } catch (final ParseException e) {
-            machine.ui.error(e.getMessage());
-        } catch (final IOException e) {
-            machine.ui.error("I/O Error: " + e.getMessage());
+            startClockLoop(machine);
         }
-
-        startClockLoop(machine);
     }
 }

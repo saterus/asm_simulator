@@ -11,13 +11,11 @@ import edu.osu.cse.mmxi.loader.parser.Error;
 import edu.osu.cse.mmxi.loader.parser.Exec;
 import edu.osu.cse.mmxi.loader.parser.Header;
 import edu.osu.cse.mmxi.loader.parser.ObjectFileParser;
-import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.loader.parser.Text;
 import edu.osu.cse.mmxi.machine.Machine;
 
 public class SimpleLoader {
-    public static void load(final String path, final Machine machine)
-        throws ParseException, IOException {
+    public static void load(final String path, final Machine machine) throws IOException {
 
         final File file = new File(".", path);
 
