@@ -3,7 +3,6 @@ package edu.osu.cse.mmxi;
 import java.io.IOException;
 
 import edu.osu.cse.mmxi.loader.SimpleLoader;
-import edu.osu.cse.mmxi.loader.parser.ParseException;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
@@ -12,7 +11,7 @@ import edu.osu.cse.mmxi.ui.UI.UIMode;
 /** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
 
-    public static int MAX_CLOCK_COUNT = 10000;
+    public static int        MAX_CLOCK_COUNT = 10000;
     private static final int FILL            = 0xED6E;
 
     /**
@@ -261,8 +260,6 @@ public final class Simulator {
             if (file != null)
                 try {
                     SimpleLoader.load(file, machine);
-                } catch (final ParseException e) {
-                    machine.ui.error(e.getMessage());
                 } catch (final IOException e) {
                     machine.ui.error("I/O Error: " + e.getMessage());
                 }
