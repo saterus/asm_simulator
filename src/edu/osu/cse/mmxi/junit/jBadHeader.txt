@@ -1,0 +1,4 @@
+HtestFi01G0BBBB  //bad hex value 01G0
+T30B00004
+T30B122B0
+E30B0 

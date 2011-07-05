@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.osu.cse.mmxi.loader.SimpleLoader;
+import edu.osu.cse.mmxi.loader.SimpleLoaderFatalException;
 import edu.osu.cse.mmxi.machine.Machine;
 
 public class SimpleLoaderTest {
@@ -17,23 +18,22 @@ public class SimpleLoaderTest {
     @Before
     public void init() {
         m = new Machine();
-
     }
 
     // test file exists, but not readable, using a directory
     @Test(expected = IOException.class)
-    public void testDirectoryRead() throws IOException {
+    public void testDirectoryRead() throws IOException, SimpleLoaderFatalException {
         SimpleLoader.load("src", m);
     }
 
     // testing that a file doesnt exist error
     @Test(expected = IOException.class)
-    public void testNonexistentRead() throws IOException {
+    public void testNonexistentRead() throws IOException, SimpleLoaderFatalException {
         SimpleLoader.load("garbage", m);
     }
 
     @Test
-    public void testRead() throws IOException {
+    public void testRead() throws IOException, SimpleLoaderFatalException {
         SimpleLoader.load(dir + "/jSample1.txt", m);
 
         // array of memory locations to verify against
@@ -55,6 +55,18 @@ public class SimpleLoaderTest {
 
     // test parser indirectly
     // bad header
+    @Test
+    public void testBadHex() throws IOException {
+        Boolean result = false;
+
+        try {
+            SimpleLoader.load(dir + "/jBadHeader.txt", m);
+        } catch (final SimpleLoaderFatalException e) {
+            result = true;
+        }
+
+        assertEquals(true, result);
+    }
     // bad main
     // bad exec
     // does error tracking work?

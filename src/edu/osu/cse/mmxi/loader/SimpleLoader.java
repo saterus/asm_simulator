@@ -15,7 +15,8 @@ import edu.osu.cse.mmxi.loader.parser.Text;
 import edu.osu.cse.mmxi.machine.Machine;
 
 public class SimpleLoader {
-    public static void load(final String path, final Machine machine) throws IOException {
+    public static void load(final String path, final Machine machine) throws IOException,
+        SimpleLoaderFatalException {
 
         final File file = new File(".", path);
 
@@ -40,7 +41,13 @@ public class SimpleLoader {
 
         if (errors.size() > 0)
             for (final Error e : errors)
-                machine.ui.warn(e.toString());
+                switch (e.getLevel()) {
+                case FATAL:
+                    throw new SimpleLoaderFatalException(e.toString());
+                default:
+                case WARN:
+                    machine.ui.warn(e.toString());
+                }
         else {
             // System.out.println(header.toString());
             // for (final Text t : text)
@@ -60,8 +67,13 @@ public class SimpleLoader {
 
             if (errors.size() > 0)
                 for (final Error e : errors)
-                    // TODO: Handle in UI or something
-                    System.out.println(e);
+                    switch (e.getLevel()) {
+                    case FATAL:
+                        throw new SimpleLoaderFatalException(e.toString());
+                    default:
+                    case WARN:
+                        machine.ui.warn(e.toString());
+                    }
         }
 
         fileReader.close();
