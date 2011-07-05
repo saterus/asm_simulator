@@ -213,7 +213,7 @@ public final class Simulator {
             }
         }
         if (m.ui.getMode() == null)
-            m.ui.setMode(UIMode.QUIET);
+            m.ui.setMode(file == null ? UIMode.STEP : UIMode.QUIET);
         if (file == null && m.ui.getMode() != UIMode.STEP) {
             error = true;
             m.ui.warn("No files given!");

@@ -260,7 +260,7 @@ public class Console {
         else if ("break".startsWith(words[1]))
             m.ui.print(" Syntax: break [-d] <address>\n         break [-D]\n"
                 + " Mnemonics: b br bre brea break\n\n"
-                + " Breakpoints allow you to stop execution of the program when certain\n"
+                + " Breakpoints allow the user to stop execution of the program when certain\n"
                 + " addresses are reached. The breakpoint facility functions during trace,\n"
                 + " step, and execution modes.\n\n"
                 + " Breakpoints can be listed, added, or removed.\n\n"
@@ -271,7 +271,16 @@ public class Console {
                 + " A message will be displayed to notify you if you try to set a breakpoint\n"
                 + " that already exists, or try to delete a breakpoint that does not exist.");
         else if ("clock".startsWith(words[1]))
-            m.ui.print(" Syntax: clock [<max>]\n" + " Mnemonics: c cl clo cloc clock\n\n");
+            m.ui.print(" Syntax: clock [<max>]\n Mnemonics: c cl clo cloc clock\n\n"
+                + "Used without arguments, the clock command will print how many\n"
+                + " instructions have been executed since the last reset (see 'help reset'),\n"
+                + " along with the current maximum. The maximum exists to stop the machine\n"
+                + " if an infinite loop is entered. If the maximum is reached (by running\n"
+                + " the machine in 'run', 'step', or 'trace' mode), it will automatically\n"
+                + " be doubled, after stopping the machine, so that execution will continue\n"
+                + " if the machine is run again immediately.\n\n"
+                + " The optional 'max' parameter allows the user to set a new maximum.\n"
+                + " Setting a negative value removes the limit entirely.");
         else if ("disasm".startsWith(words[1]))
             m.ui.print(" Syntax: disasm [<address> [halt|ret|<length>]]\n"
                 + " Mnemonics: d di dis disa disas disasm\n\n"
@@ -319,36 +328,99 @@ public class Console {
             m.ui.print(" Syntax: quit\n" + " Mnemonics: ex exi exit q qu qui quit\n\n"
                 + " Exit from the simulator program.");
         else if ("load".startsWith(words[1]))
-            m.ui.print(" Syntax: load <file>\n"
+            m.ui.print(" Syntax: load [<file>]\n"
                 + " Mnemonics: l lo loa load\n\n"
                 + " The load command loads a compiled assembly language program from the\n"
                 + " disk. The program will be in its initial state after loading and will\n"
-                + " need to be started via the run command afterwards.\n\n"
+                + " need to be started via the run command afterwards. If the 'file'\n"
+                + " parameter is given, it reloads the last loaded program.\n\n"
                 + "   > load test.out       loads 'test.out' from current directory\n"
+                + "   > load                reloads 'test.out'\n"
                 + "   > load /usr/bin/test  loads 'test' from /usr/bin/\n\n"
                 + " The file must be in MMXI file format. Otherwise, any parsing errors\n"
                 + " will be displayed on-screen, with the machine in an indeterminate\n"
                 + " state afterwards (another load command will reset the machine).");
         else if ("run".startsWith(words[1]))
-            m.ui.print(" Syntax: run\n" + " Mnemonics: r ru run\n\n" + " TODO: Text here");
+            m.ui.print(" Syntax: run\n"
+                + " Mnemonics: r ru run\n\n"
+                + " The run command executes the program starting from the current location\n"
+                + " of the PC. Program execution stops if:\n\n"
+                + "   1: The program hits a TRAP HALT command and exits normally.\n"
+                + "   2: The program reaches its clock maximum after a certain number of\n"
+                + "      instructions. If this happens, the clock maximum is automatically\n"
+                + "      doubled, and execution will continue if another run command is\n"
+                + "      issued. (See 'help clock' for details on the clock maximum.)\n"
+                + "   3: A breakpoint (see 'help break') is reached.\n"
+                + "   4: A watched portion of memory (see 'help watch') is modified.\n\n"
+                + " Under all conditions, another run command will pick up execution where\n"
+                + " the previous one stopped. If the program exited normally, this means\n"
+                + " execution will continue after a TRAP HALT command, which is usually\n"
+                + " invalid memory, so undesired operation will occur.");
         else if ("reg".startsWith(words[1]))
             m.ui.print(" Syntax: reg [pc|flags|r<num> [<value>]]\n"
-                + " Mnemonics: re reg\n\n" + " TODO: Text here");
+                + " Mnemonics: re reg\n\n"
+                + " The reg command can be used to display and modify registers.\n\n"
+                + " Without arguments, the reg command will display all 8 integer unit\n"
+                + " registers, the PC, and the n/z/p condition code flags.\n\n"
+                + " To display a specific register, use the reg command followed by the\n"
+                + " specific register designation.  You can refer to the registers by\n"
+                + " name (R0 thru R7). In addition to the integer unit data registers, you\n"
+                + " can also access the pc and flags control registers.\n\n"
+                + " The contents of a register may be set by adding the desired value after\n"
+                + " the register name.\n\n"
+                + "   > reg r0 x001C  Set register 0 to the value 0x001C\n"
+                + "   > reg flags 4   Set the flags to n=1, z=0, p=0.\n"
+                + "   > reg pc r7     Set the PC to the contents of register 7\n"
+                + "                   (equivalent to a RET command)");
         else if ("reset".startsWith(words[1]))
-            m.ui.print(" Syntax: reset [-l] [<value>|rand]\n"
-                + " Mnemonics: res rese reset\n\n" + " TODO: Text here");
+            m.ui.print(" Syntax: reset [-l] [<fill>|rand]\n Mnemonics: res rese reset\n\n"
+                + " The reset command clears all registers and memory and returns the\n"
+                + " machine to its initial condition. If the -l option is set, it will load\n"
+                + " the last loaded program after clearing. The optional fill argument\n"
+                + " allows the user to fill memory with a single repeating word, or\n"
+                + " randomize memory (which is the default behavior).\n\n"
+                + "   > reset        Randomize all memory\n"
+                + "   > reset xFEED  Set all registers and words of memory to 0xFEED\n"
+                + "   > reset -l 0   Clear everything, then load the last loaded program");
         else if ("step".startsWith(words[1]))
-            m.ui.print(" Syntax: step [<steps>]\n" + " Mnemonics: s st ste step\n\n"
-                + " TODO: Text here");
+            m.ui.print(" Syntax: step [<steps>]\n Mnemonics: s st ste step\n\n"
+                + " Execute 'steps' instructions (default 1), then print the PC and\n"
+                + " disassemble the next instruction to be evaluated. Execution may stop\n"
+                + " after fewer than 'steps' instructions if breakpoints, watchpoints, or a\n"
+                + " TRAP HALT command comes first (see 'help run').");
         else if (words[1].length() > 3 && "track".startsWith(words[1]))
-            m.ui.print(" Syntax: track pc|<address>\n" + " Mnemonics: trac track\n\n"
-                + " TODO: Text here");
+            m.ui.print(" Syntax: track pc|<address>\n Mnemonics: trac track\n\n"
+                + " Sets the memory track, which is used by the disasm, dump, and trace\n"
+                + " commands as defaults for displaying blocks of memory. If 'pc' is chosen,"
+                + " the printed portion of memory will start about 16 words before the PC (and\n"
+                + " usually aligned to 8-word chunks, depending on the command), and follow\n"
+                + " the PC as it changes. Any other choice will keep the track stationary on\n"
+                + " the chosen address. The default setting is 'track pc'.\n\n"
+                + "   > track pc     Keep the memory track on the PC\n"
+                + "   > track x1000  Track memory location 0x1000\n"
+                + "   > track r0     Track the memory location pointed to by R0 (unlike"
+                + "                  'track pc', the track will NOT change if R0 changes)");
         else if ("trace".startsWith(words[1]))
-            m.ui.print(" Syntax: trace [<steps>]\n" + " Mnemonics: t tr tra trace\n\n"
-                + " TODO: Text here");
+            m.ui.print(" Syntax: trace [<steps>]\n Mnemonics: t tr tra trace\n\n"
+                + " Execute 'steps' instructions (default 1), then print the contents of the\n"
+                + " registers and a small amount of memory starting from the memory track\n"
+                + " (see 'help track'), and disassemble the next instruction to be\n"
+                + " evaluated. Execution may stop after fewer than 'steps' instructions if\n"
+                + " breakpoints, watchpoints, or a TRAP HALT command comes first\n"
+                + " (see 'help run').");
         else if ("watch".startsWith(words[1]))
             m.ui.print(" Syntax: watch [-d] <address>\n         watch [-D]\n"
-                + " Mnemonics: w wa wat watc watch\n\n" + " TODO: Text here");
+                + " Mnemonics: w wa wat watc watch\n\n"
+                + " Watchpoints allow the user to stop execution of the program when certain\n"
+                + " registers or memory locations are altered. The watchpoint facility\n"
+                + " functions during trace, step, and execution modes.\n\n"
+                + " Watchpoints can be listed, added, or removed.\n\n"
+                + "   > watch        Lists the currently set watchpoints\n"
+                + "   > watch -D     Deletes all watchpoints\n"
+                + "   > watch x3021  Sets watchpoint on memory address 0x3021\n"
+                + "   > watch -d r3  Removes the watchpoint on register 3\n\n"
+                + " A message will be displayed to notify you if you try to set a watchpoint\n"
+                + " that already exists, or try to delete a watchpoint that does not exist.");
         else
             m.ui.print(help);
 
@@ -356,10 +428,13 @@ public class Console {
 
     private void load(final String... words) {
         if (words.length < 2) {
-            help("help", "load");
-            return;
-        }
-        file = words[1];
+            if (file == null) {
+                m.ui.print("No file loaded yet!\n");
+                help("help", "load");
+                return;
+            }
+        } else
+            file = words[1];
         m.ui.print("Loading file: " + file + "\n");
         try {
             SimpleLoader.load(file, m);
