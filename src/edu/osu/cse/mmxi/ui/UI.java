@@ -34,6 +34,13 @@ public class UI {
         System.exit(1);
     }
 
+    /**
+     * Wrapper for system.exit(1)
+     */
+    public void exit() {
+        System.exit(1);
+    }
+
     public void warn(final String msg) {
         System.err.println(msg);
     }

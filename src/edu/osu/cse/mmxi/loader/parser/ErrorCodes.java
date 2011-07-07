@@ -1,23 +1,34 @@
 package edu.osu.cse.mmxi.loader.parser;
 
 public enum ErrorCodes {
-    // unknow error
-    UNKNOWN(0, "Unknow Error Occurred"),
+    // unknown error
+    UNKNOWN(999, "Unknow Error Occurred", ErrorLevels.WARN),
 
     // simpleLoaderErrors IO
-    IO_BAD_PATH(100, "File path does not refer to a file"), IO_BAD_READ(101,
-        "Failed to read the file."), IO_BAD_FILE(102, "File was empty."),
+    IO_BAD_PATH(100, "File path does not refer to a file", ErrorLevels.FATAL), IO_BAD_READ(
+        101, "Failed to read the file.", ErrorLevels.FATAL), IO_BAD_FILE(102,
+        "File was empty.", ErrorLevels.FATAL),
 
     // simpleLoader errors
-    ADDR_OUT_BOUNDS(200, "Text address out of bounds"), ADDR_EXEC_OUT_BOUNDS(201,
-        "Execution address out of bounds");
+    ADDR_OUT_BOUNDS(200, "Text address out of bounds", ErrorLevels.FATAL), ADDR_EXEC_OUT_BOUNDS(
+        201, "Execution address out of bounds", ErrorLevels.FATAL),
 
-    private int    code;
-    private String str;
+    // parser errors
+    PARSE_EXECPTION(300, "Parsing Exception", ErrorLevels.WARN), PARSE_EMPTY(301,
+        "Parsing completed, no tokens found.", ErrorLevels.WARN), PARSE_NO_HEADER(302,
+        "Object File did not contain a Header record.", ErrorLevels.FATAL), PARSE_NO_RECORDS(
+        303, "Object File did not contain any Text records.", ErrorLevels.FATAL), PARSE_NO_EXEC(
+        304, "Object File did not contain an exec record.!", ErrorLevels.FATAL), PARSE_BAD_TEXT(
+        305, "Malformed Record.", ErrorLevels.FATAL);
 
-    ErrorCodes(final int code, final String str) {
+    private int         code;
+    private String      str;
+    private ErrorLevels level;
+
+    ErrorCodes(final int code, final String str, final ErrorLevels level) {
         this.str = str;
         this.code = code;
+        this.level = level;
     }
 
     public String getErrMsg() {
@@ -28,8 +39,12 @@ public enum ErrorCodes {
         return code;
     }
 
+    public ErrorLevels getErrLevel() {
+        return level;
+    }
+
     @Override
     public String toString() {
-        return code + " : " + str;
+        return code + " : " + level + " : " + str;
     }
 }

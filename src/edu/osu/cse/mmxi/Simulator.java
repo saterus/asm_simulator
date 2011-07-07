@@ -266,7 +266,6 @@ public final class Simulator {
                 } catch (final IOException e) {
                     machine.ui.error("I/O Error: " + e.getMessage());
                 }
-
             startClockLoop(machine);
         }
     }
@@ -281,18 +280,38 @@ public final class Simulator {
      * @see edu.osu.cse.mmxi.loader.SimpleLoader
      */
     private static void printErrors(final Machine m, final List<Error> errors) {
+        // flag for warn
+        boolean msg = false;
+        boolean warn = false;
+        boolean fatal = false;
+
         for (final Error e : errors)
             switch (e.getLevel()) {
             case FATAL:
-                m.ui.error("FATAL: " + e.getMessage() + "\n\tline: " + e.getLine());
-                break;
-            case WARN:
-                m.ui.warn("WARN: " + e.getMessage() + "\n\tline: " + e.getLine());
+                fatal = true;
+                m.ui.warn(e.toString());
                 break;
             default:
+            case WARN:
+                warn = true;
+                m.ui.warn(e.toString());
+                break;
             case MSG:
-                m.ui.warn(e.getMessage() + "\n\tlin: " + e.getLine());
+                msg = true;
+                m.ui.print(e.toString());
                 break;
             }
+
+        if (fatal)
+            m.ui.error("Fatal Errors Detected.  Exiting...");
+        else if (warn) {
+            String input = null;
+            input = m.ui.prompt("\nWarnings Detected.  Contiue or Quit(q)?");
+            if (input.equalsIgnoreCase("q")) {
+                m.ui.print("Exiting...");
+                m.ui.exit();
+            }
+        } else if (msg)
+            m.ui.prompt("Messages Detected. Press any key to continue.");
     }
 }

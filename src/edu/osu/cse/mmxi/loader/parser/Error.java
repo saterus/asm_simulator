@@ -2,28 +2,40 @@ package edu.osu.cse.mmxi.loader.parser;
 
 public class Error extends Token {
 
-    private final String      message;
-    private final ErrorLevels level;
-    private final ErrorCodes  code = ErrorCodes.UNKNOWN;
+    private String     message = "None";
+    private ErrorCodes code    = ErrorCodes.UNKNOWN;
 
-    public Error(final String m, final ErrorLevels l) {
-        this(0, m, l);
+    public Error(final ErrorCodes c) {
+        super(-1);
+        code = c;
     }
 
     public Error(final String m) {
-        this(0, m, ErrorLevels.WARN);
+        this(-1, m, ErrorCodes.UNKNOWN);
+    }
+
+    public Error(final String m, final ErrorCodes c) {
+        this(-1, m, c);
+    }
+
+    public Error(final String m, final ErrorLevels l) {
+        this(-1, m, ErrorCodes.UNKNOWN);
     }
 
     public Error(final int line, final String m) {
         super(line);
         message = m;
-        level = ErrorLevels.WARN;
+        code = ErrorCodes.UNKNOWN;
     }
 
-    public Error(final int line, final String m, final ErrorLevels l) {
+    public Error(final int line, final ErrorCodes c) {
+        this(0, "None", c);
+    }
+
+    public Error(final int line, final String m, final ErrorCodes c) {
         super(line);
         message = m;
-        level = l;
+        code = c;
     }
 
     public String getMessage() {
@@ -31,15 +43,15 @@ public class Error extends Token {
     }
 
     public ErrorLevels getLevel() {
-        return level;
+        return code.getErrLevel();
     }
 
     @Override
     public String toString() {
-        if (lineNumber == 0)
-            return "Error: " + message + " errorLevel: " + level.toString();
+        if (lineNumber == -1)
+            return "ERROR: LINE none : " + code.toString() + "\n\tdetails: " + message;
         else
-            return "Error, line " + lineNumber + ": " + message + " errorLevel: "
-                + level.toString();
+            return "ERROR: LINE " + getLine() + " : " + code.toString() + "\n\t"
+                + "details: " + message;
     }
 }
