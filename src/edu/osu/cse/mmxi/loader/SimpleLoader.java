@@ -15,8 +15,8 @@ import edu.osu.cse.mmxi.loader.parser.Text;
 import edu.osu.cse.mmxi.machine.Machine;
 
 public class SimpleLoader {
-    public static void load(final String path, final Machine machine) throws IOException,
-        SimpleLoaderFatalException {
+    public static List<Error> load(final String path, final Machine machine)
+        throws IOException {
 
         final File file = new File(".", path);
 
@@ -39,16 +39,13 @@ public class SimpleLoader {
         final Exec exec = parser.getParsedExec();
         final List<Text> text = parser.getParsedTexts();
 
-        if (errors.size() > 0)
-            for (final Error e : errors)
-                switch (e.getLevel()) {
-                case FATAL:
-                    throw new SimpleLoaderFatalException(e.toString());
-                default:
-                case WARN:
-                    machine.ui.warn(e.toString());
-                }
-        else {
+        if (errors.size() > 0) {
+            /*
+             * for (final Error e : errors) switch (e.getLevel()) { case FATAL: throw new
+             * SimpleLoaderFatalException(e.toString()); default: case WARN:
+             * machine.ui.warn(e.toString()); }
+             */
+        } else {
             // System.out.println(header.toString());
             // for (final Text t : text)
             // System.out.println(t.toString());
@@ -65,18 +62,14 @@ public class SimpleLoader {
             else
                 machine.getPCRegister().setValue(exec.getAddress());
 
-            if (errors.size() > 0)
-                for (final Error e : errors)
-                    switch (e.getLevel()) {
-                    case FATAL:
-                        throw new SimpleLoaderFatalException(e.toString());
-                    default:
-                    case WARN:
-                        machine.ui.warn(e.toString());
-                    }
+            /*
+             * if (errors.size() > 0) for (final Error e : errors) switch (e.getLevel()) {
+             * case FATAL: throw new SimpleLoaderFatalException(e.toString()); default:
+             * case WARN: machine.ui.warn(e.toString()); }
+             */
         }
 
         fileReader.close();
-
+        return errors;
     }
 }

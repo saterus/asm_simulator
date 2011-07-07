@@ -108,17 +108,17 @@ public class ObjectFileParser {
 
         if (header == null && exec == null && text.size() == 0)
             errors.add(new Error("Parsing completed, no tokens found! Empty file?",
-                errorLevels.FATAL));
+                ErrorLevels.FATAL));
         else {
             if (header == null)
                 errors.add(new Error("Object File did not contain a Header record!",
-                    errorLevels.FATAL));
+                    ErrorLevels.FATAL));
             if (text.size() == 0)
                 errors.add(new Error("Object File did not contain any Text records!",
-                    errorLevels.FATAL));
+                    ErrorLevels.FATAL));
             if (exec == null)
                 errors.add(new Error("Object File did not contain an Exec record!",
-                    errorLevels.FATAL));
+                    ErrorLevels.FATAL));
         }
         return errors;
     }
@@ -141,7 +141,7 @@ public class ObjectFileParser {
                 errors.add(new Error(lineNumber,
                     "Unrecognized or malformed record. Line: " + line));
         } catch (final ParseException e) {
-            errors.add(new Error(lineNumber, e.getMessage(), errorLevels.WARN));
+            errors.add(new Error(lineNumber, e.getMessage(), ErrorLevels.WARN));
         }
     }
 

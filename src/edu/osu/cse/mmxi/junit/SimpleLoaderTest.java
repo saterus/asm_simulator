@@ -57,13 +57,12 @@ public class SimpleLoaderTest {
     // bad header
     @Test
     public void testBadHex() throws IOException {
-        Boolean result = false;
+        final Boolean result = false;
 
-        try {
-            SimpleLoader.load(dir + "/jBadHeader.txt", m);
-        } catch (final SimpleLoaderFatalException e) {
-            result = true;
-        }
+        /*
+         * try { SimpleLoader.load(dir + "/jBadHeader.txt", m); } catch (final
+         * SimpleLoaderFatalException e) { result = true; }
+         */
 
         assertEquals(true, result);
     }

@@ -1,9 +1,10 @@
 package edu.osu.cse.mmxi;
 
 import java.io.IOException;
+import java.util.List;
 
 import edu.osu.cse.mmxi.loader.SimpleLoader;
-import edu.osu.cse.mmxi.loader.SimpleLoaderFatalException;
+import edu.osu.cse.mmxi.loader.parser.Error;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
@@ -255,19 +256,43 @@ public final class Simulator {
 
         final Machine machine = new Machine();
         final String file = processArgs(args, machine);
+
         if (machine.ui.getMode() == UIMode.STEP)
             new Console(machine, file);
         else {
             if (file != null)
                 try {
-                    SimpleLoader.load(file, machine);
+                    Simulator.printErrors(machine, SimpleLoader.load(file, machine));
                 } catch (final IOException e) {
                     machine.ui.error("I/O Error: " + e.getMessage());
-                } catch (final SimpleLoaderFatalException e) {
-                    machine.ui.error(e.getMessage());
                 }
 
             startClockLoop(machine);
         }
+    }
+
+    /**
+     * Wrapper for printing errors returned from SimpleLoader
+     * 
+     * @param m
+     *            Reference to the Machine
+     * @param errors
+     *            List of errors
+     * @see edu.osu.cse.mmxi.loader.SimpleLoader
+     */
+    private static void printErrors(final Machine m, final List<Error> errors) {
+        for (final Error e : errors)
+            switch (e.getLevel()) {
+            case FATAL:
+                m.ui.error("FATAL: " + e.getMessage() + "\n\tline: " + e.getLine());
+                break;
+            case WARN:
+                m.ui.warn("WARN: " + e.getMessage() + "\n\tline: " + e.getLine());
+                break;
+            default:
+            case MSG:
+                m.ui.warn(e.getMessage() + "\n\tlin: " + e.getLine());
+                break;
+            }
     }
 }
