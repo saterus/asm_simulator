@@ -7,7 +7,15 @@ public class Token {
         lineNumber = line;
     }
 
-    public int getLine() {
-        return lineNumber;
+    public String getLine() {
+        String rtn = String.valueOf(lineNumber);
+        int i = rtn.length();
+
+        while (i < 4) {
+            rtn = "0" + rtn;
+            i++;
+        }
+
+        return rtn;
     }
 }

@@ -1,9 +1,12 @@
 package edu.osu.cse.mmxi;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.osu.cse.mmxi.loader.SimpleLoader;
-import edu.osu.cse.mmxi.loader.SimpleLoaderFatalException;
+import edu.osu.cse.mmxi.loader.parser.Error;
+import edu.osu.cse.mmxi.loader.parser.ErrorCodes;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.UI;
@@ -40,16 +43,18 @@ public final class Simulator {
             if (m.ui.getMode() == UIMode.TRACE) {
                 if (m.clockCount() % 20 == 1) {
                     m.ui.print(" PC");
-                    for (int i = 0; i < 8; i++)
+                    for (int i = 0; i < 8; i++) {
                         m.ui.print("   R" + i);
+                    }
                     m.ui.print("  nzp inst\n");
                 }
 
                 m.ui.print(MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
                     + " ");
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < 8; i++) {
                     m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(i).getValue())
                         + " ");
+                }
                 m.ui.print((m.getFlags().getN() ? "n" : "-")
                     + (m.getFlags().getZ() ? "z" : "-")
                     + (m.getFlags().getP() ? "p" : "-") + " ");
@@ -63,19 +68,21 @@ public final class Simulator {
                 String ans = m.ui.prompt(
                     "Clock limit " + MAX_CLOCK_COUNT + " reached. Continue? ")
                     .toLowerCase();
-                while (true)
+                while (true) {
                     if (ans.equals("y") || ans.equals("yes")) {
                         MAX_CLOCK_COUNT *= 2;
                         break;
-                    } else if (ans.equals("") || ans.equals("n") || ans.equals("no"))
+                    } else if (ans.equals("") || ans.equals("n") || ans.equals("no")) {
                         break clockloop;
-                    else
+                    } else {
                         ans = m.ui.prompt("Please answer 'yes' or 'no'. ").toLowerCase();
+                    }
+                }
             }
 
             m.stepClock();
         }
-        m.ui.print("Machine halted after " + (m.clockCount() - 1) + " steps.");
+    m.ui.print("Machine halted after " + (m.clockCount() - 1) + " steps.");
     }
 
     /**
@@ -140,50 +147,53 @@ public final class Simulator {
     public static String processArgs(final String[] args, final Machine m) {
         boolean clockMode = false, error = false;
         String file = null;
+
+        final List<Error> errors = new ArrayList<Error>();
+
         words: for (int i = 0; i < args.length; i++) {
             String word = args[i];
             if (clockMode) {
                 clockMode = false;
                 try {
                     if (word.length() > 2
-                        && word.substring(0, 2).toLowerCase().equals("0x"))
+                        && word.substring(0, 2).toLowerCase().equals("0x")) {
                         MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16);
-                    else
+                    } else {
                         MAX_CLOCK_COUNT = Integer.parseInt(word);
+                    }
                 } catch (final NumberFormatException e) {
                     error = true;
-                    m.ui.warn("--max-clock-count argument "
-                        + "in invalid format; ignoring...");
+                    errors.add(new Error("in invalid format; ignoring...", ErrorCodes.UI_MAX_CLOCK));
                 }
-            } else if (word.length() > 1 && word.charAt(0) == '-')
+            } else if (word.length() > 1 && word.charAt(0) == '-') {
                 if (word.length() > 2 && word.charAt(1) == '-') {
                     word = word.substring(2);
-                    if (word.equals("max-clock-count"))
+                    if (word.equals("max-clock-count")) {
                         clockMode = true;
-                    else if (word.equals("quiet"))
+                    } else if (word.equals("quiet")) {
                         error |= setMode(m.ui, UIMode.QUIET);
-                    else if (word.equals("trace"))
+                    } else if (word.equals("trace")) {
                         error |= setMode(m.ui, UIMode.TRACE);
-                    else if (word.equals("step"))
+                    } else if (word.equals("step")) {
                         error |= setMode(m.ui, UIMode.STEP);
-                    else if (word.equals("zero"))
+                    } else if (word.equals("zero")) {
                         error |= setFill(m, 0);
-                    else if (word.equals("fill"))
+                    } else if (word.equals("fill")) {
                         error |= setFill(m, FILL);
-                    else if (word.equals("rand"))
+                    } else if (word.equals("rand")) {
                         error |= setFill(m, -1);
-                    else {
+                    } else {
                         error = true;
-                        m.ui.warn("Unknown command --" + word + "; ignoring...");
+                        errors.add(new Error("--"+word+"; ignoring...", ErrorCodes.UI_UNKN_CMD));
                     }
-                } else
-                    for (int j = 1; j < word.length(); j++)
+                } else {
+                    for (int j = 1; j < word.length(); j++) {
                         switch (word.charAt(j)) {
                         case 'c':
                             clockMode = true;
-                            if (j == word.length() - 1)
+                            if (j == word.length() - 1) {
                                 break;
-                            else {
+                            } else {
                                 args[i--] = word.substring(j + 1);
                                 continue words;
                             }
@@ -205,19 +215,25 @@ public final class Simulator {
                         case 'r':
                             error |= setFill(m, -1);
                             break;
+                        default:
+                            errors.add(new Error(word+"; ignoring...", ErrorCodes.UI_UNKN_CMD));
                         }
-            else if (file == null)
+                    }
+                }
+            } else if (file == null) {
                 file = word;
-            else {
+            } else {
                 error = true;
-                m.ui.warn("More than one file given; ignoring \"" + word + "\"...");
+                errors.add(new Error("ignoring "+word+".", ErrorCodes.UI_MULTI_FILE));
             }
         }
-        if (m.ui.getMode() == null)
+        if (m.ui.getMode() == null) {
             m.ui.setMode(UIMode.QUIET);
+        }
         if (file == null && m.ui.getMode() != UIMode.STEP) {
             error = true;
-            m.ui.warn("No files given!");
+            errors.add(new Error(ErrorCodes.UI_NO_FILE));
+            //m.ui.warn("No files given!");
         }
         if (error) {
             m.ui.warn("Proper syntax:");
@@ -225,12 +241,17 @@ public final class Simulator {
             m.ui.warn("               [-s|-t|-q|--step|--trace|--quiet]");
             m.ui.warn("               [-z|-f|-r|--zero|--fill|--rand]");
             m.ui.warn("               file.txt");
+
+            Simulator.printErrors(m.ui, errors);
         }
-        if (file == null && m.ui.getMode() != UIMode.STEP)
+        if (file == null && m.ui.getMode() != UIMode.STEP) {
             System.exit(1);
-        if (MAX_CLOCK_COUNT < 0) // /// // // // // Using this value means that the
+        }
+        if (MAX_CLOCK_COUNT < 0)
+        {
             MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
-                                                 // will always be true due to overflow
+        }
+        // will always be true due to overflow
         return file;
     }
 
@@ -238,7 +259,9 @@ public final class Simulator {
         boolean error = false;
         if (!ui.setMode(mode)) {
             error = true;
-            ui.warn("More than one mode setting found. Setting " + mode + " mode...");
+            final List<Error> errors = new ArrayList<Error>();
+            errors.add(new Error("Setting to "+mode+" mode.", ErrorCodes.UI_MULTI_SETTINGS));
+            Simulator.printErrors(ui, errors);
         }
         return error;
     }
@@ -255,19 +278,65 @@ public final class Simulator {
 
         final Machine machine = new Machine();
         final String file = processArgs(args, machine);
-        if (machine.ui.getMode() == UIMode.STEP)
+
+        if (machine.ui.getMode() == UIMode.STEP) {
             new Console(machine, file);
-        else {
-            if (file != null)
+        } else {
+            if (file != null) {
                 try {
-                    SimpleLoader.load(file, machine);
+                    Simulator.printErrors(machine.ui, SimpleLoader.load(file, machine));
                 } catch (final IOException e) {
                     machine.ui.error("I/O Error: " + e.getMessage());
-                } catch (final SimpleLoaderFatalException e) {
-                    machine.ui.error(e.getMessage());
                 }
-
+            }
             startClockLoop(machine);
+        }
+    }
+
+    /**
+     * Wrapper for printing errors returned from SimpleLoader
+     * 
+     * @param ui
+     *            Reference to the User Interface (UI)
+     * @param errors
+     *            List of errors
+     * @see edu.osu.cse.mmxi.loader.SimpleLoader
+     */
+    public static void printErrors(final UI ui, final List<Error> errors) {
+        // flag for warn
+        boolean msg = false;
+        boolean warn = false;
+        boolean fatal = false;
+
+        for (final Error e : errors) {
+            switch (e.getLevel()) {
+            case FATAL:
+                fatal = true;
+                ui.warn(e.toString());
+                break;
+            default:
+            case WARN:
+                warn = true;
+                ui.warn(e.toString());
+                break;
+            case MSG:
+                msg = true;
+                ui.print(e.toString());
+                break;
+            }
+        }
+
+        if (fatal) {
+            ui.error("Fatal Errors Detected.  Exiting...");
+        } else if (warn) {
+            String input = null;
+            input = ui.prompt("\nWarnings Detected.  Contiue or Quit(q)?");
+            if (input.equalsIgnoreCase("q")) {
+                ui.print("Exiting...");
+                ui.exit();
+            }
+        } else if (msg) {
+            ui.prompt("Messages Detected. Press any key to continue.");
         }
     }
 }

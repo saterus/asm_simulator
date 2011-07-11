@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import edu.osu.cse.mmxi.loader.parser.Error;
+import edu.osu.cse.mmxi.loader.parser.ErrorCodes;
 import edu.osu.cse.mmxi.loader.parser.Exec;
 import edu.osu.cse.mmxi.loader.parser.Header;
 import edu.osu.cse.mmxi.loader.parser.ObjectFileParser;
@@ -15,19 +16,19 @@ import edu.osu.cse.mmxi.loader.parser.Text;
 import edu.osu.cse.mmxi.machine.Machine;
 
 public class SimpleLoader {
-    public static void load(final String path, final Machine machine) throws IOException,
-        SimpleLoaderFatalException {
+    public static List<Error> load(final String path, final Machine machine)
+        throws IOException {
 
         final File file = new File(".", path);
 
         if (!file.isFile())
-            throw new IOException("Pathname does not refer to a file: " + path);
+            throw new IOException(ErrorCodes.IO_BAD_PATH.toString() + " : " + path);
 
         if (!file.canRead())
-            throw new IOException("File " + path + " is not readable.");
+            throw new IOException(ErrorCodes.IO_BAD_READ.toString() + " : " + path);
 
         if (file.length() <= 0)
-            throw new IOException("File " + path + " is empty.");
+            throw new IOException(ErrorCodes.IO_BAD_FILE.toString() + " : " + path);
 
         final BufferedReader fileReader = new BufferedReader(new InputStreamReader(
             new FileInputStream(file)));
@@ -39,44 +40,22 @@ public class SimpleLoader {
         final Exec exec = parser.getParsedExec();
         final List<Text> text = parser.getParsedTexts();
 
-        if (errors.size() > 0)
-            for (final Error e : errors)
-                switch (e.getLevel()) {
-                case FATAL:
-                    throw new SimpleLoaderFatalException(e.toString());
-                default:
-                case WARN:
-                    machine.ui.warn(e.toString());
-                }
-        else {
-            // System.out.println(header.toString());
-            // for (final Text t : text)
-            // System.out.println(t.toString());
-            // System.out.println(exec.toString());
+        if (errors.size() == 0) {
 
             for (final Text t : text)
                 if (!header.isWithinBounds(t.getAddress()))
-                    errors.add(new Error(t.getLine(), "Text address out of bounds"));
+                    errors.add(new Error(t.getLine(), ErrorCodes.ADDR_OUT_BOUNDS));
                 else
                     machine.setMemory(t.getAddress(), t.getValue());
 
             if (!header.isWithinBounds(exec.getAddress()))
-                errors.add(new Error(exec.getLine(), "Execution address out of bounds"));
+                errors.add(new Error(exec.getLine(), ErrorCodes.ADDR_EXEC_OUT_BOUNDS));
             else
                 machine.getPCRegister().setValue(exec.getAddress());
 
-            if (errors.size() > 0)
-                for (final Error e : errors)
-                    switch (e.getLevel()) {
-                    case FATAL:
-                        throw new SimpleLoaderFatalException(e.toString());
-                    default:
-                    case WARN:
-                        machine.ui.warn(e.toString());
-                    }
         }
 
         fileReader.close();
-
+        return errors;
     }
 }

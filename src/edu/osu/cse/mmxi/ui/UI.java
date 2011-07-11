@@ -34,12 +34,23 @@ public class UI {
         System.exit(1);
     }
 
+    /**
+     * Wrapper for system.exit(1)
+     */
+    public void exit() {
+        System.exit(1);
+    }
+
     public void warn(final String msg) {
         System.err.println(msg);
     }
 
     public void print(final String msg) {
         System.out.print(msg);
+    }
+
+    public void println(final String msg) {
+        System.out.println(msg);
     }
 
     public String prompt(final String msg) {
@@ -51,8 +62,9 @@ public class UI {
         byte b = 0;
         try {
             final int n = System.in.read();
-            if (n != -1)
+            if (n != -1) {
                 b = (byte) n;
+            }
         } catch (final IOException e) {
             // Should we error?
         }
@@ -69,10 +81,11 @@ public class UI {
                 neg = true;
                 num = num.substring(1);
             }
-            if (num.substring(0, 2).toLowerCase().equals("0x"))
+            if (num.substring(0, 2).toLowerCase().equals("0x")) {
                 s = Short.parseShort((neg ? "-" : "") + num.substring(2), 16);
-            else
+            } else {
                 s = Short.parseShort((neg ? "-" : "") + num);
+            }
         } catch (final NumberFormatException e) {
             // Should we error?
         }
