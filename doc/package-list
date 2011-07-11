@@ -1,4 +1,5 @@
 edu.osu.cse.mmxi
+edu.osu.cse.mmxi.junit
 edu.osu.cse.mmxi.loader
 edu.osu.cse.mmxi.loader.parser
 edu.osu.cse.mmxi.machine
