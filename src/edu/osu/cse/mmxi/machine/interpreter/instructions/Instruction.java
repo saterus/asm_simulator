@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.osu.cse.mmxi.Simulator;
-import edu.osu.cse.mmxi.loader.parser.Error;
-import edu.osu.cse.mmxi.loader.parser.ErrorCodes;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
+import edu.osu.cse.mmxi.ui.Error;
+import edu.osu.cse.mmxi.ui.ErrorCodes;
 
 public interface Instruction {
 
@@ -63,7 +63,7 @@ public interface Instruction {
         @Override
         public String toString() {
             return "ADD R" + dr + ", R" + sr + ", #"
-            + MemoryUtilities.sShortToHex((short) imm);
+                + MemoryUtilities.sShortToHex((short) imm);
         }
     }
 
@@ -110,7 +110,7 @@ public interface Instruction {
         @Override
         public String toString() {
             return "AND R" + dr + ", R" + sr + ", #"
-            + MemoryUtilities.sShortToHex((short) imm);
+                + MemoryUtilities.sShortToHex((short) imm);
         }
     }
 
@@ -126,35 +126,36 @@ public interface Instruction {
         @Override
         public boolean execute(final Machine m) {
             if ((nzp & 4) != 0 && m.getFlags().getN() || (nzp & 2) != 0
-                && m.getFlags().getZ() || (nzp & 1) != 0 && m.getFlags().getP()) {
+                && m.getFlags().getZ() || (nzp & 1) != 0 && m.getFlags().getP())
                 m.getPCRegister().setValue(
                     (short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff));
-            }
             return false;
         }
 
         @Override
         public String toString() {
-            if (nzp == 0) {
+            if (nzp == 0)
                 return pgoff == 0 ? "NOP" : "DATA " + MemoryUtilities.uShortToHex(pgoff);
-            } else {
+            else
                 return "BR" + ((nzp & 4) != 0 ? "n" : "") + ((nzp & 2) != 0 ? "z" : "")
-                + ((nzp & 1) != 0 ? "p" : "") + " x"
-                + MemoryUtilities.sShortToHex(pgoff);
-            }
+                    + ((nzp & 1) != 0 ? "p" : "") + " x"
+                    + MemoryUtilities.sShortToHex(pgoff);
         }
     }
 
     public static class DBUG implements Instruction {
         @Override
         public boolean execute(final Machine m) {
-            m.ui.print("PC " + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
-                + "\n");
             for (int i = 0; i < 8; i++) {
                 m.ui.print("R" + i + " "
-                    + MemoryUtilities.uShortToHex(m.getRegister(i).getValue()) + "\n");
+                    + MemoryUtilities.uShortToHex(m.getRegister(i).getValue()) + "   ");
+                if (i == 3)
+                    m.ui.print("FLAGS " + m.getFlags().toString() + "\n");
+                else if (i == 7)
+                    m.ui.print("PC "
+                        + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
+                        + "\n\n");
             }
-            m.ui.print(m.getFlags().toString());
             return false;
         }
 
@@ -175,9 +176,8 @@ public interface Instruction {
 
         @Override
         public boolean execute(final Machine m) {
-            if (l) {
+            if (l)
                 m.getRegister(7).setValue(m.getPCRegister().getValue());
-            }
             m.getPCRegister().setValue(
                 (short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff));
             return false;
@@ -201,9 +201,8 @@ public interface Instruction {
 
         @Override
         public boolean execute(final Machine m) {
-            if (l) {
+            if (l)
                 m.getRegister(7).setValue(m.getPCRegister().getValue());
-            }
             m.getPCRegister().setValue((short) (m.getRegister(br).getValue() + index));
             return false;
         }
@@ -211,7 +210,7 @@ public interface Instruction {
         @Override
         public String toString() {
             return (l ? "JSR" : "JMP") + "R R" + br + ", x"
-            + MemoryUtilities.sShortToHex(index);
+                + MemoryUtilities.sShortToHex(index);
         }
     }
 
@@ -250,9 +249,9 @@ public interface Instruction {
         @Override
         public boolean execute(final Machine m) {
             m.getRegister(dr)
-            .setValue(
-                m.getMemory(m
-                    .getMemory((short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff))));
+                .setValue(
+                    m.getMemory(m
+                        .getMemory((short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff))));
             m.getFlags().setFlags(m.getRegister(dr));
             return true;
         }
@@ -419,14 +418,14 @@ public interface Instruction {
 
         @Override
         public boolean execute(final Machine m) {
-
             switch (vector) {
             case 0x21: // OUT: write the char in R0 to the console
                 if ((m.getRegister(0).getValue() & 0xff80) != 0) {
-                    final List<Error> errors = new ArrayList<Error>();
-                    errors.add(new Error("at 0x"+MemoryUtilities.sShortToHex(vector),ErrorCodes.EXEC_TRAP_OUT));
-                    Simulator.printErrors(m.ui, errors);
-                    //m.ui.warn("Warning: R0 does not contain a character");
+                    final String msg = "at 0x"
+                        + MemoryUtilities.uShortToHex((short) (m.getPCRegister()
+                            .getValue() - 1)) + ": value is R0 = 0x"
+                        + MemoryUtilities.uShortToHex(m.getRegister(0).getValue());
+                    Simulator.printErrors(m.ui, new Error(msg, ErrorCodes.EXEC_TRAP_OUT));
                 }
                 m.ui.print("" + (char) (m.getRegister(0).getValue() & 0x7f));
                 break;
@@ -459,12 +458,13 @@ public interface Instruction {
                 break;
             default:
                 final List<Error> errors = new ArrayList<Error>();
-                errors.add(new Error("at 0x"+MemoryUtilities.sShortToHex(vector),ErrorCodes.EXEC_TRAP_UNKN));
+                errors.add(new Error("at 0x" + MemoryUtilities.sShortToHex(vector),
+                    ErrorCodes.EXEC_TRAP_UNKN));
                 Simulator.printErrors(m.ui, errors);
 
                 /*
-                m.ui.warn("Warning: unknown trap vector 0x"
-                    + MemoryUtilities.sShortToHex(vector));
+                 * m.ui.warn("Warning: unknown trap vector 0x" +
+                 * MemoryUtilities.sShortToHex(vector));
                  */
             }
             return false;

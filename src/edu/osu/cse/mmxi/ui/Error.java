@@ -1,13 +1,13 @@
-package edu.osu.cse.mmxi.loader.parser;
+package edu.osu.cse.mmxi.ui;
 
-public class Error extends Token {
+public class Error {
 
-    private String     message = "None";
-    private ErrorCodes code    = ErrorCodes.UNKNOWN;
+    private final int        line;
+    private final String     message;
+    private final ErrorCodes code;
 
     public Error(final ErrorCodes c) {
-        super(-1);
-        code = c;
+        this(-1, null, c);
     }
 
     public Error(final String m) {
@@ -23,19 +23,21 @@ public class Error extends Token {
     }
 
     public Error(final int line, final String m) {
-        super(line);
-        message = m;
-        code = ErrorCodes.UNKNOWN;
+        this(line, m, ErrorCodes.UNKNOWN);
     }
 
     public Error(final int line, final ErrorCodes c) {
-        this(0, "None", c);
+        this(line, null, c);
     }
 
     public Error(final int line, final String m, final ErrorCodes c) {
-        super(line);
+        this.line = line;
         message = m;
         code = c;
+    }
+
+    public int getLine() {
+        return line;
     }
 
     public String getMessage() {
@@ -43,15 +45,13 @@ public class Error extends Token {
     }
 
     public ErrorLevels getLevel() {
-        return code.getErrLevel();
+        return code.getLevel();
     }
 
     @Override
     public String toString() {
-        if (lineNumber == -1)
-            return "ERROR: LINE none : " + code.toString() + "\n\tdetails: " + message;
-        else
-            return "ERROR: LINE " + getLine() + " : " + code.toString() + "\n\t"
-                + "details: " + message;
+        return code.getLevel() + " " + code.getCode()
+            + (line == -1 ? "" : ": Line " + line) + (code == null ? "" : ": " + code)
+            + (message == null ? "" : "\n\tdetails: " + message) + "\n";
     }
 }

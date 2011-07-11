@@ -7,13 +7,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import edu.osu.cse.mmxi.loader.parser.Error;
-import edu.osu.cse.mmxi.loader.parser.ErrorCodes;
 import edu.osu.cse.mmxi.loader.parser.Exec;
 import edu.osu.cse.mmxi.loader.parser.Header;
 import edu.osu.cse.mmxi.loader.parser.ObjectFileParser;
 import edu.osu.cse.mmxi.loader.parser.Text;
 import edu.osu.cse.mmxi.machine.Machine;
+import edu.osu.cse.mmxi.ui.Error;
+import edu.osu.cse.mmxi.ui.ErrorCodes;
 
 public class SimpleLoader {
     public static List<Error> load(final String path, final Machine machine)
