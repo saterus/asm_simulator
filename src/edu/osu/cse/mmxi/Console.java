@@ -14,13 +14,15 @@ public class Console {
         int memTrack = -1;
         while (!m.hasHalted()) {
             short mem;
-            if (memTrack == -1)
+            if (memTrack == -1) {
                 mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
-            else
+            } else {
                 mem = (short) memTrack;
+            }
             m.ui.print("\n                           ");
-            for (int j = 0; j < 8; j++)
+            for (int j = 0; j < 8; j++) {
                 m.ui.print(" --" + (mem + j & 7) + "-");
+            }
             m.ui.print("\n");
             for (int i = 0; i < 4; i++) {
                 m.ui.print("R" + 2 * i + ": ");
@@ -30,10 +32,11 @@ public class Console {
                 m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i + 1)
                     .getValue()) + "   ");
                 m.ui.print(MemoryUtilities.uShortToHex((short) (mem + 8 * i)) + " | ");
-                for (int j = 0; j < 8; j++)
+                for (int j = 0; j < 8; j++) {
                     m.ui.print(MemoryUtilities.uShortToHex(m.getMemory((short) (mem + 8
                         * i + j)))
                         + " ");
+                }
                 m.ui.print("\n");
             }
             m.ui.print("\n          PC: "
@@ -51,46 +54,52 @@ public class Console {
                     memTrack = -2;
                     while (true) {
                         try {
-                            if (s.equalsIgnoreCase("pc"))
+                            if (s.equalsIgnoreCase("pc")) {
                                 memTrack = -1;
-                            else {
+                            } else {
                                 memTrack = Integer.parseInt(s, 16);
-                                if ((memTrack & 0xffff0000) != 0)
+                                if ((memTrack & 0xffff0000) != 0) {
                                     memTrack = -2;
+                                }
                             }
                         } catch (final NumberFormatException e) {
                         }
-                        if (memTrack == -2)
+                        if (memTrack == -2) {
                             s = m.ui.prompt("Invalid hex or "
                                 + "number out of range.\n> ");
-                        else
+                        } else {
                             break;
+                        }
                     }
-                    if (memTrack == -1)
+                    if (memTrack == -1) {
                         mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
-                    else
+                    } else {
                         mem = (short) memTrack;
+                    }
                     m.ui.print("\n      ");
-                    for (int j = 0; j < 16; j++)
+                    for (int j = 0; j < 16; j++) {
                         m.ui.print(" --"
                             + Integer.toHexString(mem + j & 15).toUpperCase() + "-");
+                    }
                     m.ui.print("\n");
                     for (int i = 0; i < 8; i++) {
                         m.ui.print(MemoryUtilities.uShortToHex((short) (mem + 16 * i))
                             + " | ");
-                        for (int j = 0; j < 16; j++)
+                        for (int j = 0; j < 16; j++) {
                             m.ui.print(MemoryUtilities.uShortToHex(m
                                 .getMemory((short) (mem + 16 * i + j))) + " ");
+                        }
                         m.ui.print("\n");
                     }
                     m.ui.print("\n");
-                } else
+                } else {
                     break;
+                }
             }
 
             m.stepClock();
         }
-        m.ui.print("Machine halted after " + (m.clockCount() - 1) + " steps.");
+        m.ui.println("Machine halted after " + (m.clockCount() - 1) + " steps.");
     }
 
 }
