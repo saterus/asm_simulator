@@ -15,11 +15,11 @@ public enum ErrorCodes {
 
     // parser errors
     PARSE_EXECPTION(300, "Parsing Exception", ErrorLevels.WARN),
-    PARSE_EMPTY(301,"Parsing completed, no tokens found.", ErrorLevels.WARN),
+    PARSE_EMPTY(301,"Parsing completed, no tokens found.", ErrorLevels.FATAL),
     PARSE_NO_HEADER(302,"Object File did not contain a Header record.", ErrorLevels.FATAL),
     PARSE_NO_RECORDS(303, "Object File did not contain any Text records.", ErrorLevels.FATAL),
-    PARSE_NO_EXEC(304, "Object File did not contain an exec record.!", ErrorLevels.FATAL),
-    PARSE_BAD_TEXT(305, "Malformed Record.", ErrorLevels.FATAL),
+    PARSE_NO_EXEC(304, "Object File did not contain an exec record.", ErrorLevels.FATAL),
+    PARSE_BAD_TEXT(399, "Malformed Record.", ErrorLevels.FATAL),
 
     // execution errors
     EXEC_TRAP_UNKN(400, "Unknown TRAP vector", ErrorLevels.WARN),
@@ -27,7 +27,7 @@ public enum ErrorCodes {
 
     // UI errors
     UI_MAX_CLOCK(500, "--max-clock-count argument in invalid format.", ErrorLevels.WARN),
-    UI_UNKN_CMD(501, "Unknown command.", ErrorLevels.WARN),
+    UI_UNKN_CMD(599, "Unknown command.", ErrorLevels.WARN),
     UI_MULTI_FILE(502, "Multiple files given.", ErrorLevels.WARN),
     UI_NO_FILE(503, "No file was given.", ErrorLevels.FATAL),
     UI_MULTI_SETTINGS(504, "Multiple settings given.", ErrorLevels.WARN);

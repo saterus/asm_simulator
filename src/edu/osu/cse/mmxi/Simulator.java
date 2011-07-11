@@ -164,7 +164,6 @@ public final class Simulator {
                 } catch (final NumberFormatException e) {
                     error = true;
                     errors.add(new Error("in invalid format; ignoring...", ErrorCodes.UI_MAX_CLOCK));
-                    //m.ui.warn("--max-clock-count argument in invalid format; ignoring...");
                 }
             } else if (word.length() > 1 && word.charAt(0) == '-') {
                 if (word.length() > 2 && word.charAt(1) == '-') {
@@ -186,7 +185,6 @@ public final class Simulator {
                     } else {
                         error = true;
                         errors.add(new Error("--"+word+"; ignoring...", ErrorCodes.UI_UNKN_CMD));
-                        //m.ui.warn("Unknown command --" + word + "; ignoring...");
                     }
                 } else {
                     for (int j = 1; j < word.length(); j++) {
@@ -227,7 +225,6 @@ public final class Simulator {
             } else {
                 error = true;
                 errors.add(new Error("ignoring "+word+".", ErrorCodes.UI_MULTI_FILE));
-                //m.ui.warn("More than one file given; ignoring \"" + word + "\"...");
             }
         }
         if (m.ui.getMode() == null) {
@@ -265,7 +262,6 @@ public final class Simulator {
             final List<Error> errors = new ArrayList<Error>();
             errors.add(new Error("Setting to "+mode+" mode.", ErrorCodes.UI_MULTI_SETTINGS));
             Simulator.printErrors(ui, errors);
-            //ui.warn("More than one mode setting found. Setting " + mode + " mode...");
         }
         return error;
     }
