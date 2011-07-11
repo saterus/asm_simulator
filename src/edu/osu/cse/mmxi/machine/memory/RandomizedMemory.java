@@ -6,10 +6,22 @@ package edu.osu.cse.mmxi.machine.memory;
  */
 public class RandomizedMemory extends PagedMemory {
 
+    /**
+     * Creates a {@code RandomizedMemory} object with 128 pages. The memory itself is not
+     * initialized at this step, being instead initialized when the page is first used.
+     */
     public RandomizedMemory() {
         super();
     }
 
+    /**
+     * Creates a {@code RandomizedMemory} object with a custom number of pages. The memory
+     * itself is not initialized at this step, being instead initialized when the page is
+     * first used.
+     * 
+     * @param numPages
+     *            the number of pages in memory
+     */
     public RandomizedMemory(final int numPages) {
         super(numPages);
     }

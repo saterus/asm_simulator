@@ -127,8 +127,6 @@ public class Machine {
 
     /**
      * Executes the next clock cycle.
-     * 
-     * @return the Instruction details of the executed Instruction.
      */
     public void stepClock() {
 
