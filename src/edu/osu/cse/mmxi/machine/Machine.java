@@ -13,7 +13,7 @@ public class Machine {
     protected Register         pc;
     protected FlagsRegister    nzp;
     protected Memory           memory;
-    protected final ALU        alu;
+    public final ALU           alu;
 
     private int                clockCount;
     private boolean            halted;
