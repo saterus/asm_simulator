@@ -50,8 +50,13 @@ public class Error {
 
     @Override
     public String toString() {
-        return code.getLevel() + " " + code.getCode()
-            + (line == -1 ? "" : ": Line " + line) + (code == null ? "" : ": " + code)
-            + (message == null ? "" : "\n\tdetails: " + message) + "\n";
+        String s = code.getLevel() + " " + code.getCode()
+            + (line == -1 ? "" : ": Line " + line);
+        if (code.getMsg() == null)
+            s += message == null ? "" : ": " + message;
+        else
+            s += ": " + code.getMsg()
+                + (message == null ? "" : "\n\tdetails: " + message);
+        return s + "\n";
     }
 }

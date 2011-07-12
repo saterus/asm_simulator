@@ -35,6 +35,8 @@ public enum ErrorCodes {
     // UI errors
     UI_MAX_CLOCK(500, "--max-clock-ticks argument in invalid format", ErrorLevels.WARN),
 
+    UI_MULTI_CLOCK(501, "duplicate --max-clock-ticks argument", ErrorLevels.WARN),
+
     UI_MULTI_FILE(502, "Multiple files given", ErrorLevels.WARN),
 
     UI_NO_FILE(503, "No files given", ErrorLevels.FATAL),
@@ -44,7 +46,7 @@ public enum ErrorCodes {
     UI_UNKN_CMD(599, "Unknown command", ErrorLevels.WARN),
 
     // messages
-    MSG_SYNTAX(800, null, ErrorLevels.WARN),
+    MSG_SYNTAX(800, null, ErrorLevels.MSG),
 
     // unknown error
     UNKNOWN(999, "Unknown Error", ErrorLevels.WARN);

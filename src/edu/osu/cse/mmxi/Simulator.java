@@ -142,7 +142,7 @@ public final class Simulator {
      *            the arguments in the command line
      */
     public static String processArgs(final String[] args, final Machine m) {
-        boolean clockMode = false;
+        boolean clockMode = false, clockSet = false, fillSet = false;
         String file = null;
 
         final List<Error> errors = new ArrayList<Error>();
@@ -151,16 +151,21 @@ public final class Simulator {
             String word = args[i];
             if (clockMode) {
                 clockMode = false;
-                try {
-                    if (word.length() > 2
-                        && word.substring(0, 2).toLowerCase().equals("0x"))
-                        MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16);
-                    else
-                        MAX_CLOCK_COUNT = Integer.parseInt(word);
-                } catch (final NumberFormatException e) {
-                    errors.add(new Error("in invalid format; ignoring...",
-                        ErrorCodes.UI_MAX_CLOCK));
-                }
+                if (clockSet)
+                    errors.add(new Error("clock setting '" + word
+                        + "' found; ignoring...", ErrorCodes.UI_MULTI_CLOCK));
+                else
+                    try {
+                        if (word.length() > 2
+                            && word.substring(0, 2).toLowerCase().equals("0x"))
+                            MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16);
+                        else
+                            MAX_CLOCK_COUNT = Integer.parseInt(word);
+                        clockSet = true;
+                    } catch (final NumberFormatException e) {
+                        errors.add(new Error("in invalid format; ignoring...",
+                            ErrorCodes.UI_MAX_CLOCK));
+                    }
             } else if (word.length() > 1 && word.charAt(0) == '-') {
                 if (word.length() > 2 && word.charAt(1) == '-') {
                     word = word.substring(2);
@@ -173,11 +178,11 @@ public final class Simulator {
                     else if (word.equals("step"))
                         setMode(m.ui, UIMode.STEP, errors);
                     else if (word.equals("zero"))
-                        setFill(m, 0, errors);
+                        fillSet = setFill(m, 0, fillSet, errors);
                     else if (word.equals("fill"))
-                        setFill(m, FILL, errors);
+                        fillSet = setFill(m, FILL, fillSet, errors);
                     else if (word.equals("rand"))
-                        setFill(m, -1, errors);
+                        fillSet = setFill(m, -1, fillSet, errors);
                     else
                         errors.add(new Error("command is --" + word,
                             ErrorCodes.UI_UNKN_CMD));
@@ -202,13 +207,13 @@ public final class Simulator {
                             setMode(m.ui, UIMode.STEP, errors);
                             break;
                         case 'z':
-                            setFill(m, 0, errors);
+                            fillSet = setFill(m, 0, fillSet, errors);
                             break;
                         case 'f':
-                            setFill(m, FILL, errors);
+                            fillSet = setFill(m, FILL, fillSet, errors);
                             break;
                         case 'r':
-                            setFill(m, -1, errors);
+                            fillSet = setFill(m, -1, fillSet, errors);
                             break;
                         default:
                             errors.add(new Error("command is -" + word.charAt(j)
@@ -242,15 +247,19 @@ public final class Simulator {
 
     private static void setMode(final UI ui, final UIMode mode, final List<Error> errors) {
         if (!ui.setMode(mode))
-            errors.add(new Error("Setting to " + mode + " mode.",
+            errors.add(new Error(
+                "Overriding old run mode; setting to " + mode + " mode.",
                 ErrorCodes.UI_MULTI_SETTINGS));
     }
 
-    private static void setFill(final Machine m, final int fill, final List<Error> errors) {
-        // KNOWN BUG: No way to track or detect multiple conflicting settings with this
-        // design, so a -fzfrrfrzfr option will cause long loading times and cause no
-        // warnings.
+    private static boolean setFill(final Machine m, final int fill,
+        final boolean fillSet, final List<Error> errors) {
         m.reset(fill);
+        if (fillSet)
+            errors.add(new Error("Overriding old fill mode; setting to "
+                + (fill == 0 ? "zero-" : fill == -1 ? "randomized " : "repeat-")
+                + "fill mode.", ErrorCodes.UI_MULTI_SETTINGS));
+        return true;
     }
 
     public static void main(final String[] args) {
