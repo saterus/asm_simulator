@@ -9,16 +9,16 @@ import edu.osu.cse.mmxi.ui.UI;
 
 public class Machine {
 
-    private final Register[] registers;
-    private Register         pc;
-    private FlagsRegister    nzp;
-    private Memory           memory;
-    public final ALU         alu;
+    protected final Register[] registers; // must be protected for testing purposes
+    protected Register         pc;
+    protected FlagsRegister    nzp;
+    protected Memory           memory;
+    public final ALU           alu;
 
-    private int              clockCount;
-    private boolean          halted;
+    private int                clockCount;
+    private boolean            halted;
 
-    public UI                ui;
+    public UI                  ui;
 
     public Machine() {
         ui = new UI();
