@@ -150,7 +150,7 @@ public interface Instruction {
                 m.ui.print("R" + i + " "
                     + MemoryUtilities.uShortToHex(m.getRegister(i).getValue()) + "   ");
                 if (i == 3)
-                    m.ui.print("FLAGS " + m.getFlags().toString() + "\n");
+                    m.ui.print(m.getFlags().toString() + "\n");
                 else if (i == 7)
                     m.ui.print("PC "
                         + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
