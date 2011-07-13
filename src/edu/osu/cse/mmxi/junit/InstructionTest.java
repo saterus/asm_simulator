@@ -567,7 +567,7 @@ public class InstructionTest {
 
         final LEA lea = new LEA(r0, 100);
         lea.execute(m);
-        assertEquals((short) 12, m.getRegister(r0).getValue());
+        assertEquals((short) 100, m.getRegister(r0).getValue());
     }
 
     /**
@@ -748,7 +748,7 @@ public class InstructionTest {
 
         final LEA lea = new LEA(r0, 10);
         lea.execute(m);
-        assertEquals("equals", (short) 99, m.getRegister(r0).getValue());
+        assertEquals("equals", (short) 10, m.getRegister(r0).getValue());
     }
 
     /**
