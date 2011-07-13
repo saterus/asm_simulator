@@ -90,6 +90,7 @@ public class UI {
                 s = Short.parseShort((neg ? "-" : "") + num);
         } catch (final NumberFormatException e) {
             // Should we error?
+            // TODO: THIS NEEDS HANDLED
         }
         return s;
     }
