@@ -34,7 +34,6 @@ public class MemoryUtilitiesTest {
     @Test
     public void sShortToHexTest() {
         final short test = (short) 0x001 * -1;
-
         assertEquals(MemoryUtilities.sShortToHex(test), "-1");
     }
 
@@ -49,7 +48,12 @@ public class MemoryUtilitiesTest {
     public void sShortToHexLowerLimitTest() {
         final short test = Short.MIN_VALUE;// -32768;
 
-        assertEquals(MemoryUtilities.sShortToHex(test), String.valueOf(Short.MIN_VALUE));
+        assertEquals(MemoryUtilities.sShortToHex(test), "-8000");
     }
 
+    // cannot really test this
+    @Test
+    public void rrandomShortTest() {
+        // assertEquals((MemoryUtilities.randomShort() != 0), true);
+    }
 }
