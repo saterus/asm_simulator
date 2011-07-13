@@ -33,37 +33,18 @@ import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.TRAP;
  * 
  */
 public class InstructionTest {
-    // private final short help = ///Short.parseShort("FEDCBA9876543210", 16);
-    private final short   maskAdd    = Short.parseShort("000100000000000", 2);
-    private final short   maskAddimm = Short.parseShort("000100000100000", 2);
-    private final short   maskAnd    = Short.parseShort("010100000000000", 2);
-    private final short   maskAndimm = Short.parseShort("010100000100000", 2);
-    private final short   maskBrx    = Short.parseShort("000000000000000", 2);
-    private final short   maskDbug   = Short.parseShort("100000000000000", 2);
-    private final short   maskJsr    = Short.parseShort("010000000000000", 2);
-    private final short   maskJsrR   = Short.parseShort("110000000000000", 2);
-    private final short   maskLd     = Short.parseShort("001000000000000", 2);
-    private final short   maskLdi    = Short.parseShort("101000000000000", 2);
-    private final short   maskLdr    = Short.parseShort("011000000000000", 2);
-    private final short   maskLea    = Short.parseShort("111000000000000", 2);
-    private final short   maskNot    = Short.parseShort("100100000000000", 2);
-    private final short   maskRet    = Short.parseShort("110100000000000", 2);
-    private final short   maskSt     = Short.parseShort("001100000000000", 2);
-    private final short   maskSti    = Short.parseShort("101100000000000", 2);
-    private final short   maskStr    = Short.parseShort("011100000000000", 2);
-    private final short   maskTrap   = Short.parseShort("111100000000000", 2);
 
-    private final byte    r0         = 0;
-    private final byte    r1         = 1;
-    private final byte    r2         = 2;
-    private final byte    r3         = 3;
-    private final byte    r4         = 4;
-    private final byte    r5         = 5;
-    private final byte    r6         = 6;
-    private final byte    r7         = 7;
+    private final byte    r0 = 0;
+    private final byte    r1 = 1;
+    private final byte    r2 = 2;
+    private final byte    r3 = 3;
+    private final byte    r4 = 4;
+    private final byte    r5 = 5;
+    private final byte    r6 = 6;
+    private final byte    r7 = 7;
 
     // private final InstructionParser parser = new InstructionParser();
-    private final Machine m          = new Machine();
+    private final Machine m  = new Machine();
 
     // silly eclipse was setting all registers to final!
     @Before
