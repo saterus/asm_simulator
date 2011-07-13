@@ -561,13 +561,13 @@ public class InstructionTest {
      */
     @Test
     public final void leaSimpleTest() {
-        m.getPCRegister().setValue((short) 0);
-        m.setMemory((short) 100, (short) 12);
+        m.getPCRegister().setValue((short) 0x1011);
+        // m.setMemory((short) 0x1100, (short) 12);
         m.getRegister(r0).setValue((short) 9);
 
-        final LEA lea = new LEA(r0, 100);
+        final LEA lea = new LEA(r0, 0x100);
         lea.execute(m);
-        assertEquals((short) 12, m.getRegister(r0).getValue());
+        assertEquals((short) 0x1100, m.getRegister(r0).getValue());
     }
 
     /**
@@ -596,6 +596,7 @@ public class InstructionTest {
     /**
      * RET Put R7 into PC
      */
+    @Test
     public final void retSimpleTest() {
         m.getPCRegister().setValue((short) 100);
         m.getRegister(r7).setValue((short) 200);
@@ -609,6 +610,7 @@ public class InstructionTest {
     /**
      * ST - take SR and store into memory at pageOffset
      */
+    @Test
     public final void stSimpleTest() {
         m.getPCRegister().setValue((short) 0);
         m.getRegister(r0).setValue((short) 100);
@@ -616,12 +618,13 @@ public class InstructionTest {
         final ST st = new ST(r0, 200);
         st.execute(m);
 
-        assertEquals(100, m.getMemory((short) 100));
+        assertEquals(100, m.getMemory((short) 200));
     }
 
     /**
      * STI - take
      */
+    @Test
     public final void stiSimpleTest() {
         m.getPCRegister().setValue((short) 0);
         m.setMemory((short) 100, (short) 200);
@@ -636,6 +639,7 @@ public class InstructionTest {
     /**
      * STR
      */
+    @Test
     public final void strSimpleTest() {
         m.getPCRegister().setValue((short) 0);
         m.setMemory((short) 100, (short) 99);
@@ -648,6 +652,7 @@ public class InstructionTest {
         assertEquals(m.getMemory((short) 100), 200);
     }
 
+    @Test
     public final void strSimpleWithOffsetTest() {
         m.getPCRegister().setValue((short) 0);
         m.setMemory((short) 101, (short) 99);
@@ -657,7 +662,7 @@ public class InstructionTest {
         final STR str = new STR(r0, r1, (short) 1);
         str.execute(m);
 
-        assertEquals(m.getMemory((short) 100), 200);
+        assertEquals(m.getMemory((short) 101), 200);
     }
 
     /**
@@ -759,7 +764,7 @@ public class InstructionTest {
 
         final LEA lea = new LEA(r0, 10);
         lea.execute(m);
-        assertEquals("equals", (short) 99, m.getRegister(r0).getValue());
+        assertEquals("equals", (short) 10, m.getRegister(r0).getValue());
     }
 
     /**
