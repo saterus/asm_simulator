@@ -8,10 +8,6 @@ import java.util.List;
 import edu.osu.cse.mmxi.ui.Error;
 import edu.osu.cse.mmxi.ui.ErrorCodes;
 
-// TODO: Check where we are throwing ParseExceptions. Build Error tokens instead, maybe.
-// Some of them would make sense to just record the error and move on. Others are fatal
-// errors that halt the parser and subsequently, the loader.
-
 /**
  * <p>
  * Parses and tokenizes a ObjectFile for consumption by the Loader.

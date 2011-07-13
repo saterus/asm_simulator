@@ -496,7 +496,6 @@ public class InstructionTest {
     @Test
     public final void ldSimpleTest() {
         m.getPCRegister().setValue((short) 0);
-        final short start = m.getPCRegister().getValue();
         m.setMemory((short) 100, (short) 99);
 
         final LD ld = new LD(r0, (short) 100);
@@ -511,7 +510,6 @@ public class InstructionTest {
     @Test
     public final void ldiSimpleTest() {
         m.getPCRegister().setValue((short) 0);
-        final short start = m.getPCRegister().getValue();
         m.setMemory((short) 100, (short) 99);
 
         final LDI ldi = new LDI(r0, (short) 100);
@@ -726,7 +724,6 @@ public class InstructionTest {
      */
     @Test
     public final void LEATest() {
-        final short fin;
         m.getPCRegister().setValue((short) 0);
         m.setMemory((short) 10, (short) 99);
         m.getRegister(r0).setValue((short) 1);

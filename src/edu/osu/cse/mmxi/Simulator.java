@@ -13,9 +13,7 @@ import edu.osu.cse.mmxi.ui.ErrorCodes;
 import edu.osu.cse.mmxi.ui.UI;
 import edu.osu.cse.mmxi.ui.UI.UIMode;
 
-/** TODO: Write decent high level description of the Simulator as the main driver. */
 public final class Simulator {
-
     public static int        MAX_CLOCK_COUNT = 10000;
     private static final int FILL            = 0xED6E;
 
