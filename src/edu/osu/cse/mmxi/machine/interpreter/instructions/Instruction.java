@@ -629,7 +629,6 @@ public interface Instruction {
                 m.ui.print(m.getRegister(0).getValue() + "\n");
                 break;
             case INN: // print a prompt on screen and read a decimal from the
-                m.ui.print("Enter a number: ");
                 m.getRegister(0).setValue(m.ui.getShort());
                 break; // prompt
             case RND: // store a random number in R0

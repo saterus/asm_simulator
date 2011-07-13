@@ -32,6 +32,8 @@ public enum ErrorCodes {
 
     EXEC_TRAP_OUT(401, "R0 does not contain a character", ErrorLevels.WARN),
 
+    EXEC_END_OF_FILE(402, "End of File reached prematurely", ErrorLevels.FATAL),
+
     // UI errors
     UI_MAX_CLOCK(500, "--max-clock-ticks argument in invalid format", ErrorLevels.WARN),
 

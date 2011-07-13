@@ -3,7 +3,10 @@ package edu.osu.cse.mmxi.ui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+import edu.osu.cse.mmxi.Simulator;
 
 public class UI {
 
@@ -76,21 +79,32 @@ public class UI {
 
     public short getShort() {
         short s = 0;
-        try {
-            final Scanner sc = new Scanner(in);
-            String num = sc.next("-?(0[xX][0-9A-Fa-f]+|[0-9]+)");
-            boolean neg = false;
-            if (num.charAt(0) == '-') {
-                neg = true;
-                num = num.substring(1);
+        String prompt = "Enter a number: ";
+        final Scanner sc = new Scanner(in);
+        String num;
+        while (true) {
+            print(prompt);
+            num = null;
+            try {
+                num = sc.next("-?(0[xX][0-9A-Fa-f]+|[0-9]+)");
+            } catch (final NoSuchElementException e) {
+                Simulator.printErrors(this, new Error("while reading number",
+                    ErrorCodes.EXEC_END_OF_FILE));
             }
-            if (num.substring(0, 2).toLowerCase().equals("0x"))
-                s = Short.parseShort((neg ? "-" : "") + num.substring(2), 16);
+            if (num == null)
+                prompt = "You can do better than that. Put your heart into it: ";
             else
-                s = Short.parseShort((neg ? "-" : "") + num);
-        } catch (final NumberFormatException e) {
-            // Should we error?
+                break;
         }
+        boolean neg = false;
+        if (num.charAt(0) == '-') {
+            neg = true;
+            num = num.substring(1);
+        }
+        if (num.substring(0, 2).toLowerCase().equals("0x"))
+            s = Short.parseShort((neg ? "-" : "") + num.substring(2), 16);
+        else
+            s = Short.parseShort((neg ? "-" : "") + num);
         return s;
     }
 }
