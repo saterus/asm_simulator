@@ -12,6 +12,14 @@ import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ADDimm;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.AND;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.BRx;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.DBUG;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.JSR;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.JSRR;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LD;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LDI;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LDR;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LEA;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.NOT;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.RET;
 
 /**
  * Tests the instruction directly, instruction parser should probably be checked as well.
@@ -449,4 +457,107 @@ public class InstructionTest {
         dbug.execute(m);
 
     }
+
+
+    
+    }
+    // Tested Loading short 5 into offset 10
+    @Test
+    public final void LDTest()
+    {
+    	short fin;
+    	m.getRegister(r0).setValue((short)1);
+        m.setMemory((short) (m.getPCRegister().getValue() & 0xfe00 | (short)10), (short)5);
+    	final LD ld= new LD(r0,10);
+    	ld.execute(m);
+    	fin=m.getMemory((short) (m.getPCRegister().getValue() & 0xfe00 | (short)10));
+
+    	assertEquals("equals",(short)5,fin);
+    	
+    }
+    
+    // Tested Loading Indirect, First i loaded the offset Address 10 with value of 5.
+    //Then loaded the address of 5 with value of 2
+    @Test
+    public final void LDITest()
+    {
+    	short fin;
+    	m.getRegister(r0).setValue((short)1);
+        m.setMemory((short) (m.getPCRegister().getValue() & 0xfe00 | (short)10), (short)5);
+        m.setMemory((short) (m.getPCRegister().getValue() & 0xfe00 | (short)5), (short)2);
+    	final LDI ldi= new LDI(r0,10);
+    	ldi.execute(m);
+    	fin=m.getMemory((short) (m.getPCRegister().getValue() & 0xfe00 | (short)5));
+
+    	assertEquals("equals",(short)2,fin);
+    	
+    }
+    
+    /**
+     * Testing LDR, added index of 4 to register 1.
+     */
+    @Test
+    public final void LDRTest()
+    {
+    	
+    	m.getRegister(r0).setValue((short)1);
+    	m.getRegister(r1).setValue((short)2);
+        m.getRegister(r5).setValue((short)2);
+    	final LDR ldr= new LDR(r0,r2,(int)4);
+    	ldr.execute(m);
+    	
+    	final Register fin= m.getRegister(r5);
+
+    	assertEquals("equals",(short)2,fin.getValue());
+    	
+    }
+    
+    /**
+     * Testing LEA... not really sure how to.... sort of???
+     */
+    @Test
+    public final void LEATest()
+    {	
+    	short fin;
+    	m.getRegister(r0).setValue((short) 1);
+        m.getRegister(r1).setValue((short) 2);
+    
+        final LEA lea= new LEA(r0,10);
+        lea.execute(m);
+        assertEquals("equals",(short)10,m.getRegister(0).getValue());
+    }
+    /**
+     * Testing NOT
+     */
+    @Test
+    public final void NOTTest()
+    {
+    	m.getRegister(r0).setValue((short) 1);
+        m.getRegister(r1).setValue((short) 2);
+        
+       final NOT not = new NOT(r0,r1);
+       not.execute(m);
+       
+       final Register res= m.getRegister(r0);
+       assertEquals("equal",~2,res.getValue());
+        
+    }
+    /**
+     * Testing Return
+     */
+    @Test
+    public final void RETTest()
+    {
+        m.getRegister(r7).setValue((short) 1);
+    	final RET ret= new RET();
+    	ret.execute(m);
+    	final Register pc = m.getPCRegister();
+    	
+    	 assertEquals("equal", 1, pc.getValue());
+    	
+    }
+}
+
+
+
 }
