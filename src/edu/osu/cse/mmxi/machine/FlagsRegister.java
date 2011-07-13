@@ -68,6 +68,6 @@ public class FlagsRegister extends Register {
 
     @Override
     public String toString() {
-        return "FLAGS " + (getN() ? "n" : "") + (getZ() ? "z" : "") + (getN() ? "p" : "");
+        return "FLAGS " + (getN() ? "n" : "") + (getZ() ? "z" : "") + (getP() ? "p" : "");
     }
 }
