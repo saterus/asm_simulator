@@ -9,7 +9,7 @@ import edu.osu.cse.mmxi.ui.UI;
 
 public class Machine {
 
-    private final Register[] registers;
+    private final Register[] registers; // must be protected for testing purposes
     private Register         pc;
     private FlagsRegister    nzp;
     private Memory           memory;
@@ -127,8 +127,6 @@ public class Machine {
 
     /**
      * Executes the next clock cycle.
-     * 
-     * @return the Instruction details of the executed Instruction.
      */
     public void stepClock() {
 

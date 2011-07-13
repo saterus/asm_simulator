@@ -1,11 +1,15 @@
 package edu.osu.cse.mmxi;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import edu.osu.cse.mmxi.loader.SimpleLoader;
-import edu.osu.cse.mmxi.loader.SimpleLoaderFatalException;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
+import edu.osu.cse.mmxi.ui.Error;
+import edu.osu.cse.mmxi.ui.ErrorCodes;
 import edu.osu.cse.mmxi.ui.UI;
 import edu.osu.cse.mmxi.ui.UI.UIMode;
 
@@ -64,12 +68,12 @@ public final class Simulator {
                     "Clock limit " + MAX_CLOCK_COUNT + " reached. Continue? ")
                     .toLowerCase();
                 while (true)
-                    if (ans.equals("y") || ans.equals("yes")) {
+                    if ("no".startsWith(ans))
+                        break clockloop;
+                    else if ("yes".startsWith(ans)) {
                         MAX_CLOCK_COUNT *= 2;
                         break;
-                    } else if (ans.equals("") || ans.equals("n") || ans.equals("no"))
-                        break clockloop;
-                    else
+                    } else
                         ans = m.ui.prompt("Please answer 'yes' or 'no'. ").toLowerCase();
             }
 
@@ -138,44 +142,50 @@ public final class Simulator {
      *            the arguments in the command line
      */
     public static String processArgs(final String[] args, final Machine m) {
-        boolean clockMode = false, error = false;
+        boolean clockMode = false, clockSet = false, fillSet = false;
         String file = null;
+
+        final List<Error> errors = new ArrayList<Error>();
+
         words: for (int i = 0; i < args.length; i++) {
             String word = args[i];
             if (clockMode) {
                 clockMode = false;
-                try {
-                    if (word.length() > 2
-                        && word.substring(0, 2).toLowerCase().equals("0x"))
-                        MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16);
-                    else
-                        MAX_CLOCK_COUNT = Integer.parseInt(word);
-                } catch (final NumberFormatException e) {
-                    error = true;
-                    m.ui.warn("--max-clock-count argument "
-                        + "in invalid format; ignoring...");
-                }
-            } else if (word.length() > 1 && word.charAt(0) == '-')
+                if (clockSet)
+                    errors.add(new Error("clock setting '" + word
+                        + "' found; ignoring...", ErrorCodes.UI_MULTI_CLOCK));
+                else
+                    try {
+                        if (word.length() > 2
+                            && word.substring(0, 2).toLowerCase().equals("0x"))
+                            MAX_CLOCK_COUNT = Integer.parseInt(word.substring(2), 16);
+                        else
+                            MAX_CLOCK_COUNT = Integer.parseInt(word);
+                        clockSet = true;
+                    } catch (final NumberFormatException e) {
+                        errors.add(new Error("in invalid format; ignoring...",
+                            ErrorCodes.UI_MAX_CLOCK));
+                    }
+            } else if (word.length() > 1 && word.charAt(0) == '-') {
                 if (word.length() > 2 && word.charAt(1) == '-') {
                     word = word.substring(2);
                     if (word.equals("max-clock-count"))
                         clockMode = true;
                     else if (word.equals("quiet"))
-                        error |= setMode(m.ui, UIMode.QUIET);
+                        setMode(m.ui, UIMode.QUIET, errors);
                     else if (word.equals("trace"))
-                        error |= setMode(m.ui, UIMode.TRACE);
+                        setMode(m.ui, UIMode.TRACE, errors);
                     else if (word.equals("step"))
-                        error |= setMode(m.ui, UIMode.STEP);
+                        setMode(m.ui, UIMode.STEP, errors);
                     else if (word.equals("zero"))
-                        error |= setFill(m, 0);
+                        fillSet = setFill(m, 0, fillSet, errors);
                     else if (word.equals("fill"))
-                        error |= setFill(m, FILL);
+                        fillSet = setFill(m, FILL, fillSet, errors);
                     else if (word.equals("rand"))
-                        error |= setFill(m, -1);
-                    else {
-                        error = true;
-                        m.ui.warn("Unknown command --" + word + "; ignoring...");
-                    }
+                        fillSet = setFill(m, -1, fillSet, errors);
+                    else
+                        errors.add(new Error("command is --" + word,
+                            ErrorCodes.UI_UNKN_CMD));
                 } else
                     for (int j = 1; j < word.length(); j++)
                         switch (word.charAt(j)) {
@@ -188,86 +198,141 @@ public final class Simulator {
                                 continue words;
                             }
                         case 'q':
-                            error |= setMode(m.ui, UIMode.QUIET);
+                            setMode(m.ui, UIMode.QUIET, errors);
                             break;
                         case 't':
-                            error |= setMode(m.ui, UIMode.TRACE);
+                            setMode(m.ui, UIMode.TRACE, errors);
                             break;
                         case 's':
-                            error |= setMode(m.ui, UIMode.STEP);
+                            setMode(m.ui, UIMode.STEP, errors);
                             break;
                         case 'z':
-                            error |= setFill(m, 0);
+                            fillSet = setFill(m, 0, fillSet, errors);
                             break;
                         case 'f':
-                            error |= setFill(m, FILL);
+                            fillSet = setFill(m, FILL, fillSet, errors);
                             break;
                         case 'r':
-                            error |= setFill(m, -1);
+                            fillSet = setFill(m, -1, fillSet, errors);
                             break;
+                        default:
+                            errors.add(new Error("command is -" + word.charAt(j)
+                                + " from " + word, ErrorCodes.UI_UNKN_CMD));
                         }
-            else if (file == null)
+            } else if (file == null)
                 file = word;
-            else {
-                error = true;
-                m.ui.warn("More than one file given; ignoring \"" + word + "\"...");
-            }
+            else
+                errors.add(new Error("ignoring " + word + ".", ErrorCodes.UI_MULTI_FILE));
         }
         if (m.ui.getMode() == null)
             m.ui.setMode(UIMode.QUIET);
-        if (file == null && m.ui.getMode() != UIMode.STEP) {
-            error = true;
-            m.ui.warn("No files given!");
-        }
-        if (error) {
-            m.ui.warn("Proper syntax:");
-            m.ui.warn("java Simulator [-c num|--max-clock-ticks num]");
-            m.ui.warn("               [-s|-t|-q|--step|--trace|--quiet]");
-            m.ui.warn("               [-z|-f|-r|--zero|--fill|--rand]");
-            m.ui.warn("               file.txt");
+        if (file == null && m.ui.getMode() != UIMode.STEP)
+            errors.add(new Error(ErrorCodes.UI_NO_FILE));
+        if (errors.size() != 0) {
+            errors.add(new Error("Proper syntax:\n"
+                + "java Simulator [-c num|--max-clock-ticks num]\n"
+                + "               [-s|-t|-q|--step|--trace|--quiet]\n"
+                + "               [-z|-f|-r|--zero|--fill|--rand]\n"
+                + "               file.txt", ErrorCodes.MSG_SYNTAX));
+
+            Simulator.printErrors(m.ui, errors);
         }
         if (file == null && m.ui.getMode() != UIMode.STEP)
             System.exit(1);
-        if (MAX_CLOCK_COUNT < 0) // /// // // // // Using this value means that the
-            MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
-                                                 // will always be true due to overflow
+        if (MAX_CLOCK_COUNT < 0)
+            MAX_CLOCK_COUNT = Integer.MAX_VALUE;
+        // will always be true due to overflow
         return file;
     }
 
-    private static boolean setMode(final UI ui, final UIMode mode) {
-        boolean error = false;
-        if (!ui.setMode(mode)) {
-            error = true;
-            ui.warn("More than one mode setting found. Setting " + mode + " mode...");
-        }
-        return error;
+    private static void setMode(final UI ui, final UIMode mode, final List<Error> errors) {
+        if (!ui.setMode(mode))
+            errors.add(new Error(
+                "Overriding old run mode; setting to " + mode + " mode.",
+                ErrorCodes.UI_MULTI_SETTINGS));
     }
 
-    private static boolean setFill(final Machine m, final int fill) {
-        // KNOWN BUG: No way to track or detect multiple conflicting settings with this
-        // design, so a -fzfrrfrzfr option will cause long loading times and cause no
-        // warnings.
+    private static boolean setFill(final Machine m, final int fill,
+        final boolean fillSet, final List<Error> errors) {
         m.reset(fill);
-        return false;
+        if (fillSet)
+            errors.add(new Error("Overriding old fill mode; setting to "
+                + (fill == 0 ? "zero-" : fill == -1 ? "randomized " : "repeat-")
+                + "fill mode.", ErrorCodes.UI_MULTI_SETTINGS));
+        return true;
     }
 
     public static void main(final String[] args) {
 
         final Machine machine = new Machine();
         final String file = processArgs(args, machine);
+
         if (machine.ui.getMode() == UIMode.STEP)
             new Console(machine, file);
         else {
             if (file != null)
                 try {
-                    SimpleLoader.load(file, machine);
+                    Simulator.printErrors(machine.ui, SimpleLoader.load(file, machine));
                 } catch (final IOException e) {
                     machine.ui.error("I/O Error: " + e.getMessage());
-                } catch (final SimpleLoaderFatalException e) {
-                    machine.ui.error(e.getMessage());
                 }
-
             startClockLoop(machine);
         }
+    }
+
+    /**
+     * Wrapper for printing errors returned from SimpleLoader
+     * 
+     * @param ui
+     *            Reference to the User Interface (UI)
+     * @param errors
+     *            List of errors
+     * @see edu.osu.cse.mmxi.loader.SimpleLoader
+     */
+    public static void printErrors(final UI ui, final Error... errors) {
+        printErrors(ui, Arrays.asList(errors));
+    }
+
+    /**
+     * Wrapper for printing errors returned from SimpleLoader
+     * 
+     * @param ui
+     *            Reference to the User Interface (UI)
+     * @param errors
+     *            List of errors
+     * @see edu.osu.cse.mmxi.loader.SimpleLoader
+     */
+    public static void printErrors(final UI ui, final List<Error> errors) {
+        // flag for warn
+        boolean warn = false;
+        boolean fatal = false;
+
+        for (final Error e : errors)
+            switch (e.getLevel()) {
+            case FATAL:
+                fatal = true;
+                ui.warn(e.toString());
+                break;
+            default:
+            case WARN:
+                warn = true;
+                ui.warn(e.toString());
+                break;
+            case MSG:
+                ui.print(e.toString());
+                break;
+            }
+
+        if (fatal)
+            ui.error("Fatal Errors Detected.  Exiting Program.");
+        else if (warn) {
+            String input = null;
+            input = ui.prompt("\nWarnings Detected.  Continue or Quit (q)?");
+            if (input.equalsIgnoreCase("q")) {
+                ui.print("Exiting...");
+                ui.exit();
+            }
+        } else if (errors.size() != 0)
+            ui.prompt("Messages Detected. Press any key to continue.");
     }
 }

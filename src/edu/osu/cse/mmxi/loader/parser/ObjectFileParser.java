@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.osu.cse.mmxi.ui.Error;
+import edu.osu.cse.mmxi.ui.ErrorCodes;
+
 // TODO: Check where we are throwing ParseExceptions. Build Error tokens instead, maybe.
 // Some of them would make sense to just record the error and move on. Others are fatal
 // errors that halt the parser and subsequently, the loader.
@@ -107,27 +110,23 @@ public class ObjectFileParser {
         }
 
         if (header == null && exec == null && text.size() == 0)
-            errors.add(new Error("Parsing completed, no tokens found! Empty file?",
-                errorLevels.FATAL));
+            errors.add(new Error(ErrorCodes.PARSE_EMPTY));
         else {
             if (header == null)
-                errors.add(new Error("Object File did not contain a Header record!",
-                    errorLevels.FATAL));
+                errors.add(new Error(ErrorCodes.PARSE_NO_HEADER));
             if (text.size() == 0)
-                errors.add(new Error("Object File did not contain any Text records!",
-                    errorLevels.FATAL));
+                errors.add(new Error(ErrorCodes.PARSE_NO_RECORDS));
             if (exec == null)
-                errors.add(new Error("Object File did not contain an Exec record!",
-                    errorLevels.FATAL));
+                errors.add(new Error(ErrorCodes.PARSE_NO_EXEC));
         }
         return errors;
     }
 
     /**
-     * Converts a single line of text containing an ObjectFile Record into a Token.
+     * Converts a single line of text containing an ObjectFile Record into a Token, and
+     * updates the state of the parser with the information.
      * 
      * @param line
-     * @return a token corresponding to the data parsed from the line.
      */
     private void tokensizeLine(final String line) {
         try {
@@ -138,10 +137,9 @@ public class ObjectFileParser {
             else if (line.matches("(E|e)[0-9A-Fa-f]{4}"))
                 exec = parseExec(line);
             else
-                errors.add(new Error(lineNumber,
-                    "Unrecognized or malformed record. Line: " + line));
+                errors.add(new Error(lineNumber, line, ErrorCodes.PARSE_BAD_TEXT));
         } catch (final ParseException e) {
-            errors.add(new Error(lineNumber, e.getMessage(), errorLevels.WARN));
+            errors.add(new Error(lineNumber, e.getMessage(), ErrorCodes.PARSE_EXECPTION));
         }
     }
 

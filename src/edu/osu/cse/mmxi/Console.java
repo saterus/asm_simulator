@@ -1,5 +1,8 @@
 package edu.osu.cse.mmxi;
 
+import java.io.IOException;
+
+import edu.osu.cse.mmxi.loader.SimpleLoader;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 
@@ -11,6 +14,11 @@ public class Console {
             System.exit(1);
         }
 
+        try {
+            SimpleLoader.load(file, m);
+        } catch (final IOException e) {
+            m.ui.error("I/O Error: " + e.getMessage());
+        }
         int memTrack = -1;
         while (!m.hasHalted()) {
             short mem;
@@ -45,11 +53,16 @@ public class Console {
                 .getValue())) + ": ");
             m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n\n");
             while (true) {
-                String s = m.ui.prompt("Press ENTER to step, "
+                String s = m.ui.prompt("Press ENTER to step, 'q' to quit, "
                     + "or a hex address or 'pc' to track memory:\n> ");
                 if (s.length() != 0) {
                     memTrack = -2;
                     while (true) {
+                        if (s.equals("q")) {
+                            m.ui.println("Execution aborted after "
+                                + (m.clockCount() - 1) + " steps.");
+                            System.exit(0);
+                        }
                         try {
                             if (s.equalsIgnoreCase("pc"))
                                 memTrack = -1;
@@ -90,7 +103,7 @@ public class Console {
 
             m.stepClock();
         }
-        m.ui.print("Machine halted after " + (m.clockCount() - 1) + " steps.");
+        m.ui.println("Machine halted after " + (m.clockCount() - 1) + " steps.");
     }
 
 }

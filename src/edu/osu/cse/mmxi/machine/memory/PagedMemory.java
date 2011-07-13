@@ -3,9 +3,9 @@ package edu.osu.cse.mmxi.machine.memory;
 /**
  * <p>
  * A representation of random access memory within a hardware computer system. Memory is
- * divided into pages and then further into words. Words are 16-bit Java `shorts`.
- * PagedMemorys is stored internally as a short[][] for efficient random access to pages
- * and words.
+ * divided into pages and then further into words. Words are 16-bit Java {@code short}s.
+ * {@code PagedMemory} is stored internally as a {@code short[][]} for efficient random
+ * access to pages and words.
  * </p>
  * 
  * <p>
@@ -15,14 +15,35 @@ package edu.osu.cse.mmxi.machine.memory;
  */
 public abstract class PagedMemory implements Memory {
 
-    public short[][]        memory;
+    /**
+     * The words of memory, stored as a double array with pages at the top level and page
+     * offsets at the second level.
+     */
+    protected short[][]     memory;
 
+    /**
+     * The default number of pages. The value of this variable, {@code 0x80}, cannot
+     * easily be changed because the number of bits of the page encoding (7) is hard-coded
+     * into the instruction format.
+     */
     public final static int DEFAULT_NUM_PAGES = 0x80;
 
+    /**
+     * Creates a {@code PagedMemory} object with 128 pages. The memory itself is not
+     * initialized at this step, being instead initialized when the page is first used.
+     */
     public PagedMemory() {
         this(DEFAULT_NUM_PAGES);
     }
 
+    /**
+     * Creates a {@code PagedMemory} object with a custom number of pages. The memory
+     * itself is not initialized at this step, being instead initialized when the page is
+     * first used.
+     * 
+     * @param numPages
+     *            the number of pages in memory
+     */
     public PagedMemory(final int numPages) {
         memory = new short[numPages][];
     }

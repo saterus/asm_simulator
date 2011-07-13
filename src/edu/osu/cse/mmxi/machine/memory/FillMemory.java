@@ -8,6 +8,12 @@ public class FillMemory extends PagedMemory {
 
     private final short fill;
 
+    /**
+     * Creates a new {@link PagedMemory} object with a known fill value (although the
+     * memory is not initialized immediately).
+     * 
+     * @param _fill
+     */
     public FillMemory(final short _fill) {
         super();
         fill = _fill;
