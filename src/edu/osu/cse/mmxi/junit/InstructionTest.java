@@ -10,6 +10,7 @@ import edu.osu.cse.mmxi.machine.Register;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ADD;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ADDimm;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.AND;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ANDimm;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.BRx;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.DBUG;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.JSR;
@@ -260,7 +261,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 0);
         m.getRegister(r1).setValue((short) 0);
 
-        final AND and = new AND(r0, r0, 0);
+        final ANDimm and = new ANDimm(r0, r0, 0);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -273,7 +274,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 0);
         m.getRegister(r1).setValue((short) 1);
 
-        final AND and = new AND(r0, r0, 1);
+        final ANDimm and = new ANDimm(r0, r0, 1);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -286,7 +287,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 1);
         m.getRegister(r1).setValue((short) 1);
 
-        final AND and = new AND(r0, r0, 1);
+        final ANDimm and = new ANDimm(r0, r0, 1);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -303,7 +304,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 0);
         m.getRegister(r1).setValue((short) 2);
 
-        final AND and = new AND(r0, r0, 2);
+        final ANDimm and = new ANDimm(r0, r0, 2);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -316,12 +317,13 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 2);
         m.getRegister(r1).setValue((short) 2);
 
-        final AND and = new AND(r0, r1, 2);
+        final ANDimm and = new ANDimm(r0, r1, 2);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
 
         assertEquals("equal", (short) 2, res.getValue());
+
     }
 
     /**
@@ -414,32 +416,6 @@ public class InstructionTest {
         assertEquals("equal", start + 511, pc.getValue());
     }
 
-    /**
-     * Our implamentation allows for branching off the page
-     */
-    @Test
-    public final void BranchPageLimitPlus1SimpleTest() {
-        m.getPCRegister().setValue((short) 0);
-
-        m.getFlags().setN(false);
-        m.getFlags().setZ(true);
-        m.getFlags().setP(false);
-
-        final short start = m.getPCRegister().getValue();
-        final BRx brx = new BRx(2, 512);
-        brx.execute(m);
-
-        final Register pc = m.getPCRegister();
-
-        assertEquals("equal", start + 512, pc.getValue());
-    }
-
-    /**
-     * DEBUG Have to look at console to verify
-     * 
-     * R0 0001 R1 0002 R2 0003 R3 0004 FLAGS FLAGS np R4 0005 R5 0006 R6 0007 R7 0008 PC
-     * 03E7
-     */
     /**
      * DEBUG Have to look at console to verify
      * 
@@ -589,9 +565,9 @@ public class InstructionTest {
         m.setMemory((short) 100, (short) 12);
         m.getRegister(r0).setValue((short) 9);
 
-        final LEA lea = new LEA(r0, 101);
+        final LEA lea = new LEA(r0, 100);
         lea.execute(m);
-        assertEquals((short) 101, m.getRegister(r0).getValue());
+        assertEquals((short) 12, m.getRegister(r0).getValue());
     }
 
     /**
@@ -776,12 +752,14 @@ public class InstructionTest {
     @Test
     public final void LEATest() {
         final short fin;
+        m.getPCRegister().setValue((short) 0);
+        m.setMemory((short) 10, (short) 99);
         m.getRegister(r0).setValue((short) 1);
         m.getRegister(r1).setValue((short) 2);
 
         final LEA lea = new LEA(r0, 10);
         lea.execute(m);
-        assertEquals("equals", (short) 10, m.getRegister(0).getValue());
+        assertEquals("equals", (short) 99, m.getRegister(r0).getValue());
     }
 
     /**
