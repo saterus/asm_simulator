@@ -20,6 +20,16 @@ public interface Instruction {
      */
     public boolean execute(Machine m);
 
+    /**
+     * Adds two registers and writes to a third.
+     * 
+     * The ADD instruction has two modes: register-based and immediate (see {@link ADDimm}
+     * ). In register mode, the contents of two registers, {@code sr1} and {@code sr2},
+     * are added and written to a destination register ({@code dr}). The syntax of the
+     * command is {@code 0001dddsss0xxttt}, where {@code sss}, {@code ttt}, and
+     * {@code ddd} represent the three-bit register indexes {@code sr1}, {@code sr2}, and
+     * {@code dr}, respectively, and the {@code x}s represent "don't care" bits.
+     */
     public static class ADD implements Instruction {
         private final byte dr, sr1, sr2;
 
@@ -43,6 +53,16 @@ public interface Instruction {
         }
     }
 
+    /**
+     * Adds a register to an immediate operand and writes to another register.
+     * 
+     * The ADD instruction has two modes: register-based (see {@link ADD}) and immediate.
+     * In immediate mode, the contents of a register, {@code sr}, and a 5-bit signed 2's
+     * complement integer, {@code imm}, are added and written to a destination register (
+     * {@code dr}). The syntax of the command is {@code 0001dddsss1iiiii}, where
+     * {@code sss} and {@code ddd} represent the three-bit register indexes {@code sr} and
+     * {@code dr}, respectively, and {@code iiiii} represents the immediate operand.
+     */
     public static class ADDimm implements Instruction {
         private final byte dr, sr;
         private final int  imm;
@@ -62,11 +82,20 @@ public interface Instruction {
 
         @Override
         public String toString() {
-            return "ADD R" + dr + ", R" + sr + ", #"
-                + MemoryUtilities.sShortToHex((short) imm);
+            return "ADD R" + dr + ", R" + sr + ", #" + imm;
         }
     }
 
+    /**
+     * Takes the bitwise AND of two registers and writes to a third.
+     * 
+     * The AND instruction has two modes: register-based and immediate (see {@link ANDimm}
+     * ). In register mode, the contents of two registers, {@code sr1} and {@code sr2},
+     * are bitwise ANDed and written to a destination register ({@code dr}). The syntax of
+     * the command is {@code 0001dddsss0xxttt}, where {@code sss}, {@code ttt}, and
+     * {@code ddd} represent the three-bit register indexes {@code sr1}, {@code sr2}, and
+     * {@code dr}, respectively, and the {@code x}s represent "don't care" bits.
+     */
     public static class AND implements Instruction {
         private final byte dr, sr1, sr2;
 
@@ -90,6 +119,17 @@ public interface Instruction {
         }
     }
 
+    /**
+     * Takes the bitwise AND of a register with an immediate operand and writes to another
+     * register.
+     * 
+     * The AND instruction has two modes: register-based (see {@link AND}) and immediate.
+     * In immediate mode, the contents of a register, {@code sr}, and a 5-bit signed 2's
+     * complement integer, {@code imm}, are bitwise ANDed and written to a destination
+     * register ({@code dr}). The syntax of the command is {@code 0001dddsss1iiiii}, where
+     * {@code sss} and {@code ddd} represent the three-bit register indexes {@code sr} and
+     * {@code dr}, respectively, and {@code iiiii} represents the immediate operand.
+     */
     public static class ANDimm implements Instruction {
         private final byte dr, sr;
         private final int  imm;
@@ -109,11 +149,33 @@ public interface Instruction {
 
         @Override
         public String toString() {
-            return "AND R" + dr + ", R" + sr + ", #"
-                + MemoryUtilities.sShortToHex((short) imm);
+            return "AND R" + dr + ", R" + sr + ", #" + imm;
         }
     }
 
+    /**
+     * Conditionally branches to a given immediate address on the current page, depending
+     * on the condition codes.
+     * 
+     * The BRx branch instruction sets the page offset of the PC to the given 9-bit
+     * immediate value if the bit corresponding to the current condition code is set. The
+     * branch command comes in eight different varieties determining if the program will
+     * branch under each condition (N, Z, and P). All combinations of branch on N, branch
+     * on Z, and branch on P are supported, so the {@code BRx} command is actually a
+     * collective term for the 8 different commands {@code JMP}, {@code BRnz},
+     * {@code BRnp}, {@code BRzp}, {@code BRn}, {@code BRz}, {@code BRp}, and {@code NOP},
+     * where the last command (otherwise known as {@code BR}) never branches, and so is
+     * effectively a no-op, and the first command (otherwise known as {@code BRnzp})
+     * always branches, so is equivalent to {@link JSR JMP}. Note that a NOP command with
+     * a non-zero page offset field (which is still a no-op) is displayed as
+     * {@code DATA 00xx}, since ASCII data and small numbers would be interpreted this
+     * way.
+     * 
+     * The syntax of the command is {@code 0000nzpggggggggg}, where the {@code n} bit
+     * indicates a branch if the flags register's {@code n} bit is set, with analogous
+     * definitions for the {@code z} and {@code p} bits. The 9-bit {@code g} field is the
+     * page offset.
+     */
     public static class BRx implements Instruction {
         private final byte  nzp;
         private final short pgoff;
@@ -136,6 +198,8 @@ public interface Instruction {
         public String toString() {
             if (nzp == 0)
                 return pgoff == 0 ? "NOP" : "DATA " + MemoryUtilities.uShortToHex(pgoff);
+            else if (nzp == 7)
+                return "JMP x" + MemoryUtilities.sShortToHex(pgoff);
             else
                 return "BR" + ((nzp & 4) != 0 ? "n" : "") + ((nzp & 2) != 0 ? "z" : "")
                     + ((nzp & 1) != 0 ? "p" : "") + " x"
@@ -143,6 +207,22 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The debug command takes no arguments (its instruction format is
+     * {@code 1000xxxxxxxxxxxx}, with {@code x} = don't care), and it just prints out the
+     * contents of the 8 registers, the PC, and the FLAGS register. It will print
+     * something like the sample below:
+     * 
+     * <pre>
+     * R0 0123   R1 4567   R2 89AB   R3 CDEF   FLAGS --p
+     * R4 FEDC   R5 BA98   R6 7654   R7 3210   PC BEEF
+     * </pre>
+     * 
+     * This output indicates that register 2 is holding the value {@code 0x89AB}, the PC
+     * is currently pointing at {@code 0xBEEF}, and the flags register has a cleared
+     * {@code n} and {@code z} bit and a set {@code p} bit (which means that the last
+     * register which changed was set to a positive number).
+     */
     public static class DBUG implements Instruction {
         @Override
         public boolean execute(final Machine m) {
@@ -165,6 +245,14 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code JMP}/{@code JSR} command performs an unconditional branch to the given
+     * page offset in the current page. The {@code JSR} command additionally stores the
+     * current PC value to R7 before jumping. The syntax of the {@code JMP} command is
+     * {@code 01000xxggggggggg}, and the {@code JSR} command is {@code 01001xxggggggggg},
+     * where {@code x} means "don't care" and the 9-bit {@code g} field is the page
+     * offset.
+     */
     public static class JSR implements Instruction {
         private final boolean l;
         private final short   pgoff;
@@ -179,7 +267,7 @@ public interface Instruction {
             if (l)
                 m.getRegister(7).setValue(m.getPCRegister().getValue());
             m.getPCRegister().setValue(
-                (short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff));
+                (short) (m.getPCRegister().getValue() & 0xfe00 | pgoff));
             return false;
         }
 
@@ -189,6 +277,14 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code JMPR}/{@code JSRR} command performs an unconditional branch to an
+     * address, given as the value of a given register plus an unsigned 6-bit index. The
+     * {@code JSRR} command additionally stores the current PC value to R7 before jumping.
+     * The syntax of the {@code JMPR} command is {@code 11000xxggggggggg}, and the
+     * {@code JSR} command is {@code 11001xxggggggggg}, where {@code x} means "don't care"
+     * and the 9-bit {@code g} field is the page offset.
+     */
     public static class JSRR implements Instruction {
         private final boolean l;
         private final byte    br, index;
@@ -214,6 +310,12 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code LD} command loads the value of memory at a given page offset into a
+     * register. The syntax of the command is {@code 0010dddggggggggg}, where {@code ddd}
+     * is the number of the destination register and the 9-bit {@code g} field is the page
+     * offset.
+     */
     public static class LD implements Instruction {
         private final byte  dr;
         private final short pgoff;
@@ -226,7 +328,7 @@ public interface Instruction {
         @Override
         public boolean execute(final Machine m) {
             m.getRegister(dr).setValue(
-                m.getMemory((short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff)));
+                m.getMemory((short) (m.getPCRegister().getValue() & 0xfe00 | pgoff)));
             m.getFlags().setFlags(m.getRegister(dr));
             return true;
         }
@@ -237,6 +339,12 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code LDI} command retrieves the value of memory at a given page offset,
+     * interpreted as an address, and loads the value at this address into a register. The
+     * syntax of the command is {@code 1010dddggggggggg}, where {@code ddd} is the number
+     * of the destination register and the 9-bit {@code g} field is the page offset.
+     */
     public static class LDI implements Instruction {
         private final byte  dr;
         private final short pgoff;
@@ -248,10 +356,9 @@ public interface Instruction {
 
         @Override
         public boolean execute(final Machine m) {
-            m.getRegister(dr)
-                .setValue(
-                    m.getMemory(m
-                        .getMemory((short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff))));
+            m.getRegister(dr).setValue(
+                m.getMemory(m
+                    .getMemory((short) (m.getPCRegister().getValue() & 0xfe00 | pgoff))));
             m.getFlags().setFlags(m.getRegister(dr));
             return true;
         }
@@ -262,6 +369,13 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code LDR} command loads the value of memory at an address calculated as a
+     * base register value plus a 6-bit unsigned immediate index into a destination
+     * register. The syntax of the command is {@code 0110dddbbbnnnnnn}, where {@code ddd}
+     * is the destination register, {@code bbb} is the base register, and the 6-bit
+     * {@code n} field is the index.
+     */
     public static class LDR implements Instruction {
         private final byte dr, br, index;
 
@@ -285,6 +399,12 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code LEA} command calculates an address given a page offset and the page
+     * number of the PC, and stores it in a register. The syntax of the command is
+     * {@code 1110dddggggggggg}, where {@code ddd} is the destination register and the
+     * 9-bit {@code g} field is the page offset.
+     */
     public static class LEA implements Instruction {
         private final byte  dr;
         private final short pgoff;
@@ -297,7 +417,7 @@ public interface Instruction {
         @Override
         public boolean execute(final Machine m) {
             m.getRegister(dr).setValue(
-                (short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff));
+                (short) (m.getPCRegister().getValue() & 0xfe00 | pgoff));
             m.getFlags().setFlags(m.getRegister(dr));
             return true;
         }
@@ -308,6 +428,12 @@ public interface Instruction {
         }
     }
 
+    /**
+     * Sets the destination register to the bitwise-NOT of the source register. The syntax
+     * of the command is {@code 1001dddsssxxxxxx}, where {@code sss} and {@code ddd}
+     * represent the three-bit register indexes {@code sr} and {@code dr}, respectively,
+     * and the {@code x}s represent "don't care" bits.
+     */
     public static class NOT implements Instruction {
         private final byte dr, sr;
 
@@ -329,6 +455,13 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code RET} instruction, designed for use with {@code JSR}/{@code JSRR} (see
+     * {@link JSR}), sets the PC to the contents of register 7. The syntax of the command
+     * is {@code 1101xxxxxxxxxxxx}, where {@code x} means "don't care", and it is a
+     * special case of the {@code JMPR} command, as it is equivalent in effect to
+     * {@code JMPR R7, #0} ( = {@code C1C0}).
+     */
     public static class RET implements Instruction {
         @Override
         public boolean execute(final Machine m) {
@@ -342,6 +475,11 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code ST} command stores a register to memory at a given page offset. The
+     * syntax of the command is {@code 0011sssggggggggg}, where {@code sss} is the number
+     * of the source register and the 9-bit {@code g} field is the page offset.
+     */
     public static class ST implements Instruction {
         private final byte  sr;
         private final short pgoff;
@@ -353,7 +491,7 @@ public interface Instruction {
 
         @Override
         public boolean execute(final Machine m) {
-            m.setMemory((short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff), m
+            m.setMemory((short) (m.getPCRegister().getValue() & 0xfe00 | pgoff), m
                 .getRegister(sr).getValue());
             return false;
         }
@@ -364,6 +502,12 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code STI} command retrieves the value of memory at a given page offset,
+     * interpreted as an address, and stores the source register to this address. The
+     * syntax of the command is {@code 1010sssggggggggg}, where {@code sss} is the number
+     * of the source register and the 9-bit {@code g} field is the page offset.
+     */
     public static class STI implements Instruction {
         private final byte  sr;
         private final short pgoff;
@@ -376,7 +520,7 @@ public interface Instruction {
         @Override
         public boolean execute(final Machine m) {
             m.setMemory(m
-                .getMemory((short) ((m.getPCRegister().getValue() & 0xfe00) + pgoff)), m
+                .getMemory((short) (m.getPCRegister().getValue() & 0xfe00 | pgoff)), m
                 .getRegister(sr).getValue());
             return false;
         }
@@ -387,6 +531,12 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code STR} command stores a source register to memory at an address calculated
+     * as a base register value plus a 6-bit unsigned immediate index. The syntax of the
+     * command is {@code 0110sssbbbnnnnnn}, where {@code sss} is the source register,
+     * {@code bbb} is the base register, and the 6-bit {@code n} field is the index.
+     */
     public static class STR implements Instruction {
         private final byte sr, br, index;
 
@@ -409,8 +559,37 @@ public interface Instruction {
         }
     }
 
+    /**
+     * The {@code TRAP} instruction allows the programmer to call the OS for access to I/O
+     * functionality. Its syntax is {@code 1111xxxxvvvvvvvv}, where {@code x} means
+     * "don't care" and {@code v} is the 8-bit trap vector. There are 7 supported trap
+     * vectors:
+     * <ul>
+     * <li>{@code 0x21}: {@code OUT} - Prints the value of register 0 as an ASCII
+     * character. If the high 9 bits are not all 0, a warning is posted, but they are
+     * ignored in any case.</li>
+     * <li>{@code 0x22}: {@code PUTS} - Prints a null-terminated string starting at the
+     * address in register 0. If any of the high 9 bits of any of the words are nonzero,
+     * they are ignored, but no warning is printed.</li>
+     * <li>{@code 0x23}: {@code IN} - Prints the prompt {@code "Enter a character: "}, and
+     * waits for a character to be entered. The result is stored in register 0.</li>
+     * <li>{@code 0x25}: {@code HALT} - Ends instruction interpretation, and prints a
+     * message recording how many instructions were interpreted.</li>
+     * <li>{@code 0x31}: {@code OUTN} - Prints the value of register 0 as a decimal
+     * number.</li>
+     * <li>{@code 0x33}: {@code INN} - Prints the prompt {@code "Enter a number: "}, and
+     * waits for a number to be entered. Program execution will not continue until a
+     * complete number is entered. The result is stored in register 0.</li>
+     * <li>{@code 0x43}: {@code RND} - Sets register 0 to a random number with the full
+     * range of a 16-bit value.</li>
+     * </ul>
+     * If a trap vector other than these 7 is encountered, an error (Warning 400) is
+     * printed.
+     */
     public static class TRAP implements Instruction {
-        private final byte vector;
+        public static final int OUT = 0x21, PUTS = 0x22, IN = 0x23, HALT = 0x25,
+            OUTN = 0x31, INN = 0x33, RND = 0x43;
+        private final byte      vector;
 
         public TRAP(final int _vector) {
             vector = (byte) _vector;
@@ -419,7 +598,7 @@ public interface Instruction {
         @Override
         public boolean execute(final Machine m) {
             switch (vector) {
-            case 0x21: // OUT: write the char in R0 to the console
+            case OUT: // write the char in R0 to the console
                 if ((m.getRegister(0).getValue() & 0xff80) != 0) {
                     final String msg = "at 0x"
                         + MemoryUtilities.uShortToHex((short) (m.getPCRegister()
@@ -429,7 +608,7 @@ public interface Instruction {
                 }
                 m.ui.print("" + (char) (m.getRegister(0).getValue() & 0x7f));
                 break;
-            case 0x22: // PUTS: write the null-terminated string pointed to by R0 to the
+            case PUTS: // write the null-terminated string pointed to by R0 to the
                 // console
                 short i = m.getRegister(0).getValue();
                 short s = m.getMemory(i++);
@@ -438,22 +617,22 @@ public interface Instruction {
                     s = m.getMemory(i++);
                 }
                 break;
-            case 0x23: // IN: print a prompt on screen and read a single character from
+            case IN: // print a prompt on screen and read a single character from
                 // the prompt
                 m.ui.print("Enter a character: ");
                 m.getRegister(0).setValue(m.ui.getChar());
                 break;
-            case 0x25: // HALT: halt execution
+            case HALT: // halt execution
                 m.halt();
                 break;
-            case 0x31: // OUTN: write the value of R0 to the console as a decimal integer
+            case OUTN: // write the value of R0 to the console as a decimal integer
                 m.ui.print(m.getRegister(0).getValue() + "\n");
                 break;
-            case 0x33: // INN: print a prompt on screen and read a decimal from the
+            case INN: // print a prompt on screen and read a decimal from the
                 m.ui.print("Enter a number: ");
                 m.getRegister(0).setValue(m.ui.getShort());
                 break; // prompt
-            case 0x43: // RND: store a random number in R0
+            case RND: // store a random number in R0
                 m.getRegister(0).setValue(MemoryUtilities.randomShort());
                 break;
             default:
@@ -461,11 +640,6 @@ public interface Instruction {
                 errors.add(new Error("at 0x" + MemoryUtilities.sShortToHex(vector),
                     ErrorCodes.EXEC_TRAP_UNKN));
                 Simulator.printErrors(m.ui, errors);
-
-                /*
-                 * m.ui.warn("Warning: unknown trap vector 0x" +
-                 * MemoryUtilities.sShortToHex(vector));
-                 */
             }
             return false;
         }

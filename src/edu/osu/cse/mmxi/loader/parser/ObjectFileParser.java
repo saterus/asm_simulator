@@ -123,10 +123,10 @@ public class ObjectFileParser {
     }
 
     /**
-     * Converts a single line of text containing an ObjectFile Record into a Token.
+     * Converts a single line of text containing an ObjectFile Record into a Token, and
+     * updates the state of the parser with the information.
      * 
      * @param line
-     * @return a token corresponding to the data parsed from the line.
      */
     private void tokensizeLine(final String line) {
         try {

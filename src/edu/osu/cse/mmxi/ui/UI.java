@@ -1,6 +1,8 @@
 package edu.osu.cse.mmxi.ui;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Scanner;
 
 public class UI {
@@ -9,7 +11,9 @@ public class UI {
         QUIET, TRACE, STEP
     };
 
-    private UIMode mode;
+    private UIMode        mode;
+    protected InputStream in = System.in;
+    protected PrintStream out = System.out, err = System.err;
 
     public UI() {
         this(null);
@@ -42,29 +46,28 @@ public class UI {
     }
 
     public void warn(final String msg) {
-        System.err.println(msg);
+        err.println(msg);
     }
 
     public void print(final String msg) {
-        System.out.print(msg);
+        out.print(msg);
     }
 
     public void println(final String msg) {
-        System.out.println(msg);
+        out.println(msg);
     }
 
     public String prompt(final String msg) {
         print(msg);
-        return new Scanner(System.in).nextLine();
+        return new Scanner(in).nextLine();
     }
 
     public byte getChar() {
         byte b = 0;
         try {
-            final int n = System.in.read();
-            if (n != -1) {
+            final int n = in.read();
+            if (n != -1)
                 b = (byte) n;
-            }
         } catch (final IOException e) {
             // Should we error?
         }
@@ -74,18 +77,17 @@ public class UI {
     public short getShort() {
         short s = 0;
         try {
-            final Scanner sc = new Scanner(System.in);
+            final Scanner sc = new Scanner(in);
             String num = sc.next("-?(0[xX][0-9A-Fa-f]+|[0-9]+)");
             boolean neg = false;
             if (num.charAt(0) == '-') {
                 neg = true;
                 num = num.substring(1);
             }
-            if (num.substring(0, 2).toLowerCase().equals("0x")) {
+            if (num.substring(0, 2).toLowerCase().equals("0x"))
                 s = Short.parseShort((neg ? "-" : "") + num.substring(2), 16);
-            } else {
+            else
                 s = Short.parseShort((neg ? "-" : "") + num);
-            }
         } catch (final NumberFormatException e) {
             // Should we error?
         }
