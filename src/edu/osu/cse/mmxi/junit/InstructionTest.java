@@ -10,8 +10,21 @@ import edu.osu.cse.mmxi.machine.Register;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ADD;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ADDimm;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.AND;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ANDimm;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.BRx;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.DBUG;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.JSR;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.JSRR;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LD;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LDI;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LDR;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.LEA;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.NOT;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.RET;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.ST;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.STI;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.STR;
+import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction.TRAP;
 
 /**
  * Tests the instruction directly, instruction parser should probably be checked as well.
@@ -248,7 +261,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 0);
         m.getRegister(r1).setValue((short) 0);
 
-        final AND and = new AND(r0, r0, 0);
+        final ANDimm and = new ANDimm(r0, r0, 0);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -261,7 +274,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 0);
         m.getRegister(r1).setValue((short) 1);
 
-        final AND and = new AND(r0, r0, 1);
+        final ANDimm and = new ANDimm(r0, r0, 1);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -274,7 +287,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 1);
         m.getRegister(r1).setValue((short) 1);
 
-        final AND and = new AND(r0, r0, 1);
+        final ANDimm and = new ANDimm(r0, r0, 1);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -291,7 +304,7 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 0);
         m.getRegister(r1).setValue((short) 2);
 
-        final AND and = new AND(r0, r0, 2);
+        final ANDimm and = new ANDimm(r0, r0, 2);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
@@ -304,12 +317,13 @@ public class InstructionTest {
         m.getRegister(r0).setValue((short) 2);
         m.getRegister(r1).setValue((short) 2);
 
-        final AND and = new AND(r0, r1, 2);
+        final ANDimm and = new ANDimm(r0, r1, 2);
         and.execute(m);
 
         final Register res = m.getRegister(r0);
 
         assertEquals("equal", (short) 2, res.getValue());
+
     }
 
     /**
@@ -403,30 +417,9 @@ public class InstructionTest {
     }
 
     /**
-     * Our implamentation allows for branching off the page
-     */
-    @Test
-    public final void BranchPageLimitPlus1SimpleTest() {
-        m.getPCRegister().setValue((short) 0);
-
-        m.getFlags().setN(false);
-        m.getFlags().setZ(true);
-        m.getFlags().setP(false);
-
-        final short start = m.getPCRegister().getValue();
-        final BRx brx = new BRx(2, 512);
-        brx.execute(m);
-
-        final Register pc = m.getPCRegister();
-
-        assertEquals("equal", start + 512, pc.getValue());
-    }
-
-    /**
      * DEBUG Have to look at console to verify
      * 
-     * R0 0001 R1 0002 R2 0003 R3 0004 FLAGS FLAGS np R4 0005 R5 0006 R6 0007 R7 0008 PC
-     * 03E7
+     * R0 0001 R1 0002 R2 0003 R3 0004 FLAGS n R4 0005 R5 0006 R6 0007 R7 0008 PC 03E7
      */
     @Test
     public final void dbugTest() {
@@ -449,4 +442,257 @@ public class InstructionTest {
         dbug.execute(m);
 
     }
+
+    /**
+     * JSR tests
+     */
+    @Test
+    public final void jsrSimpleNoLinkTest() {
+        m.getPCRegister().setValue((short) 0);
+        final short start = m.getPCRegister().getValue();
+
+        final JSR jsr = new JSR(false, 100);
+        jsr.execute(m);
+
+        final Register pc = m.getPCRegister();
+
+        assertEquals("equal", start + 100, pc.getValue());
+
+    }
+
+    @Test
+    public final void jsrSimpleLinkTest() {
+        m.getPCRegister().setValue((short) 0);
+        final short start = m.getPCRegister().getValue();
+
+        final JSR jsr = new JSR(true, 100);
+        jsr.execute(m);
+
+        final Register pc = m.getPCRegister();
+
+        assertEquals("equal", start + 100, pc.getValue());
+        assertEquals(start, m.getRegister(r7).getValue());
+    }
+
+    /*
+     * JSRR
+     */
+    @Test
+    public final void jsrrSimpleNoLinkTest() {
+        m.getRegister(r0).setValue((short) 100);
+
+        m.getPCRegister().setValue((short) 0);
+        final short start = m.getPCRegister().getValue();
+
+        final JSRR jsrr = new JSRR(false, r0, 100);
+        jsrr.execute(m);
+
+        final Register pc = m.getPCRegister();
+
+        assertEquals("equal", start + 200, pc.getValue());
+
+    }
+
+    @Test
+    public final void jsrrSimpleLinkTest() {
+        m.getRegister(r0).setValue((short) 100);
+
+        m.getPCRegister().setValue((short) 0);
+        final short start = m.getPCRegister().getValue();
+
+        final JSRR jsrr = new JSRR(true, r0, 100);
+        jsrr.execute(m);
+
+        final Register pc = m.getPCRegister();
+
+        assertEquals("equal", start + 200, pc.getValue());
+        assertEquals(start, m.getRegister(r7).getValue());
+    }
+
+    /**
+     * LD testing Load memory to register
+     */
+    @Test
+    public final void ldSimpleTest() {
+        m.getPCRegister().setValue((short) 0);
+        final short start = m.getPCRegister().getValue();
+        m.setMemory((short) 100, (short) 99);
+
+        final LD ld = new LD(r0, (short) 100);
+        ld.execute(m);
+
+        assertEquals((short) 99, m.getRegister(r0).getValue());
+    }
+
+    /**
+     * LDI testing Load memory indirect
+     */
+    @Test
+    public final void ldiSimpleTest() {
+        m.getPCRegister().setValue((short) 0);
+        final short start = m.getPCRegister().getValue();
+        m.setMemory((short) 100, (short) 99);
+
+        final LDI ldi = new LDI(r0, (short) 100);
+        ldi.execute(m);
+
+        assertEquals(m.getMemory((short) 99), m.getRegister(r0).getValue());
+    }
+
+    /**
+     * LDR
+     */
+    @Test
+    public final void ldrNoOffsetSimpleTest() {
+        m.getPCRegister().setValue((short) 0);
+        m.setMemory((short) 100, (short) 12);
+
+        m.getRegister(r0).setValue((short) 9);
+        m.getRegister(r2).setValue((short) 100);
+
+        final LDR ldr = new LDR(r0, r2, 0);
+        ldr.execute(m);
+
+        assertEquals((short) 12, m.getRegister(r0).getValue());
+    }
+
+    /**
+     * LEA load the PC + offset => registerX
+     */
+    @Test
+    public final void leaSimpleTest() {
+        m.getPCRegister().setValue((short) 0);
+        m.setMemory((short) 100, (short) 12);
+        m.getRegister(r0).setValue((short) 9);
+
+        final LEA lea = new LEA(r0, 101);
+        lea.execute(m);
+        assertEquals((short) 101, m.getRegister(r0).getValue());
+    }
+
+    /**
+     * NOT
+     */
+    @Test
+    public final void notSimpleTest() {
+        m.getRegister(r0).setValue((short) 2);
+        m.getRegister(r1).setValue((short) 2);
+
+        final NOT not = new NOT(r0, r1);
+        not.execute(m);
+        assertEquals((short) -3, m.getRegister(r0).getValue());
+    }
+
+    @Test
+    public final void notBigNegSimpleTest() {
+        m.getRegister(r0).setValue((short) 2);
+        m.getRegister(r1).setValue((short) (0xFFFF - 1));
+
+        final NOT not = new NOT(r0, r1);
+        not.execute(m);
+        assertEquals((short) 1, m.getRegister(r0).getValue());
+    }
+
+    /**
+     * RET Put R7 into PC
+     */
+    public final void retSimpleTest() {
+        m.getPCRegister().setValue((short) 100);
+        m.getRegister(r7).setValue((short) 200);
+
+        final RET ret = new RET();
+        ret.execute(m);
+
+        assertEquals((short) 200, m.getPCRegister().getValue());
+    }
+
+    /**
+     * ST - take SR and store into memory at pageOffset
+     */
+    public final void stSimpleTest() {
+        m.getPCRegister().setValue((short) 0);
+        m.getRegister(r0).setValue((short) 100);
+
+        final ST st = new ST(r0, 200);
+        st.execute(m);
+
+        assertEquals(100, m.getMemory((short) 100));
+    }
+
+    /**
+     * STI - take
+     */
+    public final void stiSimpleTest() {
+        m.getPCRegister().setValue((short) 0);
+        m.setMemory((short) 100, (short) 200);
+        m.getRegister(r0).setValue((short) 201);
+
+        final STI sti = new STI(r0, 100);
+        sti.execute(m);
+
+        assertEquals(201, m.getMemory((short) 200));
+    }
+
+    /**
+     * STR
+     */
+    public final void strSimpleTest() {
+        m.getPCRegister().setValue((short) 0);
+        m.setMemory((short) 100, (short) 99);
+        m.getRegister(r0).setValue((short) 200);
+        m.getRegister(r1).setValue((short) 100);
+
+        final STR str = new STR(r0, r1, (short) 0);
+        str.execute(m);
+
+        assertEquals(m.getMemory((short) 100), 200);
+    }
+
+    public final void strSimpleWithOffsetTest() {
+        m.getPCRegister().setValue((short) 0);
+        m.setMemory((short) 101, (short) 99);
+        m.getRegister(r0).setValue((short) 200);
+        m.getRegister(r1).setValue((short) 100);
+
+        final STR str = new STR(r0, r1, (short) 1);
+        str.execute(m);
+
+        assertEquals(m.getMemory((short) 100), 200);
+    }
+
+    /**
+     * TRAP
+     */
+    // x21
+    @Test
+    public final void trapx21() {
+        m.getRegister(r0).setValue((short) 0x9973);// s
+
+        final TRAP trap = new TRAP(0x21);
+        trap.execute(m);
+    }
+
+    @Test
+    public final void trapx21NoError() {
+        m.getRegister(r0).setValue((short) 0x73);// s
+
+        final TRAP trap = new TRAP(0x21);
+        trap.execute(m);
+    }
+
+    @Test
+    public final void trapx22HelloWorld() {
+        m.getPCRegister().setValue((short) 0);
+        m.getRegister(r0).setValue((short) 100);
+        m.setMemory((short) 100, (short) 'H');
+        m.setMemory((short) 101, (short) 'e');
+        m.setMemory((short) 102, (short) 'l');
+        m.setMemory((short) 103, (short) 'l');
+        m.setMemory((short) 104, (short) 'o');
+        m.setMemory((short) 105, (short) '\0');
+
+        final TRAP trap = new TRAP(0x22);
+        trap.execute(m);
+    }
+
 }
