@@ -661,16 +661,8 @@ public class InstructionTest {
     }
 
     /**
-     * TRAP
+     * TRAPS - SEE ManualJUnitTest.java
      */
-    // x21
-    @Test
-    public final void trapx21() {
-        m.getRegister(r0).setValue((short) 0x9973);// s
-
-        final TRAP trap = new TRAP(0x21);
-        trap.execute(m);
-    }
 
     @Test
     public final void trapx21NoError() {
@@ -680,19 +672,16 @@ public class InstructionTest {
         trap.execute(m);
     }
 
+    // cannot really test this, look for console for exiting
     @Test
-    public final void trapx22HelloWorld() {
-        m.getPCRegister().setValue((short) 0);
-        m.getRegister(r0).setValue((short) 100);
-        m.setMemory((short) 100, (short) 'H');
-        m.setMemory((short) 101, (short) 'e');
-        m.setMemory((short) 102, (short) 'l');
-        m.setMemory((short) 103, (short) 'l');
-        m.setMemory((short) 104, (short) 'o');
-        m.setMemory((short) 105, (short) '\0');
+    public final void trapx25() {
 
-        final TRAP trap = new TRAP(0x22);
+        assertEquals(m.hasHalted(), false);
+
+        final TRAP trap = new TRAP(0x25);
         trap.execute(m);
+
+        assertEquals(m.hasHalted(), true);
     }
 
     // Tested Loading short 5 into offset 10
