@@ -119,22 +119,21 @@ public interface Instruction {
         }
     }
 
+    /**
+     * Takes the bitwise AND of a register with an immediate operand and writes to another
+     * register.
+     * 
+     * The AND instruction has two modes: register-based (see {@link AND}) and immediate.
+     * In immediate mode, the contents of a register, {@code sr}, and a 5-bit signed 2's
+     * complement integer, {@code imm}, are bitwise ANDed and written to a destination
+     * register ({@code dr}). The syntax of the command is {@code 0001dddsss1iiiii}, where
+     * {@code sss} and {@code ddd} represent the three-bit register indexes {@code sr} and
+     * {@code dr}, respectively, and {@code iiiii} represents the immediate operand.
+     */
     public static class ANDimm implements Instruction {
         private final byte dr, sr;
         private final int  imm;
 
-        /**
-         * Takes the bitwise AND of a register with an immediate operand and writes to
-         * another register.
-         * 
-         * The AND instruction has two modes: register-based (see {@link AND}) and
-         * immediate. In immediate mode, the contents of a register, {@code sr}, and a
-         * 5-bit signed 2's complement integer, {@code imm}, are bitwise ANDed and written
-         * to a destination register ({@code dr}). The syntax of the command is
-         * {@code 0001dddsss1iiiii}, where {@code sss} and {@code ddd} represent the
-         * three-bit register indexes {@code sr} and {@code dr}, respectively, and
-         * {@code iiiii} represents the immediate operand.
-         */
         public ANDimm(final int _dr, final int _sr, final int _imm) {
             dr = (byte) _dr;
             sr = (byte) _sr;
@@ -167,8 +166,8 @@ public interface Instruction {
      * {@code BRnp}, {@code BRzp}, {@code BRn}, {@code BRz}, {@code BRp}, and {@code NOP},
      * where the last command (otherwise known as {@code BR}) never branches, and so is
      * effectively a no-op, and the first command (otherwise known as {@code BRnzp})
-     * always branches, so is equivalent to {@link JMP}. Note that a NOP command with a
-     * non-zero page offset field (which is still a no-op) is displayed as
+     * always branches, so is equivalent to {@link JSR JMP}. Note that a NOP command with
+     * a non-zero page offset field (which is still a no-op) is displayed as
      * {@code DATA 00xx}, since ASCII data and small numbers would be interpreted this
      * way.
      * 
