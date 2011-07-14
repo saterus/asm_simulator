@@ -13,6 +13,13 @@ public class Text extends Token {
         this.value = value;
     }
 
+    public Text(final int line, final int sline, final String file, final short address,
+        final short value) {
+        super(line, sline, file);
+        this.address = address;
+        this.value = value;
+    }
+
     public short getAddress() {
         return address;
     }
@@ -23,7 +30,7 @@ public class Text extends Token {
 
     @Override
     public String toString() {
-        return "Text, line " + lineNumber + ": (0x"
+        return "Text, " + super.toString() + ": (0x"
             + MemoryUtilities.uShortToHex(address) + ", 0x"
             + MemoryUtilities.uShortToHex(value) + ")";
     }

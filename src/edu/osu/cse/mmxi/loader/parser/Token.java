@@ -1,21 +1,38 @@
 package edu.osu.cse.mmxi.loader.parser;
 
 public class Token {
-    protected final int lineNumber;
+    protected final int    lineNumber, sourceLineNumber;
+    protected final String sourceFile;
 
     public Token(final int line) {
         lineNumber = line;
+        sourceLineNumber = -1;
+        sourceFile = null;
     }
 
-    public String getLine() {
-        String rtn = String.valueOf(lineNumber);
-        int i = rtn.length();
+    public Token(final int line, final int source, final String file) {
+        lineNumber = line;
+        sourceLineNumber = source;
+        sourceFile = file;
+    }
 
-        while (i < 4) {
-            rtn = "0" + rtn;
-            i++;
-        }
+    public int getLine() {
+        return lineNumber;
+    }
 
-        return rtn;
+    public int getSLine() {
+        return sourceLineNumber;
+    }
+
+    public int getSFile() {
+        return sourceLineNumber;
+    }
+
+    @Override
+    public String toString() {
+        if (sourceFile == null)
+            return "line " + lineNumber;
+        else
+            return sourceFile + "[" + sourceLineNumber + "]";
     }
 }

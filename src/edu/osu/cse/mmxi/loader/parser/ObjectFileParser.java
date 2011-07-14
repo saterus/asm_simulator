@@ -4,7 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.Error;
 import edu.osu.cse.mmxi.ui.ErrorCodes;
 
@@ -60,20 +65,27 @@ import edu.osu.cse.mmxi.ui.ErrorCodes;
  * </p>
  */
 public class ObjectFileParser {
+    private static final Pattern     ppRegex    = Pattern.compile("#![FLS][^!]*!");
 
-    private final BufferedReader reader;
+    private final BufferedReader     reader;
 
-    private int                  lineNumber = 1;
-    private final List<Error>    errors     = new ArrayList<Error>();
+    private int                      lineNumber = 1;
+    private final List<Error>        errors     = new ArrayList<Error>();
 
     /** [Bits in Hex Rep.] | 7: page | 9: address | */
-    private final List<Text>     text       = new ArrayList<Text>();
+    private final List<Text>         text       = new ArrayList<Text>();
 
     /** [Bits in Hex Rep.] | 4: initial exec address | */
-    private Exec                 exec       = null;
+    private Exec                     exec       = null;
 
     /** [Bits in Hex Rep.] | 6: name | 4: begin address | 4: segment length | */
-    private Header               header     = null;
+    private Header                   header     = null;
+
+    private final Map<String, Short> symbols    = new TreeMap<String, Short>();
+
+    private int                      sourceLine = -1;
+
+    private String                   sourceFile = null;
 
     /**
      * The ObjectFileParser is built around processing an InputStream
@@ -96,19 +108,18 @@ public class ObjectFileParser {
 
         String line = null;
         try {
-            line = parseLine(reader.readLine());
+            line = reader.readLine();
         } catch (final IOException e) {
             errors.add(new Error("IO error while reading first line: " + e.getMessage(),
                 ErrorCodes.IO_BAD_READ));
         }
 
         while (line != null) {
-            if (line.length() > 0)
-                tokensizeLine(line);
+            tokensizeLine(line);
 
             lineNumber++;
             try {
-                line = parseLine(reader.readLine());
+                line = reader.readLine();
             } catch (final IOException e) {
                 errors.add(new Error("IO error while reading line " + lineNumber + ": "
                     + e.getMessage(), ErrorCodes.IO_BAD_READ));
@@ -135,17 +146,70 @@ public class ObjectFileParser {
      * @param line
      */
     private void tokensizeLine(final String line) {
-        try {
-            if (line.matches("(H|h).{6}[0-9A-Fa-f]{8}"))
-                header = parseHeader(line);
-            else if (line.matches("(T|t)[0-9A-Fa-f]{8}"))
-                text.add(parseTextLine(line));
-            else if (line.matches("(E|e)[0-9A-Fa-f]{4}"))
-                exec = parseExec(line);
-            else
-                errors.add(new Error(lineNumber, line, ErrorCodes.PARSE_BAD_TEXT));
-        } catch (final ParseException e) {
-            errors.add(new Error(lineNumber, e.getMessage(), ErrorCodes.PARSE_EXECPTION));
+        String token = "";
+        // Comments begin with "//" or "#"
+        final String[] pieces = line.split("//|#");
+        if (pieces.length > 0)
+            token = pieces[0].trim();
+        sourceLine = -1;
+        final Matcher m = ppRegex.matcher(line);
+        while (m.find())
+            parsePreprocessorCommand(m.group());
+        if (token.length() > 0)
+            try {
+                if (token.matches("(H|h).{6}[0-9A-Fa-f]{8}"))
+                    header = parseHeader(token);
+                else if (token.matches("(T|t)[0-9A-Fa-f]{8}"))
+                    text.add(parseTextLine(token));
+                else if (token.matches("(E|e)[0-9A-Fa-f]{4}"))
+                    exec = parseExec(token);
+                else
+                    errors.add(new Error(lineNumber, token, ErrorCodes.PARSE_BAD_TEXT));
+            } catch (final ParseException e) {
+                errors.add(new Error(lineNumber, e.getMessage(),
+                    ErrorCodes.PARSE_EXECPTION));
+            }
+
+    }
+
+    private void parsePreprocessorCommand(final String token) {
+        switch (token.charAt(2)) {
+        case 'F':
+            sourceFile = token.substring(3, token.length() - 1);
+            break;
+        case 'L':
+            try {
+                sourceLine = Integer.parseInt(token.substring(3, token.length() - 1));
+            } catch (final NumberFormatException e) {
+                errors.add(new Error(lineNumber,
+                    "could not read LINE preprocessor command",
+                    ErrorCodes.PARSE_EXECPTION));
+            }
+            break;
+        case 'S':
+            final int colon = token.lastIndexOf(":");
+            if (colon == -1)
+                errors.add(new Error(lineNumber,
+                    "could not read SYMB preprocessor command",
+                    ErrorCodes.PARSE_EXECPTION));
+            else {
+                final String symb = token.substring(3, colon);
+                final boolean bad = symb.contains("+") || symb.contains("-")
+                    || symb.contains(":") || symb.toLowerCase().matches("pc|r[0-7]");
+                if (bad)
+                    errors
+                        .add(new Error(lineNumber, "invalid symbol name '" + symb + "'",
+                            ErrorCodes.PARSE_EXECPTION));
+                final int v = MemoryUtilities.parseShort(token.substring(colon + 1,
+                    token.length() - 1));
+                if (v == -1)
+                    errors.add(new Error(lineNumber, "'"
+                        + token.substring(colon + 1, token.length() - 1)
+                        + "' is not a number", ErrorCodes.PARSE_EXECPTION));
+                if (!bad && v != -1)
+                    symbols.put(symb, (short) v);
+            }
+            break;
         }
     }
 
@@ -200,24 +264,6 @@ public class ObjectFileParser {
     }
 
     /**
-     * Takes a line and strips, whitespace, and comments from it.
-     * 
-     * @param rawLine
-     *            unprocessed line straight from the stream
-     * @return a line ready for more parsing
-     */
-    private String parseLine(String rawLine) {
-        if (rawLine != null) {
-            // Comments begin with "//" or "#"
-            final String[] pieces = rawLine.split("//|#");
-
-            if (pieces.length > 0)
-                rawLine = pieces[0].trim();
-        }
-        return rawLine;
-    }
-
-    /**
      * After parsing, returns the parsed header.
      * 
      * @return the Header of the file
@@ -242,5 +288,14 @@ public class ObjectFileParser {
      */
     public List<Text> getParsedTexts() {
         return text;
+    }
+
+    /**
+     * After parsing, returns the list of parsed text records.
+     * 
+     * @return a List of Text records
+     */
+    public Map<String, Short> getParsedSymbols() {
+        return symbols;
     }
 }

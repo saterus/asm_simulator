@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import edu.osu.cse.mmxi.loader.parser.Exec;
 import edu.osu.cse.mmxi.loader.parser.Header;
@@ -18,7 +19,8 @@ import edu.osu.cse.mmxi.ui.Error;
 import edu.osu.cse.mmxi.ui.ErrorCodes;
 
 public class SimpleLoader {
-    public static List<Error> load(final String path, final Machine machine) {
+    public static List<Error> load(final String path, final Machine machine,
+        final Map<Short, Integer> lines, final Map<String, Short> symbols) {
         List<Error> errors = new ArrayList<Error>();
 
         final File file = new File(".", path);
@@ -47,14 +49,18 @@ public class SimpleLoader {
             final Header header = parser.getParsedHeader();
             final Exec exec = parser.getParsedExec();
             final List<Text> text = parser.getParsedTexts();
+            symbols.putAll(parser.getParsedSymbols());
 
             if (errors.size() == 0) {
 
                 for (final Text t : text)
                     if (!header.isWithinBounds(t.getAddress()))
                         errors.add(new Error(t.getLine(), ErrorCodes.ADDR_OUT_BOUNDS));
-                    else
+                    else {
                         machine.setMemory(t.getAddress(), t.getValue());
+                        if (lines != null)
+                            lines.put(t.getAddress(), t.getLine());
+                    }
 
                 if (!header.isWithinBounds(exec.getAddress()))
                     errors

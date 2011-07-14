@@ -1,6 +1,7 @@
 package edu.osu.cse.mmxi;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import edu.osu.cse.mmxi.loader.SimpleLoader;
@@ -14,6 +15,9 @@ public class Console {
     private String                    file;
     private final Map<Short, Object>  breakpoints;
     private final Map<Integer, Short> watchpoints;
+    private final Map<String, Short>  symbols;
+    private int                       symbLength = 0;
+    private final Map<Short, Integer> lines;
 
     public Console(final Machine _m, final String _file) {
         m = _m;
@@ -22,6 +26,8 @@ public class Console {
         file = null;
         breakpoints = new TreeMap<Short, Object>();
         watchpoints = new TreeMap<Integer, Short>();
+        symbols = new TreeMap<String, Short>();
+        lines = new TreeMap<Short, Integer>();
         m.ui.print("McMoxel MMXI Emulator\n");
         m.ui.print("Version 2");
         if (file != null)
@@ -59,6 +65,8 @@ public class Console {
             reset(words);
         else if ("step".startsWith(words[0]))
             step(false, words);
+        else if ("symb".startsWith(words[0]))
+            symb(words);
         else if (words[0].length() > 3 && "track".startsWith(words[0]))
             track(words);
         else if ("trace".startsWith(words[0]))
@@ -94,7 +102,7 @@ public class Console {
             return;
         }
         int addr;
-        if ((addr = readAddr(words[del ? 2 : 1])) == -1) {
+        if ((addr = readSymbAddr(words[del ? 2 : 1])) == -1) {
             m.ui.print("Malformed address '" + words[del ? 2 : 1] + "'\n");
             help("help", "break");
             return;
@@ -136,7 +144,7 @@ public class Console {
     private void disasm(final String... words) {
         int base = memTrack, len = 16;
         if (words.length > 1) {
-            if ((base = readAddr(words[1])) == -1) {
+            if ((base = readSymbAddr(words[1])) == -1) {
                 m.ui.print("Malformed address '" + words[1] + "'\n");
                 help("help", "disasm");
                 return;
@@ -146,19 +154,14 @@ public class Console {
                     len = -1;
                 else if (words[2].equalsIgnoreCase("ret"))
                     len = -2;
-                else
-                    try {
-                        len = Integer.parseInt(words[2]);
-                        if (len < 0) {
-                            m.ui.print("Length must be greater than 0.\n");
-                            help("help", "disasm");
-                            return;
-                        }
-                    } catch (final NumberFormatException e) {
+                else {
+                    len = readSymbAddr(words[2]);
+                    if (len == -1) {
                         m.ui.print("Malformed length parameter '" + words[2] + "'\n");
                         help("help", "disasm");
                         return;
                     }
+                }
         }
         short mem;
         if (base == -1)
@@ -167,8 +170,15 @@ public class Console {
             mem = (short) base;
         for (int i = 0;; i++) {
             final short inst = m.getMemory((short) (mem + i));
-            m.ui.print("\n    " + MemoryUtilities.uShortToHex((short) (mem + i))
-                + ":   [" + MemoryUtilities.uShortToHex(inst) + "] "
+            m.ui.print("\n  " + padLeft(toSymb((short) (mem + i)), symbLength + 4, ' ')
+                + ": ");
+            if (lines.size() == 0)
+                m.ui.print(" ");
+            else if (lines.containsKey((short) (mem + i)))
+                m.ui.print(padRight("L" + lines.get((short) (mem + i)), 4, ' '));
+            else
+                m.ui.print("    ");
+            m.ui.print(" [" + MemoryUtilities.uShortToHex(inst) + "] "
                 + m.alu.readInstruction(inst));
             if (len == -1 && inst == (short) 0xF025 || len == -2
                 && (inst & 0xF000) == 0xD000 || len >= 0 && i + 2 > len)
@@ -179,7 +189,7 @@ public class Console {
     private void dump(final String... words) {
         int base = memTrack, len = 8;
         if (words.length > 1) {
-            if ((base = readAddr(words[1])) == -1) {
+            if ((base = readSymbAddr(words[1])) == -1) {
                 m.ui.print("Malformed address '" + words[1] + "'\n");
                 help("help", "dump");
                 return;
@@ -203,7 +213,7 @@ public class Console {
             mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
         else
             mem = (short) base;
-        m.ui.print("\n      ");
+        m.ui.print("\n  " + padLeft("", symbLength + 4, ' '));
         for (int j = 0; j < 16; j++)
             m.ui.print(" --" + Integer.toHexString(mem + j & 15).toUpperCase() + "-");
         m.ui.print("  ");
@@ -211,7 +221,8 @@ public class Console {
             m.ui.print(Integer.toHexString(mem + j & 15).toUpperCase());
         for (int i = 0; i < len; i++) {
             m.ui.print("\n");
-            m.ui.print(MemoryUtilities.uShortToHex((short) (mem + 16 * i)) + " | ");
+            m.ui.print(padLeft(toSymb((short) (mem + 16 * i)), symbLength + 4, ' ')
+                + " | ");
             for (int j = 0; j < 16; j++)
                 m.ui.print(MemoryUtilities.uShortToHex(m
                     .getMemory((short) (mem + 16 * i + j))) + " ");
@@ -229,12 +240,12 @@ public class Console {
             return;
         }
         int addr, value;
-        if ((addr = readAddr(words[1])) == -1) {
+        if ((addr = readSymbAddr(words[1])) == -1) {
             m.ui.print("Malformed address '" + words[1] + "'\n");
             help("help", "edit");
             return;
         }
-        if ((value = readAddr(words[2])) == -1) {
+        if ((value = readSymbAddr(words[2])) == -1) {
             m.ui.print("Malformed value '" + words[2] + "'\n");
             help("help", "edit");
             return;
@@ -253,7 +264,7 @@ public class Console {
             + "    break           clock           disasm          dump\n"
             + "    edit            help            load            quit\n"
             + "    reg             reset           run             step\n"
-            + "    trace           track           watch";
+            + "    symb            trace           track           watch";
         if (words.length < 2 || words[1].length() == 0)
             m.ui.print(help);
         else if ("break".startsWith(words[1]))
@@ -289,9 +300,10 @@ public class Console {
                 + " continue disassembling until a TRAP HALT or RET command is encountered.\n\n"
                 + " The command will provide assembly mnemonic listings for 16 consecutive\n"
                 + " words (by default). The first column of the listing specifies the\n"
-                + " address of the word being disassembled, the second column contains the\n"
-                + " hexadecimal data at that word, while the remaining columns provide the\n"
-                + " disassembled instructions.\n\n"
+                + " address of the word being disassembled, the second column (if present)\n"
+                + " specifies the line number in the original file, the third column\n"
+                + " contains the hexadecimal data at that word, while the remaining columns\n"
+                + " provide the disassembled instructions.\n\n"
                 + "   > disasm           Disassembles starting at the current memory track\n"
                 + "                      (see 'help track' for details)\n"
                 + "   > disasm pc halt   Disassembles starting at PC, and continuing until\n"
@@ -299,7 +311,14 @@ public class Console {
                 + "   > disasm x3000     Disassembles 16 instructions starting at 0x3000\n\n"
                 + "   > disasm x1000 20  Disassembles 20 instructions starting at 0x1000\n"
                 + "   > disasm r0 ret    Disassembles starting at the address in register\n"
-                + "                      0, and continuing until RET is found");
+                + "                      0, and continuing until RET is found\n\n"
+                + "Anatomy of a line of disasm output:\n"
+                + "  1020: L18  [1021] ADD R0, R0, #1\n"
+                + "  +---  +--   +---  +-------------\n"
+                + "  |     |     |     +- The instruction in MMXI assembly format\n"
+                + "  |     |     +------- The hexadecimal value of the instruction\n"
+                + "  |     +------------- The line number (line 18)\n"
+                + "  +------------------- The hexadecimal address of the instruction");
         else if ("dump".startsWith(words[1]))
             m.ui.print(" Syntax: dump [<address> [<length>]]\n"
                 + " Mnemonics: du dum dump\n\n"
@@ -387,6 +406,21 @@ public class Console {
                 + " disassemble the next instruction to be evaluated. Execution may stop\n"
                 + " after fewer than 'steps' instructions if breakpoints, watchpoints, or a\n"
                 + " TRAP HALT command comes first (see 'help run').");
+        else if ("symb".startsWith(words[1]))
+            m.ui.print(" Syntax: symb <address> <value>\n"
+                + "         symb -d <address>\n        symb [<prefix>]\n"
+                + " Mnemonics: sy sym symb\n\n"
+                + " Symbols are artifacts used during the assembly process for the benefit\n"
+                + " of the user: mappings from words to addresses in memory or other word\n"
+                + " values. This command allows the user to view, edit, and remove existing\n"
+                + " symbols.\n\n"
+                + "   > symb              Lists the currently defined symbols\n"
+                + "   > symb s            Lists all symbols that start with 's'\n"
+                + "   > symb start x3021  Defines or redefines 'start' to be x3021\n"
+                + "   > symb -d start     Undefines symbol 'start'\n\n"
+                + " A message will be displayed to notify you if you try to undefine a symbol\n"
+                + " that is not defined. Note that 'pc', 'flags', and 'r0', ... 'r7' are not\n"
+                + " legal symbol names, and symbols can not start with a numerical character.");
         else if (words[1].length() > 3 && "track".startsWith(words[1]))
             m.ui.print(" Syntax: track pc|<address>\n Mnemonics: trac track\n\n"
                 + " Sets the memory track, which is used by the disasm, dump, and trace\n"
@@ -435,7 +469,13 @@ public class Console {
         } else
             file = words[1];
         m.ui.print("Loading file: " + file + "\n");
-        Simulator.printErrors(m.ui, SimpleLoader.load(file, m));
+        lines.clear();
+        symbols.clear();
+        Simulator.printErrors(m.ui, SimpleLoader.load(file, m, lines, symbols));
+        symbLength = 0;
+        for (final String k : symbols.keySet())
+            if (k.length() > symbLength)
+                symbLength = k.length();
         printInstruction();
     }
 
@@ -453,7 +493,7 @@ public class Console {
         }
         int value = -1;
         if (words.length > 2)
-            if ((value = readAddr(words[2])) == -1) {
+            if ((value = readSymbAddr(words[2])) == -1) {
                 m.ui.print("Malformed value '" + words[2] + "'\n");
                 help("help", "reg");
                 return;
@@ -494,7 +534,7 @@ public class Console {
             load++;
         int fill = -1;
         if (words.length > load + 1)
-            if ((fill = readAddr(words[load + 1])) == -1
+            if ((fill = readSymbAddr(words[load + 1])) == -1
                 && !words[load + 1].equals("rand")) {
                 m.ui.print("Malformed fill mode parameter '" + words[load + 1] + "'\n");
                 help("help", "reset");
@@ -503,6 +543,10 @@ public class Console {
         m.reset(fill);
         if (load != 0)
             load("load", file);
+        else {
+            lines.clear();
+            symbols.clear();
+        }
     }
 
     private void run(final String... words) {
@@ -530,6 +574,44 @@ public class Console {
         printInstruction();
     }
 
+    private void symb(final String... words) {
+        if (words.length <= 2) {
+            if (symbols.size() == 0) {
+                m.ui.print("No symbols are defined.");
+                return;
+            }
+            final String start = words.length > 1 ? words[1] : "";
+            for (final String k : symbols.keySet())
+                if (k.startsWith(start))
+                    m.ui.print(padLeft(k, symbLength + 3, ' ') + " = 0x"
+                        + MemoryUtilities.uShortToHex(symbols.get(k)) + "\n");
+        } else if (words[1].equalsIgnoreCase("-d"))
+            if (symbols.containsKey(words[2])) {
+                symbols.remove(words[2]);
+                symbLength = 0;
+                for (final String k : symbols.keySet())
+                    if (k.length() > symbLength)
+                        symbLength = k.length();
+            } else
+                m.ui.print("Symbol '" + words[2] + "' is not defined.");
+        else {
+            final int v = readSymbAddr(words[2]);
+            if (words[1].contains("+") || words[1].contains("-")
+                || words[1].contains(":") || readAddr(words[1]) != -1)
+                m.ui.print("'" + words[1]
+                    + "' is not a valid symbol name. See 'help symb' for syntax.");
+            else if (v == -1)
+                m.ui.print("Malformed value '" + words[2]
+                    + "' encountered. See 'help symb' for syntax.");
+            else {
+                symbols.put(words[1], (short) v);
+                if (words[1].length() > symbLength)
+                    symbLength = words[1].length();
+            }
+        }
+
+    }
+
     private void track(final String... words) {
         if (words.length < 2) {
             help("help", "track");
@@ -539,12 +621,13 @@ public class Console {
             m.ui.print("Tracking Program Counter.");
             memTrack = -1;
         } else {
-            if (readAddr(words[1]) == -1) {
+            final int addr = readSymbAddr(words[1]);
+            if (addr == -1) {
                 m.ui.print("Invalid tracking address.");
                 help("help", "track");
                 return;
             } else
-                memTrack = readAddr(words[1]);
+                memTrack = addr;
             m.ui.print("Tracking address "
                 + MemoryUtilities.uShortToHex((short) memTrack) + ".");
         }
@@ -665,7 +748,7 @@ public class Console {
             mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
         else
             mem = (short) memTrack;
-        m.ui.print("\n                           ");
+        m.ui.print("\n" + padLeft("", symbLength + 26, ' '));
         for (int j = 0; j < 8; j++)
             m.ui.print(" --" + (mem + j & 7) + "-");
         m.ui.print("\n");
@@ -674,9 +757,9 @@ public class Console {
             m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i).getValue())
                 + "  ");
             m.ui.print("R" + (2 * i + 1) + ": ");
-            m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i + 1).getValue())
-                + "   ");
-            m.ui.print(MemoryUtilities.uShortToHex((short) (mem + 8 * i)) + " | ");
+            m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i + 1).getValue()));
+            m.ui.print("  "
+                + padLeft(toSymb((short) (mem + 16 * i)), symbLength + 4, ' ') + " | ");
             for (int j = 0; j < 8; j++)
                 m.ui.print(MemoryUtilities.uShortToHex(m
                     .getMemory((short) (mem + 8 * i + j))) + " ");
@@ -685,38 +768,78 @@ public class Console {
     }
 
     private void printInstruction() {
-        m.ui.print("\n  PC: " + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
-            + "  ");
+        final short pc = m.getPCRegister().getValue();
+        m.ui.print("\n  PC: " + MemoryUtilities.uShortToHex(pc) + "  ");
         m.ui.print((m.getFlags().getN() ? "n" : "-") + (m.getFlags().getZ() ? "z" : "-")
             + (m.getFlags().getP() ? "p" : "-") + "  ");
-        m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister().getValue()))
-            + ": ");
-        m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()));
+        if (lines.containsKey(pc))
+            m.ui.print("Line " + lines.get(pc) + ": ");
+        m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(pc)) + ": ");
+        m.ui.print(m.alu.readInstructionAt(pc));
     }
 
-    private int readAddr(String s) {
+    private int readSymbAddr(final String s) {
+        int d = s.lastIndexOf('+');
+        int sgn = 1;
+        if (d < s.lastIndexOf('-')) {
+            sgn = -1;
+            d = s.lastIndexOf('-');
+        }
+        if (d == -1) {
+            int a = readAddr(s);
+            if (a == -1 && symbols.containsKey(s)) {
+                final Short v = symbols.get(s);
+                if (v != null)
+                    a = v;
+            }
+            return a;
+        } else {
+            final int l = readSymbAddr(s.substring(0, d));
+            final int r = readSymbAddr(s.substring(d + 1));
+            if (l == -1 || r == -1)
+                return -1;
+            else
+                return l + sgn * r;
+        }
+    }
+
+    private int readAddr(final String s) {
         if (s.equalsIgnoreCase("pc"))
             return m.getPCRegister().getValue();
         else if (s.matches("[rR][0-7]"))
             return m.getRegister(s.charAt(1) - '0').getValue();
-        else {
-            int radix = 10;
-            if (s.startsWith("0x") || s.startsWith("0X")) {
-                radix = 16;
-                s = s.substring(2);
-            } else if (s.substring(0, 1).equalsIgnoreCase("x")) {
-                radix = 16;
-                s = s.substring(1);
-            } else if (s.startsWith("0b") || s.startsWith("0B")) {
-                radix = 2;
-                s = s.substring(2);
-            } else if (s.length() > 1 && s.startsWith("0"))
-                radix = 8;
-            try {
-                return (short) Integer.parseInt(s, radix);
-            } catch (final NumberFormatException e) {
-                return -1;
+        else
+            return MemoryUtilities.parseShort(s);
+    }
+
+    private String toSymb(final short addr) {
+        int closest = -1;
+        final int uAddr = addr & 0xFFFF;
+        String cSymb = null;
+        for (final Entry<String, Short> i : symbols.entrySet()) {
+            final int uVal = i.getValue() & 0xFFFF;
+            if (uVal > closest && uVal <= uAddr) {
+                cSymb = i.getKey();
+                closest = uVal;
             }
         }
+        if (cSymb == null || uAddr - closest >= 512)
+            return MemoryUtilities.uShortToHex(addr);
+        else
+            return cSymb + (uAddr == closest ? "" : "+" + (uAddr - closest));
+    }
+
+    private String padLeft(final String s, int len, final char pad) {
+        len -= s.length();
+        if (len < 0)
+            len = 0;
+        return new String(new char[len]).replace('\0', pad) + s;
+    }
+
+    private String padRight(final String s, int len, final char pad) {
+        len -= s.length();
+        if (len < 0)
+            len = 0;
+        return s + new String(new char[len]).replace('\0', pad);
     }
 }

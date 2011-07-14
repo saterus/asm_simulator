@@ -30,7 +30,7 @@ public class Header extends Token {
 
     @Override
     public String toString() {
-        return "Header, line " + lineNumber + ": (" + name + ", 0x"
+        return "Header, " + super.toString() + ": (" + name + ", 0x"
             + MemoryUtilities.uShortToHex(begin) + ", 0x"
             + MemoryUtilities.uShortToHex(length) + ")";
     }

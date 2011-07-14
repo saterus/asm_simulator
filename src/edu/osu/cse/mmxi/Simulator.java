@@ -324,7 +324,8 @@ public final class Simulator {
             new Console(machine, file);
         else {
             if (file != null)
-                Simulator.printErrors(machine.ui, SimpleLoader.load(file, machine));
+                Simulator.printErrors(machine.ui,
+                    SimpleLoader.load(file, machine, null, null));
             startClockLoop(machine);
         }
     }
