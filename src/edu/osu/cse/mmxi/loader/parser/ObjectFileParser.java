@@ -91,18 +91,28 @@ public class ObjectFileParser {
      * errors is returned.
      * 
      * @return list of Errors obtained from parsing the Stream.
-     * @throws IOException
      */
-    public List<Error> parse() throws IOException {
+    public List<Error> parse() {
 
-        String line = parseLine(reader.readLine());
+        String line = null;
+        try {
+            line = parseLine(reader.readLine());
+        } catch (final IOException e) {
+            errors.add(new Error("IO error while reading first line: " + e.getMessage(),
+                ErrorCodes.IO_BAD_READ));
+        }
 
         while (line != null) {
             if (line.length() > 0)
                 tokensizeLine(line);
 
             lineNumber++;
-            line = parseLine(reader.readLine());
+            try {
+                line = parseLine(reader.readLine());
+            } catch (final IOException e) {
+                errors.add(new Error("IO error while reading line " + lineNumber + ": "
+                    + e.getMessage(), ErrorCodes.IO_BAD_READ));
+            }
         }
 
         if (header == null && exec == null && text.size() == 0)

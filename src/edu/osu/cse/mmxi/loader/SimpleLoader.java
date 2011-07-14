@@ -3,8 +3,10 @@ package edu.osu.cse.mmxi.loader;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.osu.cse.mmxi.loader.parser.Exec;
@@ -16,46 +18,57 @@ import edu.osu.cse.mmxi.ui.Error;
 import edu.osu.cse.mmxi.ui.ErrorCodes;
 
 public class SimpleLoader {
-    public static List<Error> load(final String path, final Machine machine)
-        throws IOException {
+    public static List<Error> load(final String path, final Machine machine) {
+        List<Error> errors = new ArrayList<Error>();
 
         final File file = new File(".", path);
 
         if (!file.isFile())
-            throw new IOException(ErrorCodes.IO_BAD_PATH.toString() + " : " + path);
+            errors.add(new Error(path, ErrorCodes.IO_BAD_PATH));
 
         if (!file.canRead())
-            throw new IOException(ErrorCodes.IO_BAD_READ.toString() + " : " + path);
+            errors.add(new Error(path, ErrorCodes.IO_BAD_READ));
 
         if (file.length() <= 0)
-            throw new IOException(ErrorCodes.IO_BAD_FILE.toString() + " : " + path);
+            errors.add(new Error(path, ErrorCodes.IO_BAD_FILE));
 
-        final BufferedReader fileReader = new BufferedReader(new InputStreamReader(
-            new FileInputStream(file)));
-
-        final ObjectFileParser parser = new ObjectFileParser(fileReader);
-
-        final List<Error> errors = parser.parse();
-        final Header header = parser.getParsedHeader();
-        final Exec exec = parser.getParsedExec();
-        final List<Text> text = parser.getParsedTexts();
-
-        if (errors.size() == 0) {
-
-            for (final Text t : text)
-                if (!header.isWithinBounds(t.getAddress()))
-                    errors.add(new Error(t.getLine(), ErrorCodes.ADDR_OUT_BOUNDS));
-                else
-                    machine.setMemory(t.getAddress(), t.getValue());
-
-            if (!header.isWithinBounds(exec.getAddress()))
-                errors.add(new Error(exec.getLine(), ErrorCodes.ADDR_EXEC_OUT_BOUNDS));
-            else
-                machine.getPCRegister().setValue(exec.getAddress());
-
+        BufferedReader fileReader = null;
+        try {
+            fileReader = new BufferedReader(new InputStreamReader(new FileInputStream(
+                file)));
+        } catch (final FileNotFoundException e) {
+            errors.add(new Error("file not found: " + path, ErrorCodes.IO_BAD_PATH));
         }
 
-        fileReader.close();
+        if (errors.size() == 0) {
+            final ObjectFileParser parser = new ObjectFileParser(fileReader);
+
+            errors = parser.parse();
+            final Header header = parser.getParsedHeader();
+            final Exec exec = parser.getParsedExec();
+            final List<Text> text = parser.getParsedTexts();
+
+            if (errors.size() == 0) {
+
+                for (final Text t : text)
+                    if (!header.isWithinBounds(t.getAddress()))
+                        errors.add(new Error(t.getLine(), ErrorCodes.ADDR_OUT_BOUNDS));
+                    else
+                        machine.setMemory(t.getAddress(), t.getValue());
+
+                if (!header.isWithinBounds(exec.getAddress()))
+                    errors
+                        .add(new Error(exec.getLine(), ErrorCodes.ADDR_EXEC_OUT_BOUNDS));
+                else
+                    machine.getPCRegister().setValue(exec.getAddress());
+
+            }
+        }
+
+        try {
+            fileReader.close();
+        } catch (final IOException e) {
+        }
         return errors;
     }
 }

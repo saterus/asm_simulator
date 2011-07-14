@@ -1,7 +1,5 @@
 package edu.osu.cse.mmxi;
 
-import java.io.IOException;
-
 import edu.osu.cse.mmxi.loader.SimpleLoader;
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
@@ -14,11 +12,7 @@ public class Console {
             System.exit(1);
         }
 
-        try {
-            SimpleLoader.load(file, m);
-        } catch (final IOException e) {
-            m.ui.error("I/O Error: " + e.getMessage());
-        }
+        Simulator.printErrors(m.ui, SimpleLoader.load(file, m));
         int memTrack = -1;
         while (!m.hasHalted()) {
             short mem;

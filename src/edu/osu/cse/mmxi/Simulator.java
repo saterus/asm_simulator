@@ -1,6 +1,5 @@
 package edu.osu.cse.mmxi;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -260,24 +259,6 @@ public final class Simulator {
         return true;
     }
 
-    public static void main(final String[] args) {
-
-        final Machine machine = new Machine();
-        final String file = processArgs(args, machine);
-
-        if (machine.ui.getMode() == UIMode.STEP)
-            new Console(machine, file);
-        else {
-            if (file != null)
-                try {
-                    Simulator.printErrors(machine.ui, SimpleLoader.load(file, machine));
-                } catch (final IOException e) {
-                    machine.ui.error("I/O Error: " + e.getMessage());
-                }
-            startClockLoop(machine);
-        }
-    }
-
     /**
      * Wrapper for printing errors returned from SimpleLoader
      * 
@@ -332,5 +313,19 @@ public final class Simulator {
             }
         } else if (errors.size() != 0)
             ui.prompt("Messages Detected. Press any key to continue.");
+    }
+
+    public static void main(final String[] args) {
+
+        final Machine machine = new Machine();
+        final String file = processArgs(args, machine);
+
+        if (machine.ui.getMode() == UIMode.STEP)
+            new Console(machine, file);
+        else {
+            if (file != null)
+                Simulator.printErrors(machine.ui, SimpleLoader.load(file, machine));
+            startClockLoop(machine);
+        }
     }
 }
