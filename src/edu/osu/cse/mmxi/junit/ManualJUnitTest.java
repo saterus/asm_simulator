@@ -103,10 +103,10 @@ public class ManualJUnitTest {
 
         System.out.println("Should enter Character, no number:");
 
-        // final TRAP trap = new TRAP(0x33);
-        // trap.execute(m);
+        final TRAP trap = new TRAP(0x33);
+        trap.execute(m);
 
-        // assertEquals((short) 9, m.getRegister(r0).getValue());
+        assertEquals((short) 9, m.getRegister(r0).getValue());
 
     }
 
@@ -116,6 +116,6 @@ public class ManualJUnitTest {
         final TRAP trap = new TRAP(0x43);
         trap.execute(m);
 
-        // assertEquals((m.getRegister(r0).getValue() != 0), true);
+        assertEquals((m.getRegister(r0).getValue() != 0), true);
     }
 }
