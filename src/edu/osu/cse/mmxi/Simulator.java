@@ -223,7 +223,7 @@ public final class Simulator {
                 errors.add(new Error("ignoring " + word + ".", ErrorCodes.UI_MULTI_FILE));
         }
         if (m.ui.getMode() == null)
-            m.ui.setMode(UIMode.QUIET);
+            m.ui.setMode(file == null ? UIMode.STEP : UIMode.QUIET);
         if (file == null && m.ui.getMode() != UIMode.STEP)
             errors.add(new Error(ErrorCodes.UI_NO_FILE));
         if (errors.size() != 0) {
@@ -237,9 +237,9 @@ public final class Simulator {
         }
         if (file == null && m.ui.getMode() != UIMode.STEP)
             System.exit(1);
-        if (MAX_CLOCK_COUNT < 0)
-            MAX_CLOCK_COUNT = Integer.MAX_VALUE;
-        // will always be true due to overflow
+        if (MAX_CLOCK_COUNT < 0) // /// // // // // Using this value means that the
+            MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
+                                                 // will always be true due to overflow
         return file;
     }
 
