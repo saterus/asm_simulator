@@ -1,6 +1,5 @@
 package edu.osu.cse.mmxi;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -436,12 +435,8 @@ public class Console {
         } else
             file = words[1];
         m.ui.print("Loading file: " + file + "\n");
-        try {
-            SimpleLoader.load(file, m);
-            printInstruction();
-        } catch (final IOException e) {
-            m.ui.print("I/O Error: " + e.getMessage());
-        }
+        Simulator.printErrors(m.ui, SimpleLoader.load(file, m));
+        printInstruction();
     }
 
     private void reg(final String... words) {

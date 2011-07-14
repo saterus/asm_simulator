@@ -101,7 +101,7 @@ public class UI {
             neg = true;
             num = num.substring(1);
         }
-        if (num.substring(0, 2).toLowerCase().equals("0x"))
+        if (num.length() >= 2 && num.substring(0, 2).toLowerCase().equals("0x"))
             s = Short.parseShort((neg ? "-" : "") + num.substring(2), 16);
         else
             s = Short.parseShort((neg ? "-" : "") + num);
