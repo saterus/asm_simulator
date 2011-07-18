@@ -1,25 +1,24 @@
-#!Fquine.a!
-HQUINE_1000005E // Quine #!Sbitmask:x1000!
-//   1010    DATA xxxx // current loc (cl) (filled by prog) #!Scl:x1010!
-T10110001 // DATA 0001 // constants (c[.]) #!Snum1:x1011!
-T1012000A // DATA 000A //  | \n            #!Snum10:x1012!
-T1013003A // DATA 003A //  |               #!Snum58:x1013!
-T10140054 // DATA 0054 // -+ T             #!SnumT:x1014!
-T10150048 // DATA 0048 // string "HQUINE_" #!SnumH:x1015! #!Sstring:x1015!
+HQUINE_1000005E // Quine
+//   1010    DATA xxxx // current loc (cl) (filled by prog)
+T10110001 // DATA 0001 // constants (c[.])
+T1012000A // DATA 000A //  | \n
+T1013003A // DATA 003A //  |
+T10140054 // DATA 0054 // -+ T
+T10150048 // DATA 0048 // string "HQUINE_"
 T10160051 // DATA 0051 //  |
 T10170055 // DATA 0055 //  |
 T10180049 // DATA 0049 //  |
 T1019004E // DATA 004E //  |
-T101A0045 // DATA 0045 //  | E             #!SnumE:x101A!
+T101A0045 // DATA 0045 //  | E
 T101B005F // DATA 005F //  |
 T101C0000 // DATA 0000 // -+
-T101D1000 // DATA 1000 // header start (hs)#!Shs:x101D!
-T101E005E // DATA 005E // header len (hl)  #!Shl:x101E!
-T101F105D // DATA 105D // end of text (et) #!Set:x101F!
-T10201021 // DATA 1021 // exec (ex)        #!Sex:x1020!
-T10212011 // LD R0, x11     // a = 1       #!Sstart:x1021! #!L100!
-T1022E200 // LEA R1, x0 {   // b = *m[0]; do {             #!L101!
-T10237040 // STR R0, R1, x0 //   m[b] = a                  #!L102!
+T101D1000 // DATA 1000 // header start (hs)
+T101E005E // DATA 005E // header len (hl)
+T101F105D // DATA 105D // end of text (et)
+T10201021 // DATA 1021 // exec (ex)
+T10212011 // LD R0, x11     // a = 1 
+T1022E200 // LEA R1, x0 {   // b = *m[0]; do {
+T10237040 // STR R0, R1, x0 //   m[b] = a
 T10241261 // ADD R1, R1, #1 //   b++
 T10251000 // ADD R0, R0, R0 //   a *= 2
 T10260A23 // BRnp 23 }      // } while (a != 0)
@@ -54,9 +53,9 @@ T10422C20 // LD R6, x20 // ex
 T10434847 // JSR x47
 T10442012 // LD R0, x12 // c[A]
 T1045F021 // TRAP OUT
-T1046F025 // TRAP HALT #!Send:x1046!
+T1046F025 // TRAP HALT
                               // hex in R6
-T1047E20F // LEA R1, xF {     // b = *m[15]; do { #!SprintHex:x1047!
+T1047E20F // LEA R1, xF {     // b = *m[15]; do {
 T10485020 // AND R0, R0, #0   //   a = 0
 T10491423 // ADD R2, R0, #3 { //   c = 3; do {
 T104A6640 // LDR R3, R1, x0   //     d = m[b]
@@ -78,5 +77,5 @@ T1059F021 // TRAP OUT         //   print(a)
 T105A9640 // NOT R3, R1       //   d = ~b
 T105B56EF // AND R3, R3, #F   //   d = ~b & 0xf
 T105C0A48 // BRnp 48 }        // } while (d != 0)
-T105DD000 // RET #!Seof:x105E!
+T105DD000 // RET
 E1021
