@@ -72,7 +72,8 @@ public class SimpleLoader {
         }
 
         try {
-            fileReader.close();
+            if (fileReader != null)
+                fileReader.close();
         } catch (final IOException e) {
         }
         return errors;

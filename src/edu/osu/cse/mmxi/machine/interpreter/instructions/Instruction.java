@@ -2,6 +2,7 @@ package edu.osu.cse.mmxi.machine.interpreter.instructions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import edu.osu.cse.mmxi.Simulator;
 import edu.osu.cse.mmxi.machine.Machine;
@@ -9,7 +10,7 @@ import edu.osu.cse.mmxi.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.ui.Error;
 import edu.osu.cse.mmxi.ui.ErrorCodes;
 
-public interface Instruction {
+public abstract class Instruction {
 
     /**
      * Executes an instruction on the Machine.
@@ -18,7 +19,14 @@ public interface Instruction {
      *            The machine upon which to execute the instruction.
      * @return true if the executed instruction modified a general purpose register.
      */
-    public boolean execute(Machine m);
+    public abstract boolean execute(Machine m);
+
+    @Override
+    public String toString() {
+        return toString(null, null);
+    }
+
+    public abstract String toString(Machine context, Map<String, Short> symb);
 
     /**
      * Adds two registers and writes to a third.
@@ -30,7 +38,7 @@ public interface Instruction {
      * {@code ddd} represent the three-bit register indexes {@code sr1}, {@code sr2}, and
      * {@code dr}, respectively, and the {@code x}s represent "don't care" bits.
      */
-    public static class ADD implements Instruction {
+    public static class ADD extends Instruction {
         private final byte dr, sr1, sr2;
 
         public ADD(final int _dr, final int _sr1, final int _sr2) {
@@ -48,7 +56,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "ADD R" + dr + ", R" + sr1 + ", R" + sr2;
         }
     }
@@ -63,7 +71,7 @@ public interface Instruction {
      * {@code sss} and {@code ddd} represent the three-bit register indexes {@code sr} and
      * {@code dr}, respectively, and {@code iiiii} represents the immediate operand.
      */
-    public static class ADDimm implements Instruction {
+    public static class ADDimm extends Instruction {
         private final byte dr, sr;
         private final int  imm;
 
@@ -81,7 +89,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "ADD R" + dr + ", R" + sr + ", #" + imm;
         }
     }
@@ -96,7 +104,7 @@ public interface Instruction {
      * {@code ddd} represent the three-bit register indexes {@code sr1}, {@code sr2}, and
      * {@code dr}, respectively, and the {@code x}s represent "don't care" bits.
      */
-    public static class AND implements Instruction {
+    public static class AND extends Instruction {
         private final byte dr, sr1, sr2;
 
         public AND(final int _dr, final int _sr1, final int _sr2) {
@@ -114,7 +122,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "AND R" + dr + ", R" + sr1 + ", R" + sr2;
         }
     }
@@ -130,7 +138,7 @@ public interface Instruction {
      * {@code sss} and {@code ddd} represent the three-bit register indexes {@code sr} and
      * {@code dr}, respectively, and {@code iiiii} represents the immediate operand.
      */
-    public static class ANDimm implements Instruction {
+    public static class ANDimm extends Instruction {
         private final byte dr, sr;
         private final int  imm;
 
@@ -148,7 +156,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "AND R" + dr + ", R" + sr + ", #" + imm;
         }
     }
@@ -176,7 +184,7 @@ public interface Instruction {
      * definitions for the {@code z} and {@code p} bits. The 9-bit {@code g} field is the
      * page offset.
      */
-    public static class BRx implements Instruction {
+    public static class BRx extends Instruction {
         private final byte  nzp;
         private final short pgoff;
 
@@ -195,15 +203,17 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
+            String addr;
+            if (true)
+                addr = "x" + MemoryUtilities.uShortToHex(pgoff);
             if (nzp == 0)
-                return pgoff == 0 ? "NOP" : "DATA " + MemoryUtilities.uShortToHex(pgoff);
+                return pgoff == 0 ? "NOP" : "DATA " + addr;
             else if (nzp == 7)
-                return "JMP x" + MemoryUtilities.sShortToHex(pgoff);
+                return "JMP " + addr;
             else
                 return "BR" + ((nzp & 4) != 0 ? "n" : "") + ((nzp & 2) != 0 ? "z" : "")
-                    + ((nzp & 1) != 0 ? "p" : "") + " x"
-                    + MemoryUtilities.sShortToHex(pgoff);
+                    + ((nzp & 1) != 0 ? "p" : "") + " " + addr;
         }
     }
 
@@ -223,14 +233,14 @@ public interface Instruction {
      * {@code n} and {@code z} bit and a set {@code p} bit (which means that the last
      * register which changed was set to a positive number).
      */
-    public static class DBUG implements Instruction {
+    public static class DBUG extends Instruction {
         @Override
         public boolean execute(final Machine m) {
             for (int i = 0; i < 8; i++) {
                 m.ui.print("R" + i + " "
                     + MemoryUtilities.uShortToHex(m.getRegister(i).getValue()) + "   ");
                 if (i == 3)
-                    m.ui.print(m.getFlags().toString() + "\n");
+                    m.ui.print(m.getFlags() + "\n");
                 else if (i == 7)
                     m.ui.print("PC "
                         + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
@@ -240,7 +250,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "DBUG";
         }
     }
@@ -253,7 +263,7 @@ public interface Instruction {
      * where {@code x} means "don't care" and the 9-bit {@code g} field is the page
      * offset.
      */
-    public static class JSR implements Instruction {
+    public static class JSR extends Instruction {
         private final boolean l;
         private final short   pgoff;
 
@@ -272,7 +282,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return (l ? "JSR" : "JMP") + " x" + MemoryUtilities.sShortToHex(pgoff);
         }
     }
@@ -285,7 +295,7 @@ public interface Instruction {
      * {@code JSR} command is {@code 11001xxggggggggg}, where {@code x} means "don't care"
      * and the 9-bit {@code g} field is the page offset.
      */
-    public static class JSRR implements Instruction {
+    public static class JSRR extends Instruction {
         private final boolean l;
         private final byte    br, index;
 
@@ -304,7 +314,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return (l ? "JSR" : "JMP") + "R R" + br + ", x"
                 + MemoryUtilities.sShortToHex(index);
         }
@@ -316,7 +326,7 @@ public interface Instruction {
      * is the number of the destination register and the 9-bit {@code g} field is the page
      * offset.
      */
-    public static class LD implements Instruction {
+    public static class LD extends Instruction {
         private final byte  dr;
         private final short pgoff;
 
@@ -334,7 +344,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "LD R" + dr + ", x" + MemoryUtilities.sShortToHex(pgoff);
         }
     }
@@ -345,7 +355,7 @@ public interface Instruction {
      * syntax of the command is {@code 1010dddggggggggg}, where {@code ddd} is the number
      * of the destination register and the 9-bit {@code g} field is the page offset.
      */
-    public static class LDI implements Instruction {
+    public static class LDI extends Instruction {
         private final byte  dr;
         private final short pgoff;
 
@@ -364,7 +374,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "LDI R" + dr + ", x" + MemoryUtilities.sShortToHex(pgoff);
         }
     }
@@ -376,7 +386,7 @@ public interface Instruction {
      * is the destination register, {@code bbb} is the base register, and the 6-bit
      * {@code n} field is the index.
      */
-    public static class LDR implements Instruction {
+    public static class LDR extends Instruction {
         private final byte dr, br, index;
 
         public LDR(final int _dr, final int _br, final int _index) {
@@ -394,7 +404,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "LDR R" + dr + ", R" + br + ", x" + MemoryUtilities.sShortToHex(index);
         }
     }
@@ -405,7 +415,7 @@ public interface Instruction {
      * {@code 1110dddggggggggg}, where {@code ddd} is the destination register and the
      * 9-bit {@code g} field is the page offset.
      */
-    public static class LEA implements Instruction {
+    public static class LEA extends Instruction {
         private final byte  dr;
         private final short pgoff;
 
@@ -423,7 +433,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "LEA R" + dr + ", x" + MemoryUtilities.sShortToHex(pgoff);
         }
     }
@@ -434,7 +444,7 @@ public interface Instruction {
      * represent the three-bit register indexes {@code sr} and {@code dr}, respectively,
      * and the {@code x}s represent "don't care" bits.
      */
-    public static class NOT implements Instruction {
+    public static class NOT extends Instruction {
         private final byte dr, sr;
 
         public NOT(final int _dr, final int _sr) {
@@ -450,7 +460,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "NOT R" + dr + ", R" + sr;
         }
     }
@@ -462,7 +472,7 @@ public interface Instruction {
      * special case of the {@code JMPR} command, as it is equivalent in effect to
      * {@code JMPR R7, #0} ( = {@code C1C0}).
      */
-    public static class RET implements Instruction {
+    public static class RET extends Instruction {
         @Override
         public boolean execute(final Machine m) {
             m.getPCRegister().setValue(m.getRegister(7).getValue());
@@ -470,7 +480,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "RET";
         }
     }
@@ -480,7 +490,7 @@ public interface Instruction {
      * syntax of the command is {@code 0011sssggggggggg}, where {@code sss} is the number
      * of the source register and the 9-bit {@code g} field is the page offset.
      */
-    public static class ST implements Instruction {
+    public static class ST extends Instruction {
         private final byte  sr;
         private final short pgoff;
 
@@ -497,7 +507,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "ST R" + sr + ", x" + MemoryUtilities.sShortToHex(pgoff);
         }
     }
@@ -508,7 +518,7 @@ public interface Instruction {
      * syntax of the command is {@code 1010sssggggggggg}, where {@code sss} is the number
      * of the source register and the 9-bit {@code g} field is the page offset.
      */
-    public static class STI implements Instruction {
+    public static class STI extends Instruction {
         private final byte  sr;
         private final short pgoff;
 
@@ -526,7 +536,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "STI R" + sr + ", x" + MemoryUtilities.sShortToHex(pgoff);
         }
     }
@@ -537,7 +547,7 @@ public interface Instruction {
      * command is {@code 0110sssbbbnnnnnn}, where {@code sss} is the source register,
      * {@code bbb} is the base register, and the 6-bit {@code n} field is the index.
      */
-    public static class STR implements Instruction {
+    public static class STR extends Instruction {
         private final byte sr, br, index;
 
         public STR(final int _sr, final int _br, final int _index) {
@@ -554,7 +564,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             return "STR R" + sr + ", R" + br + ", x" + MemoryUtilities.sShortToHex(index);
         }
     }
@@ -586,7 +596,7 @@ public interface Instruction {
      * If a trap vector other than these 7 is encountered, an error (Warning 400) is
      * printed.
      */
-    public static class TRAP implements Instruction {
+    public static class TRAP extends Instruction {
         public static final int OUT = 0x21, PUTS = 0x22, IN = 0x23, HALT = 0x25,
             OUTN = 0x31, INN = 0x33, RND = 0x43;
         private final byte      vector;
@@ -644,7 +654,7 @@ public interface Instruction {
         }
 
         @Override
-        public String toString() {
+        public String toString(final Machine context, final Map<String, Short> symb) {
             switch (vector) {
             case 0x21:
                 return "TRAP OUT";

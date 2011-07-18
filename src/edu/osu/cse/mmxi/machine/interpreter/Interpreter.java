@@ -1,5 +1,7 @@
 package edu.osu.cse.mmxi.machine.interpreter;
 
+import java.util.Map;
+
 import edu.osu.cse.mmxi.machine.Machine;
 import edu.osu.cse.mmxi.machine.interpreter.instructions.Instruction;
 
@@ -25,5 +27,11 @@ public class Interpreter implements ALU {
     @Override
     public String readInstructionAt(final short mem) {
         return readInstruction(m.getMemory(mem));
+    }
+
+    public String readInstruction(final short inst, final Machine context,
+        final Map<String, Short> symb) {
+        final Instruction i = InstructionParser.parseInstruction(inst);
+        return i.toString(context, symb);
     }
 }

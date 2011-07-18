@@ -128,49 +128,58 @@ public class InstructionParser {
         STR = 7, TRAP = 15;
 
     public static Instruction parseInstruction(final short inst) {
-        switch (inst >> 12 & 0xf) {
+        switch (getBits(inst, 12, 3)) {
         case BRx:
-            return new Instruction.BRx(inst >> 9 & 0x7, inst & 0x1ff);
+            return new Instruction.BRx(getBits(inst, 9, 3), getBits(inst, 0, 9));
         case ADD:
-            if ((inst & 0x20) == 0)
-                return new Instruction.ADD(inst >> 9 & 0x7, inst >> 6 & 0x7, inst & 0x7);
+            if (getBits(inst, 5, 1) == 0)
+                return new Instruction.ADD(getBits(inst, 9, 3), getBits(inst, 6, 3),
+                    getBits(inst, 0, 3));
             else
-                return new Instruction.ADDimm(inst >> 9 & 0x7, inst >> 6 & 0x7,
-                    inst & 0x1f);
+                return new Instruction.ADDimm(getBits(inst, 9, 3), getBits(inst, 6, 3),
+                    getBits(inst, 0, 5));
         case LD:
-            return new Instruction.LD(inst >> 9 & 0x7, inst & 0x1ff);
+            return new Instruction.LD(getBits(inst, 9, 3), getBits(inst, 0, 9));
         case ST:
-            return new Instruction.ST(inst >> 9 & 0x7, inst & 0x1ff);
+            return new Instruction.ST(getBits(inst, 9, 3), getBits(inst, 0, 9));
         case JSR:
-            return new Instruction.JSR((inst & 0x800) != 0, inst & 0x1ff);
+            return new Instruction.JSR(getBits(inst, 11, 1) != 0, getBits(inst, 0, 9));
         case AND:
-            if ((inst & 0x20) == 0)
-                return new Instruction.AND(inst >> 9 & 0x7, inst >> 6 & 0x7, inst & 0x7);
+            if (getBits(inst, 5, 1) == 0)
+                return new Instruction.AND(getBits(inst, 9, 3), getBits(inst, 6, 3),
+                    getBits(inst, 0, 3));
             else
-                return new Instruction.ANDimm(inst >> 9 & 0x7, inst >> 6 & 0x7,
-                    inst & 0x1f);
+                return new Instruction.ANDimm(getBits(inst, 9, 3), getBits(inst, 6, 3),
+                    getBits(inst, 0, 5));
         case LDR:
-            return new Instruction.LDR(inst >> 9 & 0x7, inst >> 6 & 0x7, inst & 0x3f);
+            return new Instruction.LDR(getBits(inst, 9, 3), getBits(inst, 6, 3), getBits(
+                inst, 0, 6));
         case STR:
-            return new Instruction.STR(inst >> 9 & 0x7, inst >> 6 & 0x7, inst & 0x3f);
+            return new Instruction.STR(getBits(inst, 9, 3), getBits(inst, 6, 3), getBits(
+                inst, 0, 6));
         case DBUG:
             return new Instruction.DBUG();
         case NOT:
-            return new Instruction.NOT(inst >> 9 & 0x7, inst >> 6 & 0x7);
+            return new Instruction.NOT(getBits(inst, 9, 3), getBits(inst, 6, 3));
         case LDI:
-            return new Instruction.LDI(inst >> 9 & 0x7, inst & 0x1ff);
+            return new Instruction.LDI(getBits(inst, 9, 3), getBits(inst, 0, 9));
         case STI:
-            return new Instruction.STI(inst >> 9 & 0x7, inst & 0x1ff);
+            return new Instruction.STI(getBits(inst, 9, 3), getBits(inst, 0, 9));
         case JSRR:
-            return new Instruction.JSRR((inst & 0x800) != 0, inst >> 6 & 0x7, inst & 0x3f);
+            return new Instruction.JSRR(getBits(inst, 11, 1) != 0, getBits(inst, 6, 3),
+                getBits(inst, 0, 6));
         case RET:
             return new Instruction.RET();
         case LEA:
-            return new Instruction.LEA(inst >> 9 & 0x7, inst & 0x1ff);
+            return new Instruction.LEA(getBits(inst, 9, 3), getBits(inst, 0, 9));
         case TRAP:
-            return new Instruction.TRAP(inst & 0xff);
+            return new Instruction.TRAP(getBits(inst, 0, 8));
         default:
             return null; // impossible; here for eclipse's benefit
         }
+    }
+
+    private static int getBits(final int dat, final int begin, final int len) {
+        return dat >> begin & (1 << len) - 1;
     }
 }

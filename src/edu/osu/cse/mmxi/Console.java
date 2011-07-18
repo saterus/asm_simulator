@@ -813,10 +813,14 @@ public class Console {
     }
 
     private String toSymb(final short addr) {
+        return toSymb(addr, symbols);
+    }
+
+    public static String toSymb(final short addr, final Map<String, Short> symb) {
         int closest = -1;
         final int uAddr = addr & 0xFFFF;
         String cSymb = null;
-        for (final Entry<String, Short> i : symbols.entrySet()) {
+        for (final Entry<String, Short> i : symb.entrySet()) {
             final int uVal = i.getValue() & 0xFFFF;
             if (uVal > closest && uVal <= uAddr) {
                 cSymb = i.getKey();
