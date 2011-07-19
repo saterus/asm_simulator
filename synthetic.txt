@@ -1,0 +1,58 @@
+ADD	Rd, Rs1, Rs2
+ADD	Rd, Rs, #imm
+AND	Rd, Rs1, Rs2
+AND	Rd, Rs, #imm
+BR	off
+BRn	off
+BRz	off
+BRp	off
+BRnz	off
+BRnp	off
+BRzp	off
+BRnzp	off
+DBUG
+JMP	off
+JSR	off
+JMPR	off
+JSRR	off
+LD	Rd, off
+LDI	Rd, off
+LDR	Rd, Rb, ind
+LEA	Rd, off
+NOT	Rd, Rs
+RET
+ST	Rs, off
+STI	Rs, off
+STR	Rs, Rb, ind
+TRAP	vect
+
+AND	Rd, Rs		= AND Rd, Rd, Rs
+AND	Rd, #imm	= AND Rd, Rd, #imm
+AND	Rd, #imm	= AND Rd, Rd, #imm
+CLR	Rd		= INC Rd, #0
+CLR	R*, off		= CLR R
+			  ST R, off
+DBL	Rd, Rs		= ADD Rd, Rs, Rs
+DBL	Rd		= DBL Rd, Rd
+DEC	Rd, Rs*		= NEG Rs
+			  INC Rd, Rs
+DEC	Rd, #imm	= ADD Rd, Rd, #-imm
+DEC	Rd		= DEC Rd, #1
+INC	Rd, Rs		= ADD Rd, Rd, Rs
+INC	Rd, #imm	= ADD Rd, Rd, #imm
+INC	Rd		= INC Rd, #1
+LDR	Rd, Rb		= LDR Rd, Rb, #0
+MOV	Rd, Rs		= ADD Rd, Rs, #0
+NEG	Rd, Rs		= NOT Rd, Rs
+			  INC Rd
+NEG	Rd		= NEG Rd, Rd
+NOT	Rd		= NOT Rd, Rd
+POP	Rd, Rstk	= DEC Rstk
+			  LDR Rd, Rstk
+PUSH	Rd, Rstk	= STR Rd, Rstk
+			  INC Rstk
+SHL	Rd, 0<=imm<16	= (DBL Rd) [imm times]
+STR	Rd, Rb		= STR Rd, Rb, #0
+SUB	Rd, Rs1, Rs2	= NEG Rd, Rs2
+			  INC Rd, Rs1
+TST	Rd		= AND Rd, Rd, Rd
