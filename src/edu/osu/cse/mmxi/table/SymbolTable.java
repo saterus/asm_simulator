@@ -23,21 +23,21 @@ public class SymbolTable {
         return equateMap.get(label);
     }
 
-    public static boolean SymbolIsDefined(final String label) {
+    public static boolean isSymbolDefined(final String label) {
         final boolean checkSymbol = symbolMap.containsKey(label);
 
         return checkSymbol;
 
     }
 
-    public void UpdateLocation(final String label, final int location) {
+    public void updateLocation(final String label, final int location) {
         symbolMap.put(label, location);
     }
 
     // only gets you the line location, not the actual address.
-    public int GetLocation(final String label) {
-        final int Location = symbolMap.get(label);
-        return Location;
+    public int getLocation(final String label) {
+        final int location = symbolMap.get(label);
+        return location;
 
     }
 

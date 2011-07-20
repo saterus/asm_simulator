@@ -1,8 +1,8 @@
 package edu.osu.cse.mmxi.table;
 
-public class Machine_Op_Table {
+public class MachineOpTable {
 
-    public static boolean isinTable2(String candidate) {
+    public static boolean isInTable2(String candidate) {
         candidate = candidate.toUpperCase();
         boolean status = false;
         if (candidate.equals("ADD"))
@@ -56,7 +56,7 @@ public class Machine_Op_Table {
 
     // converts the Instruction to opcode in binary function.
     // use that to concatanate with the rest of the binaries.
-    public static String binaryop(String candidate) {
+    public static String binaryOp(String candidate) {
         candidate = candidate.toUpperCase();
         String opcode = "";
         if (candidate.equals("ADD"))

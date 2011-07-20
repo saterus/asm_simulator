@@ -11,10 +11,10 @@ public class PsuedoOpTable {
     // empty Constructor
     // Changed this to just create the table, no reason not to here -DMB 4/10/11
     public PsuedoOpTable() {
-        table = add_Pseudo_Map();
+        table = addPseudoMap();
     }
 
-    private Map<String, Integer> add_Pseudo_Map() {
+    private Map<String, Integer> addPseudoMap() {
 
         final Map<String, Integer> temp = new HashMap<String, Integer>();
 
