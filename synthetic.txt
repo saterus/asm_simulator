@@ -28,31 +28,55 @@ TRAP	vect
 
 AND	Rd, Rs		= AND Rd, Rd, Rs
 AND	Rd, #imm	= AND Rd, Rd, #imm
-AND	Rd, #imm	= AND Rd, Rd, #imm
 CLR	Rd		= INC Rd, #0
-CLR	R*, off		= CLR R
-			  ST R, off
+CLR	off, Rj*	= CLR Rj
+			  ST Rj, off
 DBL	Rd, Rs		= ADD Rd, Rs, Rs
 DBL	Rd		= DBL Rd, Rd
-DEC	Rd, Rs*		= NEG Rs
+DEC	Rd, Rs [s == d]	= CLR Rd
+DEC	Rd, Rs [s != d]	= NOT Rd
 			  INC Rd, Rs
+			  NOT Rd
 DEC	Rd, #imm	= ADD Rd, Rd, #-imm
 DEC	Rd		= DEC Rd, #1
 INC	Rd, Rs		= ADD Rd, Rd, Rs
 INC	Rd, #imm	= ADD Rd, Rd, #imm
 INC	Rd		= INC Rd, #1
 LDR	Rd, Rb		= LDR Rd, Rb, #0
-MOV	Rd, Rs		= ADD Rd, Rs, #0
+MOV	Rd, Rs		= AND Rd, Rs, #-1
 NEG	Rd, Rs		= NOT Rd, Rs
 			  INC Rd
 NEG	Rd		= NEG Rd, Rd
 NOT	Rd		= NOT Rd, Rd
+NOP			= BR x0
 POP	Rd, Rstk	= DEC Rstk
 			  LDR Rd, Rstk
-PUSH	Rd, Rstk	= STR Rd, Rstk
+PUSH	Rs, Rstk	= STR Rs, Rstk
 			  INC Rstk
 SHL	Rd, 0<=imm<16	= (DBL Rd) [imm times]
 STR	Rd, Rb		= STR Rd, Rb, #0
 SUB	Rd, Rs1, Rs2	= NEG Rd, Rs2
-			  INC Rd, Rs1
-TST	Rd		= AND Rd, Rd, Rd
+	[d != s1]	  INC Rd, Rs1
+SUB	Rd, Rs1, Rs2	= DEC Rd, Rs2
+	[d == s1]
+TST	Rd		= MOV Rd, Rd
+XCHG	Ra, Rb, Rj*	= MOV Ra, Rj
+	[j != a, b]	  MOV Rb, Ra
+			  MOV Rj, Rb
+XOR	Rd,Ra,Rb,Rj	= CLR Rd
+	[a == b]
+XOR	Rd,Ra*,Rb*,Rj	= AND Rd, Ra, Rb
+	[a != b == j]	  NOT Rd
+			  NOT Ra
+			  NOT Rb
+			  AND Ra, Rb
+			  NOT Ra
+			  AND Rd, Ra
+XOR	Rd,Ra,Rb,Rj*	= NOT Rd, Ra
+	[j != a != b]	  NOT Rj, Rb
+			  AND Rj, Rd
+			  NOT Rj
+			  AND Rd, Ra, Rb
+			  NOT Rd
+			  AND Rd, Rj
+			  
