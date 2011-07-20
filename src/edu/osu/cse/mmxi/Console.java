@@ -19,6 +19,13 @@ public class Console {
     private int                       symbLength = 0;
     private final Map<Short, Integer> lines;
 
+    private final String              mcmoxel    = ""
+                                                     + "    _/      _/            _/      _/                                _/\n"
+                                                     + "   _/_/  _/_/    _/_/_/  _/_/  _/_/    _/_/    _/    _/    _/_/    _/\n"
+                                                     + "  _/  _/  _/  _/        _/  _/  _/  _/    _/    _/_/    _/_/_/_/  _/\n"
+                                                     + " _/      _/  _/        _/      _/  _/    _/  _/    _/  _/        _/\n"
+                                                     + "_/      _/    _/_/_/  _/      _/    _/_/    _/    _/    _/_/_/  _/\n\n";
+
     public Console(final Machine _m, final String _file) {
         m = _m;
         maxClock = Simulator.MAX_CLOCK_COUNT;
@@ -28,6 +35,7 @@ public class Console {
         watchpoints = new TreeMap<Integer, Short>();
         symbols = new TreeMap<String, Short>();
         lines = new TreeMap<Short, Integer>();
+        m.ui.print(mcmoxel);
         m.ui.print("McMoxel MMXI Emulator\n");
         m.ui.print("Version 2");
         if (file != null)
