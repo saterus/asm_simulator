@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi.table;
+package edu.osu.cse.mmxi.asm.table;
 
 import java.util.HashMap;
 import java.util.Map;

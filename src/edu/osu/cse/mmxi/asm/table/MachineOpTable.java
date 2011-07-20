@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi.table;
+package edu.osu.cse.mmxi.asm.table;
 
 public class MachineOpTable {
 

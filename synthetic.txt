@@ -28,7 +28,7 @@ TRAP	vect
 
 AND	Rd, Rs		= AND Rd, Rd, Rs
 AND	Rd, #imm	= AND Rd, Rd, #imm
-CLR	Rd		= INC Rd, #0
+CLR	Rd		= AND Rd, #0
 CLR	off, Rj*	= CLR Rj
 			  ST Rj, off
 DBL	Rd, Rs		= ADD Rd, Rs, Rs
@@ -66,17 +66,16 @@ XCHG	Ra, Rb, Rj*	= MOV Ra, Rj
 XOR	Rd,Ra,Rb,Rj	= CLR Rd
 	[a == b]
 XOR	Rd,Ra*,Rb*,Rj	= AND Rd, Ra, Rb
-	[a != b == j]	  NOT Rd
-			  NOT Ra
+	[a != b == j]	  NOT Ra
 			  NOT Rb
-			  AND Ra, Rb
-			  NOT Ra
-			  AND Rd, Ra
+			  AND Rb, Ra
+			  NOT Rb
+			  NOT Rd
+			  AND Rd, Rb
 XOR	Rd,Ra,Rb,Rj*	= NOT Rd, Ra
 	[j != a != b]	  NOT Rj, Rb
 			  AND Rj, Rd
-			  NOT Rj
 			  AND Rd, Ra, Rb
+			  NOT Rj
 			  NOT Rd
 			  AND Rd, Rj
-			  
