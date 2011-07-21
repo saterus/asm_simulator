@@ -63,7 +63,23 @@ TST	Rd		= MOV Rd, Rd
 XCHG	Ra, Rb, Rj*	= MOV Ra, Rj
 	[j != a, b]	  MOV Rb, Ra
 			  MOV Rj, Rb
-XOR	Rd,Ra,Rb,Rj	= CLR Rd
+XNOR	Rd, Ra, Rb, Rj	= MOV Rd, Ra
+	[a == b]
+XNOR	Rd,Ra*,Rb*,Rj	= NOT Rd, Ra
+	[a != b == j]	  AND Rd, Rb
+			  NOT Rb
+			  AND Rb, Ra
+			  NOT Rb
+			  NOT Rd
+			  AND Rd, Rb
+XNOR	Rd,Ra,Rb,Rj*	= NOT Rd, Ra
+	[j != a != b]	  NOT Rj, Rb
+			  AND Rj, Ra
+			  AND Rd, Rb
+			  NOT Rj
+			  NOT Rd
+			  AND Rd, Rj
+XOR	Rd, Ra, Rb, Rj	= CLR Rd
 	[a == b]
 XOR	Rd,Ra*,Rb*,Rj	= AND Rd, Ra, Rb
 	[a != b == j]	  NOT Ra
@@ -79,3 +95,4 @@ XOR	Rd,Ra,Rb,Rj*	= NOT Rd, Ra
 			  NOT Rj
 			  NOT Rd
 			  AND Rd, Rj
+			  
