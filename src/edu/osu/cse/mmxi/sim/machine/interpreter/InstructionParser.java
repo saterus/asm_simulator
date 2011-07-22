@@ -128,7 +128,7 @@ public class InstructionParser {
         STR = 7, TRAP = 15;
 
     public static Instruction parseInstruction(final short inst) {
-        switch (getBits(inst, 12, 3)) {
+        switch (getBits(inst, 12, 4)) {
         case BRx:
             return new Instruction.BRx(getBits(inst, 9, 3), getBits(inst, 0, 9));
         case ADD:

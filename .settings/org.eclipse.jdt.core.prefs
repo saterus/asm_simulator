@@ -1,4 +1,4 @@
-#Sun Jun 26 00:21:30 EDT 2011
+#Thu Jul 21 16:02:19 EDT 2011
 eclipse.preferences.version=1
 org.eclipse.jdt.core.codeComplete.argumentPrefixes=
 org.eclipse.jdt.core.codeComplete.argumentSuffixes=
@@ -279,7 +279,7 @@ org.eclipse.jdt.core.formatter.number_of_empty_lines_to_preserve=1
 org.eclipse.jdt.core.formatter.put_empty_statement_on_new_line=true
 org.eclipse.jdt.core.formatter.tabulation.char=space
 org.eclipse.jdt.core.formatter.tabulation.size=4
-org.eclipse.jdt.core.formatter.use_on_off_tags=false
+org.eclipse.jdt.core.formatter.use_on_off_tags=true
 org.eclipse.jdt.core.formatter.use_tabs_only_for_leading_indentations=false
 org.eclipse.jdt.core.formatter.wrap_before_binary_operator=true
 org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested=true
