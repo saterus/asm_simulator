@@ -100,21 +100,21 @@ public class InstructionFormat {
                           "1001A--A--xxxxxx",  //                     NOT Rd
                           "0101A--A--0xxC--"}, //                     AND Rd, Rb
         {"XNOR*", "RRRR", "0101A--B--111111"}, // XNOR Rd,Ra,Rb,Rj [a == b] = MOV Rd, Ra
-        {"XOR*",  "RRRR", "1001A--B--xxxxxx",  // XOR Rd,Ra,Rb,Rj*  = NOT Rd, Ra
+        {"XOR*",  "RRRR", "1001A--B--xxxxxx",  // XOR  Rd,Ra,Rb,Rj* = NOT Rd, Ra
                           "1001D--C--xxxxxx",  //      [j != a != b]  NOT Rj, Rb
                           "0101D--D--0xxA--",  //                     AND Rj, Rd
                           "0101A--B--0xxC--",  //                     AND Rd, Ra, Rb
                           "1001D--D--xxxxxx",  //                     NOT Rj
                           "1001A--A--xxxxxx",  //                     NOT Rd
                           "0101A--A--0xxD--"}, //                     AND Rd, Rj
-        {"XOR*",  "RRRR", "0101A--B--0xxC--",  // XOR Rd,Ra*,Rb*,Rj = AND Rd, Ra, Rb
+        {"XOR*",  "RRRR", "0101A--B--0xxC--",  // XOR  Rd,Ra*,Rb*,Rj= AND Rd, Ra, Rb
                           "1001B--B--xxxxxx",  //      [a != b == j]  NOT Ra
                           "1001C--C--xxxxxx",  //                     NOT Rb
                           "0101C--C--0xxB--",  //                     AND Rb, Ra
                           "1001C--C--xxxxxx",  //                     NOT Rb
                           "1001A--A--xxxxxx",  //                     NOT Rd
                           "0101A--A--0xxC--"}, //                     AND Rd, Rb
-        {"XOR*",  "RRRR", "0101A--A--100000"}};// XOR Rd,Ra,Rb,Rj [a == b] = CLR Rd
+        {"XOR*",  "RRRR", "0101A--A--100000"}};// XOR  Rd,Ra,Rb,Rj [a == b] = CLR Rd
     // @formatter:on
     public static final Map<String, List<IFRecord>> instructions = new HashMap<String, List<IFRecord>>();
     static {
@@ -191,65 +191,68 @@ public class InstructionFormat {
             throw new ParseException("Immediate used in place of register or vice-versa");
         IFRecord inst = candidates.get(0);
         if (inst.special)
-            if (key.equals("DEC:2")) {
-                if (isReg[1] == 0)
-                    values[1] = (short) -values[1];
-                else if (values[0] == values[1])
-                    inst = candidates.get(1);
-            } else if (key.equals("SHL:2")) {
-                final IFRecord shl = inst;
-                inst = new IFRecord();
-                inst.template = new short[values[1]];
-                inst.replacements = new int[shl.replacements.length * values[1]][];
-                for (int i = 0; i < values[1]; i++) {
-                    inst.template[i] = shl.template[0];
-                    for (int j = 0; j < shl.replacements.length; j++) {
-                        final int[] arr = new int[4];
-                        arr[0] = shl.replacements[j][0];
-                        arr[1] = i;
-                        arr[2] = shl.replacements[j][2];
-                        arr[3] = shl.replacements[j][3];
-                        inst.replacements[i * shl.replacements.length + j] = arr;
-                    }
-                }
-            } else if (key.equals("SUB:3")) {
-                if (values[0] == values[1])
-                    inst = candidates.get(1);
-            } else if (key.equals("XNOR:4") || key.equals("XOR:4"))
-                if (values[1] == values[2])
-                    inst = candidates.get(2);
-                else if (values[2] == values[3])
-                    inst = candidates.get(1);
-        for (int i = 0; i < values.length; i++) {
-            boolean valid = false;
-            switch (inst.signature.charAt(i)) {
-            case 'R':
-                valid = values[i] >= 0 && values[i] < 8;
-                break;
-            case '4':
-                valid = values[i] >= 0 && values[i] < 16;
-                break;
-            case '5':
-                valid = values[i] >= -16 && values[i] < 16;
-                break;
-            case '6':
-                valid = values[i] >= 0 && values[i] < 64;
-                break;
-            case '8':
-                valid = values[i] >= 0 && values[i] < 256;
-                break;
-            case '9':
-                valid = true;
-                break;
-            }
-            if (!valid)
+            inst = doSpecial(key, isReg, values, candidates);
+        for (int i = 0; i < values.length; i++)
+            if (!isValid(inst.signature.charAt(i), values[i]))
                 throw new ParseException("parameter " + (i + 1) + " out of range");
-        }
         final short[] ret = new short[inst.template.length];
         System.arraycopy(inst.template, 0, ret, 0, ret.length);
         for (final int[] rep : inst.replacements)
             ret[rep[1]] |= (values[rep[0]] & (1 << rep[3]) - 1) << rep[2];
         return ret;
+    }
+
+    private static IFRecord doSpecial(final String key, final int[] isReg,
+        final short[] values, final List<IFRecord> candidates) {
+        IFRecord inst = candidates.get(0);
+        if (key.equals("DEC:2")) {
+            if (isReg[1] == 0)
+                values[1] = (short) -values[1];
+            else if (values[0] == values[1])
+                inst = candidates.get(1);
+        } else if (key.equals("SHL:2")) {
+            final IFRecord shl = inst;
+            inst = new IFRecord();
+            inst.template = new short[values[1]];
+            inst.replacements = new int[shl.replacements.length * values[1]][];
+            for (int i = 0; i < values[1]; i++) {
+                inst.template[i] = shl.template[0];
+                for (int j = 0; j < shl.replacements.length; j++) {
+                    final int[] arr = new int[4];
+                    arr[0] = shl.replacements[j][0];
+                    arr[1] = i;
+                    arr[2] = shl.replacements[j][2];
+                    arr[3] = shl.replacements[j][3];
+                    inst.replacements[i * shl.replacements.length + j] = arr;
+                }
+            }
+        } else if (key.equals("SUB:3")) {
+            if (values[0] == values[1])
+                inst = candidates.get(1);
+        } else if (key.equals("XNOR:4") || key.equals("XOR:4"))
+            if (values[1] == values[2])
+                inst = candidates.get(2);
+            else if (values[2] == values[3])
+                inst = candidates.get(1);
+        return inst;
+    }
+
+    private static boolean isValid(final char sig, final short val) {
+        switch (sig) {
+        case 'R':
+            return val >= 0 && val < 8;
+        case '4':
+            return val >= 0 && val < 16;
+        case '5':
+            return val >= -16 && val < 16;
+        case '6':
+            return val >= 0 && val < 64;
+        case '8':
+            return val >= 0 && val < 256;
+        case '9':
+            return true;
+        }
+        return false;
     }
 
     public static class IFRecord {
