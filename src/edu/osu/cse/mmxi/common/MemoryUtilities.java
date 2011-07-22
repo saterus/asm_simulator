@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi.sim.machine.memory;
+package edu.osu.cse.mmxi.common;
 
 /**
  * The <code>MemoryUtilities</code> class contains several methods of general-purpose use

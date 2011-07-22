@@ -9,8 +9,8 @@ import java.util.NoSuchElementException;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.Symbol;
-import edu.osu.cse.mmxi.sim.loader.parser.ParseException;
-import edu.osu.cse.mmxi.sim.machine.memory.MemoryUtilities;
+import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.ParseException;
 
 public class ArithmeticParser {
     public static final boolean collapseIfEvaluable = true;

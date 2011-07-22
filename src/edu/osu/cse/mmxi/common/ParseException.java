@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi.sim.loader.parser;
+package edu.osu.cse.mmxi.common;
 
 public class ParseException extends Exception {
 

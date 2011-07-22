@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.osu.cse.mmxi.sim.loader.parser.ParseException;
+import edu.osu.cse.mmxi.common.ParseException;
 
 public class InstructionFormat {
 

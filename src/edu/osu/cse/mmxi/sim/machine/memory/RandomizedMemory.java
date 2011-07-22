@@ -1,5 +1,7 @@
 package edu.osu.cse.mmxi.sim.machine.memory;
 
+import edu.osu.cse.mmxi.common.MemoryUtilities;
+
 /**
  * An implementation of physical memory where all words in all pages are initialized to
  * random bytes instead of zeros.

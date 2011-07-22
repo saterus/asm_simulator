@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
-import edu.osu.cse.mmxi.sim.machine.memory.MemoryUtilities;
 import edu.osu.cse.mmxi.sim.ui.Error;
 import edu.osu.cse.mmxi.sim.ui.ErrorCodes;
 import edu.osu.cse.mmxi.sim.ui.UI;

@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
-import edu.osu.cse.mmxi.sim.machine.memory.MemoryUtilities;
 
 public class Console {
     private final Machine             m;

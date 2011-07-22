@@ -9,7 +9,8 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.osu.cse.mmxi.sim.machine.memory.MemoryUtilities;
+import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.ParseException;
 import edu.osu.cse.mmxi.sim.ui.Error;
 import edu.osu.cse.mmxi.sim.ui.ErrorCodes;
 

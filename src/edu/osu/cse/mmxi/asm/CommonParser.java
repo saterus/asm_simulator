@@ -7,8 +7,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
-import edu.osu.cse.mmxi.sim.loader.parser.ParseException;
-import edu.osu.cse.mmxi.sim.machine.memory.MemoryUtilities;
+import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.ParseException;
 
 public class CommonParser {
     private static final String zeroArgOps, allOps,

@@ -1,5 +1,7 @@
 package edu.osu.cse.mmxi.sim.machine.memory;
 
+import edu.osu.cse.mmxi.common.MemoryUtilities;
+
 /**
  * <p>
  * A representation of random access memory within a hardware computer system. Memory is

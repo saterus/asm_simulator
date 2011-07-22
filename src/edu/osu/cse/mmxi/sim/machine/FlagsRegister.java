@@ -1,6 +1,6 @@
 package edu.osu.cse.mmxi.sim.machine;
 
-import edu.osu.cse.mmxi.sim.machine.memory.MemoryUtilities;
+import edu.osu.cse.mmxi.common.MemoryUtilities;
 
 /**
  * A specific Register that comes with an atomic operation for retrieving and incrementing
