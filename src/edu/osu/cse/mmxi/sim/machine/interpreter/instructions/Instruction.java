@@ -57,7 +57,17 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "ADD R" + dr + ", R" + sr1 + ", R" + sr2;
+            if (sr1 == sr2) {
+                if (dr == sr1)
+                    return "DBL R" + dr;
+                else
+                    return "DBL R" + dr + ", R" + sr1;
+            } else if (dr == sr1)
+                return "INC R" + dr + ", R" + sr2;
+            else if (dr == sr2)
+                return "INC R" + dr + ", R" + sr1;
+            else
+                return "ADD R" + dr + ", R" + sr1 + ", R" + sr2;
         }
     }
 
@@ -90,7 +100,18 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "ADD R" + dr + ", R" + sr + ", #" + imm;
+            if (dr == sr) {
+                if (imm < 0) {
+                    if (imm == -1)
+                        return "DEC R" + dr;
+                    else
+                        return "DEC R" + dr + ", #" + -imm;
+                } else if (imm == 1)
+                    return "INC R" + dr;
+                else
+                    return "INC R" + dr + ", #" + imm;
+            } else
+                return "ADD R" + dr + ", R" + sr + ", #" + imm;
         }
     }
 
@@ -123,7 +144,12 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "AND R" + dr + ", R" + sr1 + ", R" + sr2;
+            if (sr1 == dr)
+                return "AND R" + dr + ", #" + sr2;
+            else if (sr2 == dr)
+                return "AND R" + dr + ", #" + sr1;
+            else
+                return "AND R" + dr + ", R" + sr1 + ", R" + sr2;
         }
     }
 
@@ -157,7 +183,17 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "AND R" + dr + ", R" + sr + ", #" + imm;
+            if (imm == 0)
+                return "CLR R" + dr;
+            else if (imm == -1) {
+                if (sr == dr)
+                    return "TST R" + dr;
+                else
+                    return "MOV R" + dr + ", R" + sr;
+            } else if (sr == dr)
+                return "AND R" + dr + ", #" + imm;
+            else
+                return "AND R" + dr + ", R" + sr + ", #" + imm;
         }
     }
 
@@ -405,7 +441,11 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "LDR R" + dr + ", R" + br + ", x" + MemoryUtilities.sShortToHex(index);
+            if (index == 0)
+                return "LDR R" + dr + ", R" + br;
+            else
+                return "LDR R" + dr + ", R" + br + ", x"
+                    + MemoryUtilities.sShortToHex(index);
         }
     }
 
@@ -461,7 +501,10 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "NOT R" + dr + ", R" + sr;
+            if (dr == sr)
+                return "NOT R" + dr;
+            else
+                return "NOT R" + dr + ", R" + sr;
         }
     }
 

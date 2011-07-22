@@ -18,7 +18,6 @@ public class InstructionFormat {
         {"ADD",   "RR5",  "0001A--B--1C----"}, // ADD  Rd, Rs, #imm
         {"AND",   "RRR",  "0101A--B--0xxC--"}, // AND  Rd, Rs1, Rs2
         {"AND",   "RR5",  "0101A--B--1C----"}, // AND  Rd, Rs, #imm
-        {"BR",    "9",    "0000000A--------"}, // BR   off
         {"BRn",   "9",    "0000100A--------"}, // BRn  off
         {"BRz",   "9",    "0000010A--------"}, // BRz  off
         {"BRp",   "9",    "0000001A--------"}, // BRp  off
@@ -66,6 +65,10 @@ public class InstructionFormat {
                           "0001A--A--100001"}, //                     INC Rd
         {"NOT",   "R",    "1001A--A--xxxxxx"}, // NOT  Rd           = NOT Rd, Rd
         {"NOP",   "",     "0000000xxxxxxxxx"}, // NOP               = BR x0
+        {"OR",    "RRR",  "1001C--C--xxxxxx",  // OR   Rd, Ra, Rb*  = NOT Rb
+                          "1001A--B--xxxxxx",  //                     NOT Rd, Ra
+                          "0101A--A--0xxC--",  //                     AND Rd, Rb
+                          "1001A--A--xxxxxx"}, //                     NOT Rd
         {"POP",   "RR",   "0001B--B--111111",  // POP  Rd, Rstk     = DEC Rstk
                           "0110A--B--000000"}, //                     LDR Rd, Rstk
         {"PUSH",  "RR",   "0111A--B--000000",  // PUSH Rs, Rstk     = STR Rs, Rstk
@@ -132,7 +135,7 @@ public class InstructionFormat {
                     /**/16 - m.end(), m.end() - m.start() });
             }
             r.replacements = l.toArray(new int[0][]);
-            final String key = r.name + ":" + r.signature.length();
+            final String key = r.name.toUpperCase() + ":" + r.signature.length();
             if (!instructions.containsKey(key))
                 instructions.put(key, new ArrayList<IFRecord>());
             instructions.get(key).add(r);
@@ -141,7 +144,7 @@ public class InstructionFormat {
 
     private static List<IFRecord> getInstruction(final String name, final int[] isReg)
         throws ParseException {
-        final String key = name + ":" + isReg.length;
+        final String key = name.toUpperCase() + ":" + isReg.length;
         if (!instructions.containsKey(key))
             throw new ParseException("Unknown opcode or signature");
         final List<IFRecord> candidates = new ArrayList<IFRecord>(instructions.get(key));
@@ -183,7 +186,7 @@ public class InstructionFormat {
     public static short[] getInstruction(final String name, final int[] isReg,
         final short[] values) throws ParseException {
         final List<IFRecord> candidates = getInstruction(name, isReg);
-        final String key = name + ":" + isReg.length;
+        final String key = name.toUpperCase() + ":" + isReg.length;
         if (candidates.size() == 0)
             throw new ParseException("Immediate used in place of register or vice-versa");
         IFRecord inst = candidates.get(0);
