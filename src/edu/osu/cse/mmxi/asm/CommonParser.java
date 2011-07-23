@@ -35,22 +35,31 @@ public class CommonParser {
 
     public static String[] parseLine(String line) throws ParseException {
         if (line.contains(";"))
-            line = line.substring(line.indexOf(';'));
+            line = line.substring(0, line.indexOf(';'));
         if (line.matches("\\s*[0-9A-Za-z_]+\\s*"))
             return parseLine(line, !line.trim().toUpperCase().matches(zeroArgOps));
-        final Matcher m = Pattern.compile("\\s*([0-9A-Za-z_]+)\\s+([.]?[A-Za-z]+).*")
+        final Matcher m = Pattern.compile("\\s*([0-9A-Za-z_]+)\\s+([.]?[A-Za-z]+)(.*)")
             .matcher(line);
         if (m.matches())
-            return parseLine(line,
-                m.group(1).matches(zeroArgOps) || m.group(2).matches(zeroArgOps));
+            // I arrived at the complicated boolean expression below by enumerating all
+            // the possibilities of the first two tokens being ops, zero-arg ops, or
+            // something else, and determining whether in each case the first token should
+            // be considered a label or the opcode. Ex: "NOP NOP" has a label, "NOP" does
+            // not, "BRZ" does, "BRZ NOP" does, "BRZ NOP, x0" does not. (The whole reason
+            // for this is the ambiguity of that first token, since labels have names that
+            // are also opcodes, and we have relaxed the column constraint, so other clues
+            // must be taken into account.) See CommonParserTest.testParseLine() for
+            // examples.
+            return parseLine(line, m.group(2).matches(zeroArgOps)
+                ^ m.group(3).trim().length() != 0 && m.group(2).matches(allOps));
         throw new ParseException("unknown puctuation in label or opcode fields");
     }
 
     private static String[] parseLine(final String line, final boolean hasLabel)
         throws ParseException {
-        final String[] tokens = line.split("\\s+", 3);
-        final String label = hasLabel ? tokens[0] : null;
         final int l = hasLabel ? 1 : 0;
+        final String[] tokens = line.trim().split("\\s+", l + 2);
+        final String label = hasLabel ? tokens[0] : null;
         if (tokens.length <= l + 1)
             return new String[] { label, tokens.length == l ? null : tokens[l] };
         final String[] args = tokens[l + 1].split(","), ret = new String[args.length + 2];

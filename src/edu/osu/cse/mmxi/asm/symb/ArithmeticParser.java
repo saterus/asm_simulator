@@ -13,7 +13,7 @@ import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class ArithmeticParser {
-    public static final boolean collapseIfEvaluable = true;
+    public static final boolean collapseIfEvaluable = false;
 
     public static SymbolExpression parse(String s) throws ParseException {
         // Holds Operator and SymbolExpression objects
@@ -54,7 +54,7 @@ public class ArithmeticParser {
         return res;
     }
 
-    public static void collapseStack(final Deque<Object> stack, final Operator trigger)
+    private static void collapseStack(final Deque<Object> stack, final Operator trigger)
         throws ParseException {
         try {
             while (true) {
@@ -78,7 +78,7 @@ public class ArithmeticParser {
         }
     }
 
-    public static void collapseStack(final Deque<Object> stack) throws ParseException {
+    private static void collapseStack(final Deque<Object> stack) throws ParseException {
         final SymbolExpression last = (SymbolExpression) stack.pop();
         final Operator op = (Operator) stack.pop();
         if (op == GROUP)

@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi.sim.junit;
+package edu.osu.cse.mmxi.junit.sim;
 
 import static org.junit.Assert.assertEquals;
 
