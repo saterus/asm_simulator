@@ -225,8 +225,8 @@ public class ObjectFileParser {
     private Text parseTextLine(final String line) throws ParseException {
         // It's not necessary to check for a good string here, because we
         // already have, with the pattern matching earlier.
-        return new Text(lineNumber, (short) Integer.parseInt(line.substring(1, 5), 16),
-            (short) Integer.parseInt(line.substring(5), 16));
+        return new Text(lineNumber, sourceLine, sourceFile, (short) Integer.parseInt(
+            line.substring(1, 5), 16), (short) Integer.parseInt(line.substring(5), 16));
     }
 
     /**

@@ -6,27 +6,13 @@ import java.util.Map;
 public class PsuedoOpTable {
 
     // a directive map that contains Directive Words and Directive_Number
-    private final Map<String, Integer> table;
-
-    // empty Constructor
-    // Changed this to just create the table, no reason not to here -DMB 4/10/11
-    public PsuedoOpTable() {
-        table = addPseudoMap();
+    public static final Map<String, Integer> table = new HashMap<String, Integer>();
+    static {
+        table.put(".ORIG", 1);
+        table.put(".END", 2);
+        table.put(".EQU", 3);
+        table.put(".FILL", 4);
+        table.put(".STRZ", 5);
+        table.put(".BLKW", 6);
     }
-
-    private Map<String, Integer> addPseudoMap() {
-
-        final Map<String, Integer> temp = new HashMap<String, Integer>();
-
-        temp.put(".ORIG", 1);
-        temp.put(".END", 2);
-        temp.put(".EQU", 3);
-        temp.put(".FILL", 4);
-        temp.put(".STRZ", 5);
-        temp.put(".BLKW", 6);
-
-        return temp;
-
-    }
-
 }

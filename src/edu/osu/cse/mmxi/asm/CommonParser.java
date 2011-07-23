@@ -7,13 +7,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
+import edu.osu.cse.mmxi.asm.table.PsuedoOpTable;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class CommonParser {
-    private static final String zeroArgOps, allOps,
-        pseudoOps = "ORIG|EQU|FILL|BLKW|STRZ|END"; // TODO should be exported to
-                                                   // PseudoOpTable
+    private static final String zeroArgOps, allOps, pseudoOps;
     static {
         final SortedSet<String> zao = new TreeSet<String>(), ao = new TreeSet<String>();
         for (final List<IFRecord> i : InstructionFormat.instructions.values())
@@ -22,13 +21,16 @@ public class CommonParser {
                     zao.add(j.name);
                 ao.add(j.name);
             }
-        String zaoS = "", aoS = "";
+        String zaoS = "", aoS = "", poS = "";
         for (final String op : zao)
             zaoS += "|" + op;
         for (final String op : ao)
             aoS += "|" + op;
+        for (final String op : PsuedoOpTable.table.keySet())
+            poS += "|" + op.substring(1);
         zeroArgOps = zaoS.substring(1);
         allOps = aoS.substring(1);
+        pseudoOps = poS.substring(1);
     }
 
     public static String[] parseLine(String line) throws ParseException {

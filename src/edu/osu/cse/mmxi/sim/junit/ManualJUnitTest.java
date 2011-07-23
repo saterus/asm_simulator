@@ -7,6 +7,7 @@ import org.junit.Test;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 import edu.osu.cse.mmxi.sim.machine.interpreter.instructions.Instruction.TRAP;
 
+@SuppressWarnings("unused")
 public class ManualJUnitTest {
     private final byte    r0 = 0;
     private final byte    r1 = 1;
@@ -71,7 +72,7 @@ public class ManualJUnitTest {
         System.out.println("");
 
         m.getRegister(r0).setValue((short) 99); // make sure r0 no 's'
-        System.out.println("enter 's' at the promt");
+        System.out.println("enter 's' at the prompt");
 
         final TRAP trap = new TRAP(0x23);
         trap.execute(m);
@@ -116,6 +117,6 @@ public class ManualJUnitTest {
         final TRAP trap = new TRAP(0x43);
         trap.execute(m);
 
-        assertEquals((m.getRegister(r0).getValue() != 0), true);
+        assertEquals(m.getRegister(r0).getValue() != 0, true);
     }
 }
