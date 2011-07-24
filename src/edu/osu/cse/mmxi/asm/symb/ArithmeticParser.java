@@ -13,7 +13,7 @@ import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class ArithmeticParser {
-    public static final boolean collapseIfEvaluable = false;
+    public static final boolean collapseIfEvaluable = true;
 
     public static SymbolExpression parse(String s) throws ParseException {
         // Holds Operator and SymbolExpression objects
@@ -116,17 +116,21 @@ public class ArithmeticParser {
         final int v = MemoryUtilities.parseShort(leaf);
         if (v != -1)
             return new NumExp((short) v);
-        return Symbol.getSymb(leaf);
+        final Symbol s = Symbol.getSymb(leaf);
+        if (collapseIfEvaluable && s.value != null)
+            return s.value;
+        else
+            return s;
     }
 
     public static void main(final String[] args) {
         SymbolExpression se;
         try {
+            Symbol.getSymb("z").set(parse("6^2&y"));
             se = parse("x*(3**5)-z");
             System.out.println(se);
-            Symbol.setSymb("x", parse("2+3"));
-            Symbol.setSymb("y", parse("5*5"));
-            Symbol.setSymb("z", parse("6^2"));
+            Symbol.getSymb("x").set(parse("2+3"));
+            Symbol.getSymb("y").set(parse("5*5"));
             System.out.println(se);
             System.out.println(se.evaluate());
         } catch (final ParseException e) {

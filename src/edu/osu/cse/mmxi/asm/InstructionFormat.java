@@ -8,6 +8,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
+import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
+import edu.osu.cse.mmxi.asm.line.AssemblyLine.RegisterArg;
+import edu.osu.cse.mmxi.asm.symb.Operator;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression.IfExp;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class InstructionFormat {
@@ -166,6 +174,20 @@ public class InstructionFormat {
         return candidates;
     }
 
+    public static SymbolExpression getLength(final InstructionLine inst)
+        throws ParseException {
+        final int[] isReg = new int[inst.args.length];
+        for (int i = 0; i < isReg.length; i++)
+            isReg[i] = inst.args[i].isReg();
+        final List<IFRecord> candidates = getInstruction(inst.opcode, isReg);
+        if (candidates.size() == 0)
+            throw new ParseException("Immediate used in place of register or vice-versa");
+        final SymbolExpression len = getSpecialLength(inst, candidates);
+        if (len == null)
+            return new NumExp((short) candidates.get(0).template.length);
+        return len;
+    }
+
     /**
      * Finds an instruction based on a name and signature. The {@code isReg} parameter
      * contains a list indicating if each parameter had a register (1) or not (0), or if
@@ -191,7 +213,7 @@ public class InstructionFormat {
             throw new ParseException("Immediate used in place of register or vice-versa");
         IFRecord inst = candidates.get(0);
         if (inst.special)
-            inst = doSpecial(key, isReg, values, candidates);
+            inst = getSpecialInstruction(key, isReg, values, candidates);
         for (int i = 0; i < values.length; i++)
             if (!isValid(inst.signature.charAt(i), values[i]))
                 throw new ParseException("parameter " + (i + 1) + " out of range");
@@ -202,7 +224,7 @@ public class InstructionFormat {
         return ret;
     }
 
-    private static IFRecord doSpecial(final String key, final int[] isReg,
+    private static IFRecord getSpecialInstruction(final String key, final int[] isReg,
         final short[] values, final List<IFRecord> candidates) {
         IFRecord inst = candidates.get(0);
         if (key.equals("DEC:2")) {
@@ -235,6 +257,47 @@ public class InstructionFormat {
             else if (values[2] == values[3])
                 inst = candidates.get(1);
         return inst;
+    }
+
+    private static SymbolExpression getSpecialLength(final InstructionLine inst,
+        final List<IFRecord> candidates) {
+        final String key = inst.opcode + ":" + inst.args.length;
+        if (key.equals("DEC:2") && inst.args[1] instanceof RegisterArg) {
+            final Short reg0, reg1 = ((RegisterArg) inst.args[1]).reg;
+            if (inst.args[0] instanceof RegisterArg)
+                reg0 = ((RegisterArg) inst.args[0]).reg;
+            else
+                reg0 = ((ExpressionArg) inst.args[0]).val.evaluate();
+            if (reg0 != null)
+                return new NumExp((short) (reg0 == reg1 ? 1 : 3));
+            else
+                return new IfExp(new OpExp(Operator.MINUS,
+                    ((ExpressionArg) inst.args[0]).val, new NumExp(reg1)), new NumExp(
+                    (short) 1), new NumExp((short) 3));
+        } else if (key.equals("SHL:2")) {
+            final Short val = ((ExpressionArg) inst.args[0]).val.evaluate();
+            if (val != null)
+                return new NumExp(val);
+            else
+                return ((ExpressionArg) inst.args[0]).val;
+        } else if (key.equals("XNOR:4") || key.equals("XOR:4")) {
+            final Short reg1, reg2;
+            SymbolExpression exp1, exp2;
+            if (inst.args[1] instanceof RegisterArg)
+                exp1 = new NumExp(reg1 = ((RegisterArg) inst.args[1]).reg);
+            else
+                reg1 = (exp1 = ((ExpressionArg) inst.args[1]).val).evaluate();
+            if (inst.args[2] instanceof RegisterArg)
+                exp2 = new NumExp(reg2 = ((RegisterArg) inst.args[2]).reg);
+            else
+                reg2 = (exp2 = ((ExpressionArg) inst.args[2]).val).evaluate();
+            if (reg1 != null && reg2 != null)
+                return new NumExp((short) (reg1 == reg2 ? 1 : 7));
+            else
+                return new IfExp(new OpExp(Operator.MINUS, exp1, exp2), new NumExp(
+                    (short) 1), new NumExp((short) 7));
+        }
+        return null;
     }
 
     private static boolean isValid(final char sig, final short val) {

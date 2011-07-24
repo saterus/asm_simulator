@@ -21,16 +21,16 @@ public class CommonParser {
                     zao.add(j.name.toUpperCase());
                 ao.add(j.name.toUpperCase());
             }
-        String zaoS = "", aoS = "", poS = "";
+        String zaoS = "[.]ORIG", aoS = "", poS = "";
         for (final String op : zao)
             zaoS += "|" + op;
         for (final String op : ao)
             aoS += "|" + op;
         for (final String op : PsuedoOpTable.table.keySet())
             poS += "|" + op.substring(1).toUpperCase();
-        zeroArgOps = zaoS.substring(1);
+        zeroArgOps = zaoS;
         allOps = aoS.substring(1);
-        pseudoOps = poS.substring(1);
+        pseudoOps = "[.](" + poS.substring(1) + ")";
     }
 
     public static String[] parseLine(String line) throws ParseException {
@@ -40,8 +40,8 @@ public class CommonParser {
             return new String[] { null, null };
         if (line.matches("\\s*[0-9A-Za-z_]+\\s*"))
             return parseLine(line, !line.trim().toUpperCase().matches(zeroArgOps));
-        final Matcher m = Pattern.compile("\\s*([0-9A-Z_]+)\\s+([.]?[A-Z]+)(.*)")
-            .matcher(line.toUpperCase());
+        final Matcher m = Pattern.compile("\\s*(\\S+)\\s+(\\S+)(.*)").matcher(
+            line.toUpperCase());
         if (m.matches())
             // I arrived at the complicated boolean expression below by enumerating all
             // the possibilities of the first two tokens being ops, zero-arg ops, or
@@ -52,8 +52,11 @@ public class CommonParser {
             // are also opcodes, and we have relaxed the column constraint, so other clues
             // must be taken into account.) See CommonParserTest.testParseLine() for
             // examples.
-            return parseLine(line, m.group(2).matches(zeroArgOps)
-                ^ m.group(3).trim().length() != 0 && m.group(2).matches(allOps));
+            return parseLine(
+                line,
+                m.group(2).equals(".ORIG") || m.group(2).matches(zeroArgOps)
+                    ^ m.group(3).trim().length() != 0
+                    && m.group(2).matches(allOps + "|" + pseudoOps));
         throw new ParseException("unknown puctuation in label or opcode fields");
     }
 
@@ -65,7 +68,12 @@ public class CommonParser {
         if (tokens.length <= l + 1)
             return new String[] { label,
                     tokens.length == l ? null : tokens[l].toUpperCase() };
-        final String[] args = tokens[l + 1].split(","), ret = new String[args.length + 2];
+        final String[] args;
+        if (tokens[l + 1].matches("\\s*\".*\"\\s*"))
+            args = new String[] { tokens[l + 1].trim() };
+        else
+            args = tokens[l + 1].split(",");
+        final String[] ret = new String[args.length + 2];
         ret[0] = label;
         ret[1] = tokens[l].toUpperCase();
         for (int i = 0; i < args.length; i++)
@@ -85,7 +93,7 @@ public class CommonParser {
                 if (!InstructionFormat.instructions.containsKey(line[1] + ":"
                     + (line.length - 2)))
                     throw new ParseException("incorrect number of arguments");
-            } else if (!line[1].matches("[.](" + pseudoOps + ")"))
+            } else if (!line[1].matches(pseudoOps))
                 throw new ParseException("unknown opcode");
         return line;
     }

@@ -1,10 +1,19 @@
 package edu.osu.cse.mmxi.asm.symb;
 
+import java.util.HashSet;
+import java.util.Set;
 
-public interface SymbolExpression {
-    public Short evaluate();
+import edu.osu.cse.mmxi.asm.Literal;
+import edu.osu.cse.mmxi.asm.Symbol;
 
-    public static class OpExp implements SymbolExpression {
+public abstract class SymbolExpression {
+    public Short evaluate() {
+        return evaluate(new HashSet<Symbol>());
+    }
+
+    public abstract Short evaluate(Set<Symbol> used);
+
+    public static class OpExp extends SymbolExpression {
         public Operator           op;
         public SymbolExpression[] operands;
 
@@ -36,13 +45,13 @@ public interface SymbolExpression {
         }
 
         @Override
-        public Short evaluate() {
+        public Short evaluate(final Set<Symbol> used) {
             final SymbolExpression sea = operands[0];
             SymbolExpression seb = null;
-            final Short va = sea.evaluate();
+            final Short va = sea.evaluate(used);
             Short vb = null;
             if (operands.length == 2)
-                vb = (seb = operands[1]).evaluate();
+                vb = (seb = operands[1]).evaluate(used);
             if (va == null || seb != null && vb == null)
                 return null;
             switch (op) {
@@ -85,7 +94,33 @@ public interface SymbolExpression {
         }
     }
 
-    public static class NumExp implements SymbolExpression {
+    public static class IfExp extends SymbolExpression {
+        public SymbolExpression cond, ifExp, elseExp;
+
+        public IfExp(final SymbolExpression c, final SymbolExpression i,
+            final SymbolExpression e) {
+            cond = c;
+            ifExp = i;
+            elseExp = e;
+        }
+
+        @Override
+        public String toString() {
+            if (cond instanceof OpExp && ((OpExp) cond).op == Operator.MINUS)
+                return "(" + ((OpExp) cond).operands[0] + " == "
+                    + ((OpExp) cond).operands[1] + " ? " + ifExp + " : " + elseExp;
+            return "(" + cond + " == 0 ? " + ifExp + " : " + elseExp;
+        }
+
+        @Override
+        public Short evaluate(final Set<Symbol> used) {
+            final Short cVal = cond.evaluate(used);
+            return cVal == null ? null : cVal == 0 ? ifExp.evaluate(used) : elseExp
+                .evaluate(used);
+        }
+    }
+
+    public static class NumExp extends SymbolExpression {
         public short value;
 
         public NumExp(final short v) {
@@ -98,8 +133,31 @@ public interface SymbolExpression {
         }
 
         @Override
-        public Short evaluate() {
+        public Short evaluate(final Set<Symbol> used) {
             return value;
+        }
+    }
+
+    public static class LiteralExp extends SymbolExpression {
+        public Literal lit;
+
+        public LiteralExp(final short v) {
+            lit = Literal.getLiteral(v);
+        }
+
+        public LiteralExp(final Literal l) {
+            lit = l;
+        }
+
+        @Override
+        public String toString() {
+            return "=#" + lit.value;
+        }
+
+        @Override
+        public Short evaluate(final Set<Symbol> used) {
+            final int l = lit.getLocation();
+            return l == -1 ? null : (short) l;
         }
     }
 }

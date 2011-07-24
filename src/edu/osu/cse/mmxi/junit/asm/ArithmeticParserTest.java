@@ -53,9 +53,9 @@ public class ArithmeticParserTest {
     @Test
     public void testSymb() throws ParseException {
         final SymbolExpression se = ArithmeticParser.parse("(4-2)+x*y-z");
-        Symbol.setSymb("x", ArithmeticParser.parse("y-z"));
-        Symbol.setSymb("y", ArithmeticParser.parse("4<<2"));
-        Symbol.setSymb("z", ArithmeticParser.parse("y*y>>>2"));
+        Symbol.getSymb("x").set(ArithmeticParser.parse("y-z"));
+        Symbol.getSymb("y").set(ArithmeticParser.parse("4<<2"));
+        Symbol.getSymb("z").set(ArithmeticParser.parse("y*y>>>2"));
         assertEquals("y - z", Symbol.getSymb("x").value.toString());
         if (ArithmeticParser.collapseIfEvaluable)
             assertEquals("16", Symbol.getSymb("y").value.toString());

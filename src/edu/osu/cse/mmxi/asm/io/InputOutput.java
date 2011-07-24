@@ -15,6 +15,7 @@ public class InputOutput {
      * Reads the input file
      */
     private BufferedReader reader;
+    private String         readerFile;
 
     /**
      * Writes the intermediate file
@@ -28,20 +29,25 @@ public class InputOutput {
      *            The filename
      * @throws IOException
      * @throws FileNotFoundException
-     * @throws SecurityException
      * @see closeReader()
      */
-    public void openReader(final String file) throws IOException, FileNotFoundException,
-        SecurityException {
-        try {
-            if (reader != null)
-                reader.close();
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-        } catch (final FileNotFoundException e) {
+    public void openReader(final String file) throws IOException, FileNotFoundException {
+        if (reader != null)
+            reader.close();
+        reader = new BufferedReader(new InputStreamReader(new FileInputStream(
+            readerFile = file)));
+    }
 
-        } catch (final SecurityException e) {
-
-        }
+    /**
+     * Starts the reader over from the beginning.
+     * 
+     * @param file
+     *            The filename
+     * @throws IOException
+     * @see closeReader()
+     */
+    public void resetReader() throws IOException {
+        openReader(readerFile);
     }
 
     /**
@@ -51,55 +57,36 @@ public class InputOutput {
      *            The filename
      * @throws IOException
      * @throws FileNotFoundException
-     * @throws SecurityException
      */
-    public void openWriter(final String file) throws IOException, FileNotFoundException,
-        SecurityException {
-        try {
-            if (writer != null)
-                writer.close();
-            writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(file)));
-        } catch (final FileNotFoundException e) {
-
-        } catch (final SecurityException e) {
-
-        }
+    public void openWriter(final String file) throws IOException, FileNotFoundException {
+        if (writer != null)
+            writer.close();
+        writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
     }
 
     public String getLine() throws IOException {
         String line = null;
-        try {
-            line = reader.readLine();
-        } catch (final IOException e) {
-
-        }
+        line = reader.readLine();
         return line;
     }
 
     public void writeLine(final String line) throws IOException {
-        try {
-            writer.write(line);
-        } catch (final IOException e) {
-
-        }
+        writer.write(line);
     }
 
-    public void closeReader() throws IOException {
+    public void closeReader() {
         try {
             if (reader != null)
                 reader.close();
         } catch (final IOException e) {
-
         }
     }
 
-    public void closeWriter() throws IOException {
+    public void closeWriter() {
         try {
             if (writer != null)
                 writer.close();
         } catch (final IOException e) {
-
         }
     }
 
