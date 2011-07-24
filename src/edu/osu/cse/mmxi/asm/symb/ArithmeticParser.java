@@ -6,9 +6,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.NoSuchElementException;
 
+import edu.osu.cse.mmxi.asm.Symbol;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.Symbol;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
 

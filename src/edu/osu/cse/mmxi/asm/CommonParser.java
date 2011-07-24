@@ -18,8 +18,8 @@ public class CommonParser {
         for (final List<IFRecord> i : InstructionFormat.instructions.values())
             for (final IFRecord j : i) {
                 if (j.signature.length() == 0)
-                    zao.add(j.name);
-                ao.add(j.name);
+                    zao.add(j.name.toUpperCase());
+                ao.add(j.name.toUpperCase());
             }
         String zaoS = "", aoS = "", poS = "";
         for (final String op : zao)
@@ -27,7 +27,7 @@ public class CommonParser {
         for (final String op : ao)
             aoS += "|" + op;
         for (final String op : PsuedoOpTable.table.keySet())
-            poS += "|" + op.substring(1);
+            poS += "|" + op.substring(1).toUpperCase();
         zeroArgOps = zaoS.substring(1);
         allOps = aoS.substring(1);
         pseudoOps = poS.substring(1);
@@ -36,10 +36,12 @@ public class CommonParser {
     public static String[] parseLine(String line) throws ParseException {
         if (line.contains(";"))
             line = line.substring(0, line.indexOf(';'));
+        if (line.trim().length() == 0)
+            return new String[] { null, null };
         if (line.matches("\\s*[0-9A-Za-z_]+\\s*"))
             return parseLine(line, !line.trim().toUpperCase().matches(zeroArgOps));
-        final Matcher m = Pattern.compile("\\s*([0-9A-Za-z_]+)\\s+([.]?[A-Za-z]+)(.*)")
-            .matcher(line);
+        final Matcher m = Pattern.compile("\\s*([0-9A-Z_]+)\\s+([.]?[A-Z]+)(.*)")
+            .matcher(line.toUpperCase());
         if (m.matches())
             // I arrived at the complicated boolean expression below by enumerating all
             // the possibilities of the first two tokens being ops, zero-arg ops, or
@@ -61,10 +63,11 @@ public class CommonParser {
         final String[] tokens = line.trim().split("\\s+", l + 2);
         final String label = hasLabel ? tokens[0] : null;
         if (tokens.length <= l + 1)
-            return new String[] { label, tokens.length == l ? null : tokens[l] };
+            return new String[] { label,
+                    tokens.length == l ? null : tokens[l].toUpperCase() };
         final String[] args = tokens[l + 1].split(","), ret = new String[args.length + 2];
         ret[0] = label;
-        ret[1] = tokens[l];
+        ret[1] = tokens[l].toUpperCase();
         for (int i = 0; i < args.length; i++)
             ret[i + 2] = args[i].trim();
         return ret;
@@ -77,9 +80,13 @@ public class CommonParser {
             if (line[0].matches("[rR][0-7]"))
                 throw new ParseException("registers can not be labels");
         }
-        if (line[1] != null && !line[1].matches(allOps)
-            && !(line[1].charAt(0) == '.' && line[1].substring(1).matches(pseudoOps)))
-            throw new ParseException("unknown opcode");
+        if (line[1] != null)
+            if (line[1].matches(allOps)) {
+                if (!InstructionFormat.instructions.containsKey(line[1] + ":"
+                    + (line.length - 2)))
+                    throw new ParseException("incorrect number of arguments");
+            } else if (!line[1].matches("[.](" + pseudoOps + ")"))
+                throw new ParseException("unknown opcode");
         return line;
     }
 }
