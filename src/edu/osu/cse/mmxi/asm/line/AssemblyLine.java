@@ -1,9 +1,9 @@
 package edu.osu.cse.mmxi.asm.line;
 
+import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.LiteralExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
@@ -103,7 +103,7 @@ public interface AssemblyLine {
 
     public static class LiteralArg extends ExpressionArg {
         public LiteralArg(final short v) {
-            super(new LiteralExp(v));
+            super(Literal.getLiteral(v));
         }
 
         @Override

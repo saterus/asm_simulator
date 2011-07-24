@@ -37,7 +37,7 @@ public class Pass1Parser {
                             throw new ParseException("too many args for .ORIG");
                         if (label == null)
                             throw new ParseException("no segment name given");
-                        a.segName = label.symb.name;
+                        Symbol.removeSymb(a.segName = label.symb.name);
                         if (inst.args.length > 0) {
                             if (!(inst.args[0] instanceof ExpressionArg))
                                 throw new ParseException(
@@ -78,7 +78,7 @@ public class Pass1Parser {
                         if (val != null)
                             lc += val;
                         else {
-                            lcBase = Symbol.getSymb(":TEMP" + ++tempNumber).set(
+                            lcBase = Symbol.getSymb(":T" + ++tempNumber).set(
                                 new OpExp(Operator.PLUS, new OpExp(Operator.PLUS, lcBase,
                                     new NumExp(lc)), len));
                             lc = 0;
@@ -90,7 +90,7 @@ public class Pass1Parser {
                     if (val != null)
                         lc += val;
                     else {
-                        lcBase = Symbol.getSymb(":TEMP" + ++tempNumber).set(
+                        lcBase = Symbol.getSymb(":T" + ++tempNumber).set(
                             new OpExp(Operator.PLUS, new OpExp(Operator.PLUS, lcBase,
                                 new NumExp(lc)), len));
                         lc = 0;
@@ -104,11 +104,14 @@ public class Pass1Parser {
         }
         try {
             Symbol.getSymb(":END").set(new OpExp(Operator.PLUS, lcBase, new NumExp(lc)));
+            Literal.complete = true;
         } catch (final ParseException e) {
             System.err.println(e.getMessage());
         }
         for (final Symbol s : Symbol.symbs.values())
-            s.evaluate();
+            s.expand();
+        for (final Symbol s : Literal.table.values())
+            s.expand();
         System.out.println(Symbol.printSymbs());
     }
 }

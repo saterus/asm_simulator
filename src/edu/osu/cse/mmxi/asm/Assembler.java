@@ -32,6 +32,6 @@ public class Assembler {
     }
 
     public static void main(final String[] args) throws IOException {
-        new Assembler("quine.a", null, null);
+        new Assembler(args[0], null, null);
     }
 }

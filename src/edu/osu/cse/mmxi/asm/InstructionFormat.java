@@ -275,11 +275,11 @@ public class InstructionFormat {
                     ((ExpressionArg) inst.args[0]).val, new NumExp(reg1)), new NumExp(
                     (short) 1), new NumExp((short) 3));
         } else if (key.equals("SHL:2")) {
-            final Short val = ((ExpressionArg) inst.args[0]).val.evaluate();
+            final Short val = ((ExpressionArg) inst.args[1]).val.evaluate();
             if (val != null)
                 return new NumExp(val);
             else
-                return ((ExpressionArg) inst.args[0]).val;
+                return ((ExpressionArg) inst.args[1]).val;
         } else if (key.equals("XNOR:4") || key.equals("XOR:4")) {
             final Short reg1, reg2;
             SymbolExpression exp1, exp2;

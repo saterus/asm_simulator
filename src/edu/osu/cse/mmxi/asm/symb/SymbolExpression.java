@@ -3,7 +3,6 @@ package edu.osu.cse.mmxi.asm.symb;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
 
 public abstract class SymbolExpression {
@@ -42,6 +41,16 @@ public abstract class SymbolExpression {
                     s += operands[i].toString();
             }
             return s;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (o == null || !(o instanceof OpExp))
+                return false;
+            if (operands[1] == null && ((OpExp) o).operands[1] != null)
+                return false;
+            return op == ((OpExp) o).op && operands[0].equals(((OpExp) o).operands[0])
+                && operands[1].equals(((OpExp) o).operands[1]);
         }
 
         @Override
@@ -108,8 +117,16 @@ public abstract class SymbolExpression {
         public String toString() {
             if (cond instanceof OpExp && ((OpExp) cond).op == Operator.MINUS)
                 return "(" + ((OpExp) cond).operands[0] + " == "
-                    + ((OpExp) cond).operands[1] + " ? " + ifExp + " : " + elseExp;
-            return "(" + cond + " == 0 ? " + ifExp + " : " + elseExp;
+                    + ((OpExp) cond).operands[1] + " ? " + ifExp + " : " + elseExp + ")";
+            return "(" + cond + " == 0 ? " + ifExp + " : " + elseExp + ")";
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (o == null || !(o instanceof IfExp))
+                return false;
+            return cond.equals(((IfExp) o).cond) && ifExp.equals(((IfExp) o).ifExp)
+                && elseExp.equals(((IfExp) o).elseExp);
         }
 
         @Override
@@ -133,31 +150,15 @@ public abstract class SymbolExpression {
         }
 
         @Override
+        public boolean equals(final Object o) {
+            if (o == null || !(o instanceof SymbolExpression))
+                return false;
+            return value == ((SymbolExpression) o).evaluate();
+        }
+
+        @Override
         public Short evaluate(final Set<Symbol> used) {
             return value;
-        }
-    }
-
-    public static class LiteralExp extends SymbolExpression {
-        public Literal lit;
-
-        public LiteralExp(final short v) {
-            lit = Literal.getLiteral(v);
-        }
-
-        public LiteralExp(final Literal l) {
-            lit = l;
-        }
-
-        @Override
-        public String toString() {
-            return "=#" + lit.value;
-        }
-
-        @Override
-        public Short evaluate(final Set<Symbol> used) {
-            final int l = lit.getLocation();
-            return l == -1 ? null : (short) l;
         }
     }
 }

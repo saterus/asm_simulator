@@ -1,4 +1,4 @@
-QUINE_   .ORIG  ; x1000           ; Quine
+QUINE    .ORIG  ; x1000           ; Quine
 OUT      .EQU    x21
 PUTS     .EQU    x22
 HALT     .EQU    x25
@@ -10,14 +10,8 @@ const1   .FILL   x0001           ; constants (c[.])
 endl     .FILL   x000A           ;  | \n
 cons58   .FILL   x003A           ;  |
 constT   .FILL   x0054           ; -+ T
-str      .FILL   x0048           ; string "HQUINE_"
-         .FILL   x0051           ;  |
-         .FILL   x0055           ;  |
-         .FILL   x0049           ;  |
-         .FILL   x004E           ;  |
-constE   .FILL   x0045           ;  | E
-         .FILL   x005F           ;  |
-         .FILL   x0000           ; -+
+str      .STRZ   "HQUINE "
+constE   .EQU    str + 5
 mStart   .FILL   start           ; header start (hs)
 mLen     .FILL   end - start     ; will be set to end - bitmsk
 mEndN    .FILL   -end            ; will be set to -end
@@ -83,5 +77,4 @@ if2      LD      R2, cons58      ;   c = 58
          AND     R3, xF          ;   d &= 0xF
          BRnp    loop3           ; } while (d != 0)
          RET
-end
-         .END    start
+end      .END    ex

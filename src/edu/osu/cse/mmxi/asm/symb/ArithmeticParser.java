@@ -1,10 +1,20 @@
 package edu.osu.cse.mmxi.asm.symb;
 
 import static edu.osu.cse.mmxi.asm.symb.Operator.GROUP;
+import static edu.osu.cse.mmxi.asm.symb.Operator.MINUS;
+import static edu.osu.cse.mmxi.asm.symb.Operator.PLUS;
+import static edu.osu.cse.mmxi.asm.symb.Operator.TIMES;
 
 import java.util.ArrayDeque;
+import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import edu.osu.cse.mmxi.asm.Symbol;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
@@ -123,18 +133,72 @@ public class ArithmeticParser {
             return s;
     }
 
-    public static void main(final String[] args) {
-        SymbolExpression se;
-        try {
-            Symbol.getSymb("z").set(parse("6^2&y"));
-            se = parse("x*(3**5)-z");
-            System.out.println(se);
-            Symbol.getSymb("x").set(parse("2+3"));
-            Symbol.getSymb("y").set(parse("5*5"));
-            System.out.println(se);
-            System.out.println(se.evaluate());
-        } catch (final ParseException e) {
-            e.printStackTrace();
+    public static SymbolExpression simplify(final SymbolExpression se) {
+        return simplify(se, true);
+    }
+
+    public static SymbolExpression simplify(final SymbolExpression se, final boolean eval) {
+        if (se == null)
+            return null;
+        final SortedMap<SymbolExpression, Integer> terms = new TreeMap<SymbolExpression, Integer>(
+            new Comparator<SymbolExpression>() {
+                @Override
+                public int compare(final SymbolExpression se1, final SymbolExpression se2) {
+                    return se1.toString().compareTo(se2.toString());
+                }
+            });
+
+        addTerms(se, terms, 1, eval);
+        short sum = 0;
+        for (final Iterator<Entry<SymbolExpression, Integer>> i = terms.entrySet()
+            .iterator(); i.hasNext();) {
+            final Entry<SymbolExpression, Integer> e = i.next();
+            final Short v = e.getKey().evaluate(eval ? new HashSet<Symbol>() : null);
+            if (v != null) {
+                sum += e.getValue() * v;
+                i.remove();
+            } else if (e.getValue() == 0)
+                i.remove();
         }
+        SymbolExpression ret = null;
+        for (final Entry<SymbolExpression, Integer> e : terms.entrySet()) {
+            final boolean wasNeg = e.getValue() < 0;
+            final int mult = wasNeg ? -e.getValue() : e.getValue();
+            SymbolExpression node = e.getKey();
+            if (mult != 1)
+                node = new OpExp(TIMES, new NumExp((short) mult), node);
+            ret = ret == null ? wasNeg ? new OpExp(MINUS, node) : node : new OpExp(
+                wasNeg ? MINUS : PLUS, ret, node);
+        }
+        if (ret == null || sum != 0) {
+            final boolean wasNeg = sum < 0;
+            if (wasNeg)
+                sum = (short) -sum;
+            final SymbolExpression node = new NumExp(sum);
+            ret = ret == null ? wasNeg ? new OpExp(MINUS, node) : node : new OpExp(
+                wasNeg ? MINUS : PLUS, ret, node);
+        }
+        return ret;
+    }
+
+    private static void addTerms(final SymbolExpression se,
+        final Map<SymbolExpression, Integer> terms, final int mult, final boolean eval) {
+        if (se instanceof OpExp && (((OpExp) se).op == PLUS || ((OpExp) se).op == MINUS)) {
+            addTerms(((OpExp) se).operands[0], terms, mult, eval);
+            addTerms(((OpExp) se).operands[1], terms, mult
+                * (((OpExp) se).op == MINUS ? -1 : 1), eval);
+        } else if (se instanceof OpExp && ((OpExp) se).op == TIMES) {
+            final Short v0 = ((OpExp) se).operands[0]
+                .evaluate(eval ? new HashSet<Symbol>() : null);
+            final Short v1 = ((OpExp) se).operands[1]
+                .evaluate(eval ? new HashSet<Symbol>() : null);
+            if (v0 != null)
+                addTerms(((OpExp) se).operands[1], terms, mult * v0, eval);
+            else if (v1 != null)
+                addTerms(((OpExp) se).operands[0], terms, mult * v1, eval);
+            else
+                terms.put(se, (terms.containsKey(se) ? terms.get(se) : 0) + mult);
+        } else
+            terms.put(se, (terms.containsKey(se) ? terms.get(se) : 0) + mult);
     }
 }

@@ -1,6 +1,7 @@
 package edu.osu.cse.mmxi.junit.asm;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -75,4 +76,34 @@ public class ArithmeticParserTest {
         assertEquals(-830, (short) se.evaluate());
     }
 
+    @Test
+    public void testSimplify() throws ParseException {
+        if (!ArithmeticParser.collapseIfEvaluable)
+            fail("this test requires collapseIfEvaluable = true");
+        Symbol.symbs.clear();
+        SymbolExpression se = ArithmeticParser.parse("x+1-(y+2-3)-z-z");
+        assertEquals("x + 1 - (y + 2 - 3) - z - z", se.toString());
+        se = ArithmeticParser.simplify(se);
+        assertEquals("x - y - 2 * z + 2", se.toString());
+
+        se = ArithmeticParser.parse("x+5-(x+2-y)");
+        assertEquals("x + 5 - (x + 2 - y)", se.toString());
+        se = ArithmeticParser.simplify(se);
+        assertEquals("y + 3", se.toString());
+
+        se = ArithmeticParser.parse("x+5-(x+7)");
+        assertEquals("x + 5 - (x + 7)", se.toString());
+        se = ArithmeticParser.simplify(se);
+        assertEquals("-2", se.toString());
+
+        se = ArithmeticParser.parse("x+5-(x+5)");
+        assertEquals("x + 5 - (x + 5)", se.toString());
+        se = ArithmeticParser.simplify(se);
+        assertEquals("0", se.toString());
+
+        se = ArithmeticParser.parse("x+5-(y+5)");
+        assertEquals("x + 5 - (y + 5)", se.toString());
+        se = ArithmeticParser.simplify(se);
+        assertEquals("x - y", se.toString());
+    }
 }
