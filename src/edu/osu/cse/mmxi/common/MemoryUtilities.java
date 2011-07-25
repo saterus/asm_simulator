@@ -102,4 +102,43 @@ public class MemoryUtilities {
             return -1;
         }
     }
+
+    /**
+     * Attempts to parse the given quoted string, accepting backslash-quoted ASCII values.
+     * 
+     * @param s
+     *            the string to parse
+     * @return the unquoted string
+     */
+    public static String parseString(String s) {
+        String ret = "";
+        while (s.length() > 0)
+            if (s.charAt(0) == '\\') {
+                s = s.substring(1);
+                if (s.length() == 0) {
+                    ret += "\\";
+                    continue;
+                }
+                final int index = "abtnvfre\'\"\\".indexOf(s.charAt(0));
+                if (index != -1) {
+                    s = s.substring(1);
+                    ret += "\u0007\b\t\n\u000B\f\r\u001B\'\"\\".charAt(index);
+                } else if (s.matches("x[0-9A-Fa-f]{2}.*")) {
+                    ret += (char) Integer.parseInt(s.substring(1, 3), 16);
+                    s = s.substring(3);
+                } else if (s.matches("c[?-_].*")) {
+                    ret += (char) (s.charAt(1) - '@' & 0x7F);
+                    s = s.substring(2);
+                } else if (s.matches("(([0-3]?[0-7])?[0-7]).*")) {
+                    final String oct = s.split("[^0-7]", 2)[0];
+                    ret += (char) Integer.parseInt(oct, 8);
+                    s = s.substring(oct.length());
+                } else
+                    ret += "\\";
+            } else {
+                ret += s.charAt(0);
+                s = s.substring(1);
+            }
+        return ret;
+    }
 }
