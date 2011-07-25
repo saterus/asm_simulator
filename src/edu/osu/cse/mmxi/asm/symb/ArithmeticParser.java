@@ -1,6 +1,8 @@
 package edu.osu.cse.mmxi.asm.symb;
 
 import static edu.osu.cse.mmxi.asm.symb.Operator.GROUP;
+import static edu.osu.cse.mmxi.asm.symb.Operator.HASH;
+import static edu.osu.cse.mmxi.asm.symb.Operator.LIT;
 import static edu.osu.cse.mmxi.asm.symb.Operator.MINUS;
 import static edu.osu.cse.mmxi.asm.symb.Operator.PLUS;
 import static edu.osu.cse.mmxi.asm.symb.Operator.TIMES;
@@ -15,7 +17,10 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
@@ -95,7 +100,15 @@ public class ArithmeticParser {
             stack.push(last);
         else {
             final SymbolExpression se;
-            if (stack.peek() instanceof Operator)
+            if (op == HASH)
+                se = last;
+            else if (op == LIT) {
+                final Short v = last.evaluate();
+                if (v == null)
+                    throw new ParseException(
+                        "literals expressions must evaluate on the spot");
+                se = Literal.getLiteral(v);
+            } else if (stack.peek() instanceof Operator)
                 se = new OpExp(op, last);
             else
                 se = new OpExp(op, (SymbolExpression) stack.pop(), last);
@@ -111,6 +124,9 @@ public class ArithmeticParser {
     }
 
     private static int leafLength(final String s) throws ParseException {
+        final Matcher m = Pattern.compile("^'.*?(?<!\\\\)'").matcher(s);
+        if (m.find())
+            return m.end();
         final String token = s.split("[^0-9A-Za-z_]", 2)[0];
         if (token.matches("[rR][0-7]"))
             throw new ParseException("symbols can not be register names");
@@ -122,7 +138,15 @@ public class ArithmeticParser {
         return token.length();
     }
 
-    private static SymbolExpression parseLeaf(final String leaf) {
+    private static SymbolExpression parseLeaf(final String leaf) throws ParseException {
+        if (leaf.matches("'.*'")) {
+            final String c = MemoryUtilities.parseString(leaf.substring(1,
+                leaf.length() - 1));
+            if (c.length() != 1)
+                throw new ParseException("character literal " + leaf
+                    + " must contain exactly one character");
+            return new NumExp((short) c.charAt(0));
+        }
         final int v = MemoryUtilities.parseShort(leaf);
         if (v != -1)
             return new NumExp((short) v);

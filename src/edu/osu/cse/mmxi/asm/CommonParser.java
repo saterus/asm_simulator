@@ -69,9 +69,11 @@ public class CommonParser {
             return new String[] { label,
                     tokens.length == l ? null : tokens[l].toUpperCase() };
         final String[] args;
-        if (tokens[l + 1].matches("\\s*\".*\"\\s*"))
-            args = new String[] { tokens[l + 1].trim() };
-        else
+        if (tokens[l + 1].matches("\\s*\".*(?<!\\\\)\"\\s*")) {
+            String str = tokens[l + 1].trim();
+            str = str.substring(1, str.length() - 1);
+            args = new String[] { "\"" + MemoryUtilities.parseString(str) + "\"" };
+        } else
             args = tokens[l + 1].split(",");
         final String[] ret = new String[args.length + 2];
         ret[0] = label;

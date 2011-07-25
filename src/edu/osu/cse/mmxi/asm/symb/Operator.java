@@ -13,11 +13,14 @@ public enum Operator {
 
     PLUS(5, "+", 7), MINUS(5, "-", 7),
 
+    // this one is out of prec. order because TIMES has an operator that is a prefix of
+    // this one, so POWER must come first (same with USHR and SHR)
     POWER(7, "**", 2),
 
     TIMES(6, "*", 3), DIV(6, "/", 3), MOD(6, "%", 3),
 
-    NOT(8, "~", 4);
+    // unary operators automatically get top precedence
+    NOT(8, "~", 4), HASH(8, "#", 4), LIT(8, "=", 4);
 
     public int    prec;
     public String value;

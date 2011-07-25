@@ -79,6 +79,16 @@ public class InstructionFormat {
                           "1001A--A--xxxxxx"}, //                     NOT Rd
         {"POP",   "RR",   "0001B--B--111111",  // POP  Rd, Rstk     = DEC Rstk
                           "0110A--B--000000"}, //                     LDR Rd, Rstk
+        {"PRNT",  "9",    "0010000A--------",  // PRNT off          = LD R0, off
+                          "1111xxxx00100001"}, //                     TRAP OUT
+        {"PRNT",  "R",    "0110000A--000000",  // PRNT Rs           = MOV R0, Rs
+                          "1111xxxx00100001"}, //                     TRAP OUT
+        {"PRNTR", "R",    "0101000A--111111",  // PRNTR Rs          = LDR R0, Rs
+                          "1111xxxx00100001"}, //                     TRAP OUT
+        {"PRNTR", "R6",   "0110000A--B-----",  // PRNTR Rs, index   = LDR R0, Rs, index
+                          "1111xxxx00100001"}, //                     TRAP OUT
+        {"PRNTS", "9",    "1110000A--------",  // PRNTS off         = LEA R0, off
+                          "1111xxxx00100010"}, //                     TRAP PUTS
         {"PUSH",  "RR",   "0111A--B--000000",  // PUSH Rs, Rstk     = STR Rs, Rstk
                           "0001B--B--100001"}, //                     INC Rstk
         {"SHL*",  "R4",   "0001A--A--0xxA--"}, // SHL  Rd, 0<=imm<16 = (DBL Rd) [imm times]

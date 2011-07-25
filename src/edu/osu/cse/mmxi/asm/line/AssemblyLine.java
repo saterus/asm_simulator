@@ -40,7 +40,7 @@ public interface AssemblyLine {
                     final int v = MemoryUtilities.parseShort(num);
                     if (v == -1)
                         try {
-                            args[i] = new ExpressionArg(num);
+                            args[i] = new ExpressionArg(arg);
                         } catch (final ParseException e) {
                             throw new ParseException("on argument " + (i + 1) + ": "
                                 + e.getMessage());
