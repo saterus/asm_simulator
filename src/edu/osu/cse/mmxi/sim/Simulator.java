@@ -5,10 +5,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.sim.error.Error;
+import edu.osu.cse.mmxi.sim.error.ErrorCodes;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
-import edu.osu.cse.mmxi.sim.ui.Error;
-import edu.osu.cse.mmxi.sim.ui.ErrorCodes;
 import edu.osu.cse.mmxi.sim.ui.UI;
 import edu.osu.cse.mmxi.sim.ui.UI.UIMode;
 

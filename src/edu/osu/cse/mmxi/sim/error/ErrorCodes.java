@@ -1,4 +1,6 @@
-package edu.osu.cse.mmxi.sim.ui;
+package edu.osu.cse.mmxi.sim.error;
+
+import edu.osu.cse.mmxi.common.error.ErrorLevels;
 
 public enum ErrorCodes {
     // simpleLoaderErrors IO

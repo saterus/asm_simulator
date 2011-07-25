@@ -1,4 +1,4 @@
-package edu.osu.cse.mmxi.sim.ui;
+package edu.osu.cse.mmxi.common.error;
 
 public enum ErrorLevels {
     FATAL("Fatal Error"), WARN("Warning"), MSG("Note");

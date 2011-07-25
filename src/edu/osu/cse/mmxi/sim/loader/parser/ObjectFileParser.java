@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
-import edu.osu.cse.mmxi.sim.ui.Error;
-import edu.osu.cse.mmxi.sim.ui.ErrorCodes;
+import edu.osu.cse.mmxi.sim.error.Error;
+import edu.osu.cse.mmxi.sim.error.ErrorCodes;
 
 /**
  * <p>

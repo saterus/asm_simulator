@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import edu.osu.cse.mmxi.sim.error.Error;
+import edu.osu.cse.mmxi.sim.error.ErrorCodes;
 import edu.osu.cse.mmxi.sim.loader.parser.Exec;
 import edu.osu.cse.mmxi.sim.loader.parser.Header;
 import edu.osu.cse.mmxi.sim.loader.parser.ObjectFileParser;
 import edu.osu.cse.mmxi.sim.loader.parser.Text;
 import edu.osu.cse.mmxi.sim.machine.Machine;
-import edu.osu.cse.mmxi.sim.ui.Error;
-import edu.osu.cse.mmxi.sim.ui.ErrorCodes;
 
 public class SimpleLoader {
     public static List<Error> load(final String path, final Machine machine,
