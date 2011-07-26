@@ -1,4 +1,4 @@
-Lab2EG	.ORIG	x30B0
+Lab2EG	.ORIG
 count	.FILL	#4
 begin	LD	ACC, count
 	LEA	R0,msg
