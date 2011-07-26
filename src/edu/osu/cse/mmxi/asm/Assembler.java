@@ -26,17 +26,21 @@ public class Assembler {
             errors.add(new Error(ErrorCodes.IO_BAD_FILE));
             printErrors(ui, errors);
         }
-        Pass1Parser.parse(this);
+        final String interDat = Pass1Parser.parse(this);
+        if (intermediate == null)
+            System.out.print(interDat);
+        else
+            InputOutput.writeFile(intermediate, interDat);
         if (out != null) {
             io.resetReader();
             try {
-                io.openWriter(out);
+                io.openWriters(out, null);
             } catch (final FileNotFoundException e) {
                 errors.add(new Error(ErrorCodes.IO_BAD_READ));
                 printErrors(ui, errors);
             }
             Pass2Parser.parse(this);
-            io.closeWriter();
+            io.closeWriters();
         }
         io.closeReader();
     }
@@ -54,7 +58,7 @@ public class Assembler {
      *            List of errors
      * @see edu.osu.cse.mmxi.sim.loader.SimpleLoader
      */
-    public static void printErrors(final UI ui, final Error errors) {
+    public static void printErrors(final UI ui, final Error... errors) {
         printErrors(ui, Arrays.asList(errors));
     }
 

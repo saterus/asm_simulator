@@ -91,11 +91,9 @@ public class Symbol extends SymbolExpression {
         String ret = "";
         for (final Symbol s : symbs.values())
             ret += s.value == null ? s.name + " =.\n" : s.name + " = " + s.value + "\n";
-        if (Literal.complete) {
-            final int index = 0;
+        if (Literal.complete)
             for (final Symbol s : Literal.table.values())
                 ret += s.name + " = " + s.value + "\n";
-        }
         return ret;
     }
 }

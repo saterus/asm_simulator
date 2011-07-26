@@ -16,7 +16,7 @@ import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class Pass1Parser {
-    public static void parse(final Assembler a) throws IOException {
+    public static String parse(final Assembler a) throws IOException {
         Symbol lcBase = Symbol.getSymb(":START");
         short lc = 0;
         int lineNumber = 1;
@@ -112,6 +112,6 @@ public class Pass1Parser {
             s.expand();
         for (final Symbol s : Literal.table.values())
             s.expand();
-        System.out.println(Symbol.printSymbs());
+        return Symbol.printSymbs();
     }
 }
