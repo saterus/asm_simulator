@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.RegisterArg;
+import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.Operator;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.IfExp;
@@ -140,8 +141,11 @@ public class InstructionFormat {
             final IFRecord r = new IFRecord();
             if (inst[0].contains("*"))
                 r.special = true;
-            r.name = inst[0].replace("*", "");
-            r.signature = inst[1];
+            r.name = inst[0].replace("*", ""); // name contains the opcode name
+            r.signature = inst[1]; // signature contains a string with the types of each
+                                   // argument in the characters
+            // template contains the list of shorts before putting values in the fields
+            // (all bits are 0 except required 1's)
             r.template = new short[inst.length - 2];
             final List<int[]> l = new ArrayList<int[]>();
             for (int i = 2; i < inst.length; i++) {
@@ -152,6 +156,11 @@ public class InstructionFormat {
                     l.add(new int[] { inst[i].charAt(m.start()) - 'A', i - 2,
                     /**/16 - m.end(), m.end() - m.start() });
             }
+            // replacements contains a list of tuples (arg, index, start, len), where arg
+            // is the index of the argument in the argument list, index is the choice of
+            // which word (of a multi-word or synthetic instruction) to replace, start is
+            // the index of the least significant bit in the word, and len is the number
+            // of bits to replace
             r.replacements = l.toArray(new int[0][]);
             final String key = r.name.toUpperCase() + ":" + r.signature.length();
             if (!instructions.containsKey(key))
@@ -215,39 +224,67 @@ public class InstructionFormat {
      *            the value of each parameter
      * @return the list of words that encode the instruction
      */
-    public static short[] getInstruction(final String name, final int[] isReg,
-        final short[] values) throws ParseException {
-        final List<IFRecord> candidates = getInstruction(name, isReg);
-        final String key = name.toUpperCase() + ":" + isReg.length;
+    public static short[][] getInstruction(final Location lc, final InstructionLine inst)
+        throws ParseException {
+        final int[] isReg = new int[inst.args.length];
+        final Location[] values = new Location[inst.args.length];
+        for (int i = 0; i < isReg.length; i++) {
+            isReg[i] = inst.args[i].isReg();
+            if (inst.args[i] instanceof RegisterArg)
+                values[i] = new Location(false, ((RegisterArg) inst.args[i]).reg);
+            else {
+                final SymbolExpression se = ArithmeticParser
+                    .simplify(((ExpressionArg) inst.args[i]).val);
+                values[i] = Location.convertToRelative(se);
+                if (values[i] == null)
+                    throw new ParseException("Argument " + se + " too complex to encode");
+            }
+        }
+        final List<IFRecord> candidates = getInstruction(inst.opcode, isReg);
+        final String key = inst.opcode + ":" + isReg.length;
         if (candidates.size() == 0)
             throw new ParseException("Immediate used in place of register or vice-versa");
-        IFRecord inst = candidates.get(0);
-        if (inst.special)
-            inst = getSpecialInstruction(key, isReg, values, candidates);
-        for (int i = 0; i < values.length; i++)
-            if (!isValid(inst.signature.charAt(i), values[i]))
+        IFRecord rec = candidates.get(0);
+        if (rec.special)
+            rec = getSpecialInstruction(key, isReg, values, candidates);
+        for (int i = 0; i < values.length; i++) {
+            if (!isValid(rec.signature.charAt(i), (short) values[i].address))
                 throw new ParseException("parameter " + (i + 1) + " out of range");
-        final short[] ret = new short[inst.template.length];
-        System.arraycopy(inst.template, 0, ret, 0, ret.length);
-        for (final int[] rep : inst.replacements)
-            ret[rep[1]] |= (values[rep[0]] & (1 << rep[3]) - 1) << rep[2];
+            if (rec.signature.charAt(i) == '9') {
+                if (lc.isRelative ^ values[i].isRelative)
+                    throw new ParseException(
+                        "absolute page address used in relative program");
+                if (((lc.address ^ values[i].address) & 0xFE00) != 0)
+                    throw new ParseException("label dereferences to incorrect page");
+            } else if (values[i].isRelative)
+                throw new ParseException(
+                    "relative parameter used in field which does not support it");
+        }
+        final short[][] ret = new short[rec.template.length][];
+        for (int i = 0; i < ret.length; i++)
+            ret[i] = new short[] { rec.template[i], -1 };
+        for (final int[] rep : rec.replacements) {
+            ret[rep[1]][0] |= (values[rep[0]].address & (1 << rep[3]) - 1) << rep[2];
+            if (rep[3] == 9 && rep[2] == 0)
+                ret[rep[1]][1] = 0;
+        }
         return ret;
     }
 
     private static IFRecord getSpecialInstruction(final String key, final int[] isReg,
-        final short[] values, final List<IFRecord> candidates) {
+        final Location[] values, final List<IFRecord> candidates) {
         IFRecord inst = candidates.get(0);
         if (key.equals("DEC:2")) {
             if (isReg[1] == 0)
-                values[1] = (short) -values[1];
+                values[1].address = (short) -values[1].address;
             else if (values[0] == values[1])
                 inst = candidates.get(1);
         } else if (key.equals("SHL:2")) {
             final IFRecord shl = inst;
             inst = new IFRecord();
-            inst.template = new short[values[1]];
-            inst.replacements = new int[shl.replacements.length * values[1]][];
-            for (int i = 0; i < values[1]; i++) {
+            inst.template = new short[values[1].address];
+            inst.replacements = new int[shl.replacements.length * values[1].address][];
+            for (int i = 0; i < values[1].address; i++) {
                 inst.template[i] = shl.template[0];
                 for (int j = 0; j < shl.replacements.length; j++) {
                     final int[] arr = new int[4];
@@ -259,10 +296,10 @@ public class InstructionFormat {
                 }
             }
         } else if (key.equals("SUB:3")) {
-            if (values[0] == values[1])
+            if (values[0].address == values[1].address)
                 inst = candidates.get(1);
         } else if (key.equals("XNOR:4") || key.equals("XOR:4"))
-            if (values[1] == values[2])
+            if (values[1].address == values[2].address)
                 inst = candidates.get(2);
             else if (values[2] == values[3])
                 inst = candidates.get(1);

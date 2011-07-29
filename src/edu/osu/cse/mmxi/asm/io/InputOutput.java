@@ -91,8 +91,8 @@ public class InputOutput {
         if (lWriter != null)
             lWriter.close();
         oWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(oFile)));
-        lWriter = new BufferedWriter(new OutputStreamWriter(lFile == null ? System.out
-            : new FileOutputStream(lFile)));
+        lWriter = lFile == null ? null : new BufferedWriter(new OutputStreamWriter(
+            new FileOutputStream(lFile)));
     }
 
     /**
@@ -114,18 +114,21 @@ public class InputOutput {
      * @throws IOException
      */
     public void writeOLine(final String line) throws IOException {
-        oWriter.write(line);
+        oWriter.write(line + "\n");
     }
 
     /**
-     * Writes one line of data to the listing file stream.
+     * Writes one line of data to the listing file stream.+
      * 
      * @param line
      *            the line of data to write to the file
      * @throws IOException
      */
     public void writeLLine(final String line) throws IOException {
-        lWriter.write(line);
+        if (lFile == null)
+            System.out.println(line);
+        else
+            lWriter.write(line + "\n");
     }
 
     /**

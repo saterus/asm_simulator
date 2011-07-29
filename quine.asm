@@ -10,7 +10,7 @@ str	.STRZ	"HQUINE "
 constE	.EQU	str + 5
 mStart	.FILL	start		; header start (hs)
 mLen	.FILL	end - start	; will be set to end - bitmsk
-mEndN	.FILL	-end		; will be set to -end
+mEndN	.FILL	~(-end)		; will be set to -end
 mEx	.FILL	ex		; exec (ex)
 ex	LD	R0, =1		; a = 1 
 	LEA	R1, bitmsk	; b = *m[0]; do {
@@ -35,6 +35,7 @@ loop2	ST	R2, cl
 	LD	R2, cl
 	INC	R2
 	LD	R3, mEndN
+	NOT	R3
 	INC	R3, R2
 	BRn	loop2
 	PRNT	constE
