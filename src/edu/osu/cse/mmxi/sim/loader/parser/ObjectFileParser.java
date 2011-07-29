@@ -160,7 +160,7 @@ public class ObjectFileParser {
             try {
                 if (token.matches("(H|h).{6}[0-9A-Fa-f]{8}"))
                     header = parseHeader(token);
-                else if (token.matches("(T|t)[0-9A-Fa-f]{8}"))
+                else if (token.matches("(T|t)[0-9A-Fa-f]{8}(M[01])?"))
                     text.add(parseTextLine(token));
                 else if (token.matches("(E|e)[0-9A-Fa-f]{4}"))
                     exec = parseExec(token);
@@ -226,7 +226,7 @@ public class ObjectFileParser {
         // It's not necessary to check for a good string here, because we
         // already have, with the pattern matching earlier.
         return new Text(lineNumber, sourceLine, sourceFile, (short) Integer.parseInt(
-            line.substring(1, 5), 16), (short) Integer.parseInt(line.substring(5), 16));
+            line.substring(1, 5), 16), (short) Integer.parseInt(line.substring(5, 9), 16));
     }
 
     /**
