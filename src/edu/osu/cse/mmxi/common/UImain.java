@@ -6,6 +6,11 @@ import java.io.PrintStream;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+/**
+ * Do not call directly. This is intended to be extended and overwriting of
+ * printErrorEndOfFile().
+ * 
+ */
 public class UImain {
     protected InputStream in = System.in;
     protected PrintStream out = System.out, err = System.err;
