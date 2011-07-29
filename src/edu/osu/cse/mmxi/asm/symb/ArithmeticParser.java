@@ -4,6 +4,7 @@ import static edu.osu.cse.mmxi.asm.symb.Operator.GROUP;
 import static edu.osu.cse.mmxi.asm.symb.Operator.HASH;
 import static edu.osu.cse.mmxi.asm.symb.Operator.LIT;
 import static edu.osu.cse.mmxi.asm.symb.Operator.MINUS;
+import static edu.osu.cse.mmxi.asm.symb.Operator.NOT;
 import static edu.osu.cse.mmxi.asm.symb.Operator.PLUS;
 import static edu.osu.cse.mmxi.asm.symb.Operator.TIMES;
 
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression.IfExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
@@ -164,15 +166,7 @@ public class ArithmeticParser {
     public static SymbolExpression simplify(final SymbolExpression se, final boolean eval) {
         if (se == null)
             return null;
-        final SortedMap<SymbolExpression, Integer> terms = new TreeMap<SymbolExpression, Integer>(
-            new Comparator<SymbolExpression>() {
-                @Override
-                public int compare(final SymbolExpression se1, final SymbolExpression se2) {
-                    return se1.toString().compareTo(se2.toString());
-                }
-            });
-
-        addTerms(se, terms, 1, eval);
+        final SortedMap<SymbolExpression, Integer> terms = getTerms(se, eval);
         short sum = 0;
         for (final Iterator<Entry<SymbolExpression, Integer>> i = terms.entrySet()
             .iterator(); i.hasNext();) {
@@ -205,24 +199,67 @@ public class ArithmeticParser {
         return ret;
     }
 
+    public static SortedMap<SymbolExpression, Integer> getTerms(SymbolExpression se,
+        final boolean eval) {
+        final SortedMap<SymbolExpression, Integer> terms = new TreeMap<SymbolExpression, Integer>(
+            new Comparator<SymbolExpression>() {
+                @Override
+                public int compare(final SymbolExpression se1, final SymbolExpression se2) {
+                    return se1.toString().compareTo(se2.toString());
+                }
+            });
+        if (eval)
+            se = expand(se, null);
+        addTerms(se, terms, 1, eval);
+        return terms;
+    }
+
     private static void addTerms(final SymbolExpression se,
         final Map<SymbolExpression, Integer> terms, final int mult, final boolean eval) {
         if (se instanceof OpExp && (((OpExp) se).op == PLUS || ((OpExp) se).op == MINUS)) {
-            addTerms(((OpExp) se).operands[0], terms, mult, eval);
-            addTerms(((OpExp) se).operands[1], terms, mult
+            final SymbolExpression[] ops = ((OpExp) se).operands;
+            if (ops.length > 1)
+                addTerms(ops[0], terms, mult, eval);
+            addTerms(ops[ops.length - 1], terms, mult
                 * (((OpExp) se).op == MINUS ? -1 : 1), eval);
+            return;
+        } else if (se instanceof OpExp && ((OpExp) se).op == NOT) {
+            addTerms(((OpExp) se).operands[0], terms, -mult, eval);
+            addTerms(new NumExp((short) 1), terms, -mult, eval);
+            return;
         } else if (se instanceof OpExp && ((OpExp) se).op == TIMES) {
             final Short v0 = ((OpExp) se).operands[0]
                 .evaluate(eval ? new HashSet<Symbol>() : null);
             final Short v1 = ((OpExp) se).operands[1]
                 .evaluate(eval ? new HashSet<Symbol>() : null);
-            if (v0 != null)
-                addTerms(((OpExp) se).operands[1], terms, mult * v0, eval);
-            else if (v1 != null)
-                addTerms(((OpExp) se).operands[0], terms, mult * v1, eval);
-            else
-                terms.put(se, (terms.containsKey(se) ? terms.get(se) : 0) + mult);
-        } else
-            terms.put(se, (terms.containsKey(se) ? terms.get(se) : 0) + mult);
+            if (v0 != null || v1 != null) {
+                if (v0 != null)
+                    addTerms(((OpExp) se).operands[1], terms, mult * v0, eval);
+                else
+                    addTerms(((OpExp) se).operands[0], terms, mult * v1, eval);
+                return;
+            }
+        }
+        terms.put(se, (terms.containsKey(se) ? terms.get(se) : 0) + mult);
     }
+
+    public static SymbolExpression expand(final SymbolExpression node, final Symbol parent) {
+        if (node == null)
+            return null;
+        if (node instanceof OpExp)
+            for (int i = 0; i < ((OpExp) node).operands.length; i++)
+                ((OpExp) node).operands[i] = expand(((OpExp) node).operands[i], parent);
+        else if (node instanceof IfExp) {
+            ((IfExp) node).cond = expand(((IfExp) node).cond, parent);
+            ((IfExp) node).ifExp = expand(((IfExp) node).ifExp, parent);
+            ((IfExp) node).elseExp = expand(((IfExp) node).elseExp, parent);
+        } else {
+            if (node instanceof Literal)
+                ((Literal) node).fill();
+            if (node instanceof Symbol && node != parent && ((Symbol) node).value != null)
+                return expand(((Symbol) node).value, parent);
+        }
+        return node;
+    }
+
 }

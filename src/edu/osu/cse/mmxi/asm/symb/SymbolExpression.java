@@ -146,7 +146,8 @@ public abstract class SymbolExpression {
 
         @Override
         public String toString() {
-            return "" + value;
+            return (value < 0 ? "-x" : "x")
+                + Integer.toHexString(value < 0 ? -value : value);
         }
 
         @Override

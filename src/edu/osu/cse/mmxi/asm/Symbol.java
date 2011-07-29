@@ -35,26 +35,7 @@ public class Symbol extends SymbolExpression {
 
     public void expand() {
         evaluate(); // will catch any recursion
-        value = ArithmeticParser.simplify(expand(value));
-    }
-
-    private SymbolExpression expand(final SymbolExpression node) {
-        if (node == null)
-            return null;
-        if (node instanceof OpExp) {
-            ((OpExp) node).operands[0] = expand(((OpExp) node).operands[0]);
-            ((OpExp) node).operands[1] = expand(((OpExp) node).operands[1]);
-        } else if (node instanceof IfExp) {
-            ((IfExp) node).cond = expand(((IfExp) node).cond);
-            ((IfExp) node).ifExp = expand(((IfExp) node).ifExp);
-            ((IfExp) node).elseExp = expand(((IfExp) node).elseExp);
-        } else {
-            if (node instanceof Literal)
-                ((Literal) node).fill();
-            if (node instanceof Symbol && node != this && ((Symbol) node).value != null)
-                return expand(((Symbol) node).value);
-        }
-        return node;
+        value = ArithmeticParser.simplify(ArithmeticParser.expand(value, this));
     }
 
     protected Symbol(final String n) {
