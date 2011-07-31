@@ -3,8 +3,6 @@ package edu.osu.cse.mmxi.asm;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
 import edu.osu.cse.mmxi.asm.table.PsuedoOpTable;
@@ -12,25 +10,19 @@ import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class CommonParser {
-    private static final String zeroArgOps, allOps, pseudoOps;
+    private static final String OPS, PSEUDO_OPS;
     static {
-        final SortedSet<String> zao = new TreeSet<String>(), ao = new TreeSet<String>();
+        final SortedSet<String> ao = new TreeSet<String>();
         for (final List<IFRecord> i : InstructionFormat.instructions.values())
-            for (final IFRecord j : i) {
-                if (j.signature.length() == 0)
-                    zao.add(j.name.toUpperCase());
+            for (final IFRecord j : i)
                 ao.add(j.name.toUpperCase());
-            }
-        String zaoS = "[.]ORIG", aoS = "", poS = "";
-        for (final String op : zao)
-            zaoS += "|" + op;
+        String aoS = "", poS = "";
         for (final String op : ao)
             aoS += "|" + op;
         for (final String op : PsuedoOpTable.table.keySet())
             poS += "|" + op.substring(1).toUpperCase();
-        zeroArgOps = zaoS;
-        allOps = aoS.substring(1);
-        pseudoOps = "[.](" + poS.substring(1) + ")";
+        OPS = aoS.substring(1);
+        PSEUDO_OPS = "[.](" + poS.substring(1) + ")";
     }
 
     public static String[] parseLine(String line) throws ParseException {
@@ -38,26 +30,7 @@ public class CommonParser {
             line = line.substring(0, line.indexOf(';'));
         if (line.trim().length() == 0)
             return new String[] { null, null };
-        if (line.matches("\\s*[0-9A-Za-z_]+\\s*"))
-            return parseLine(line, !line.trim().toUpperCase().matches(zeroArgOps));
-        final Matcher m = Pattern.compile("\\s*(\\S+)\\s+(\\S+)(.*)").matcher(
-            line.toUpperCase());
-        if (m.matches())
-            // I arrived at the complicated boolean expression below by enumerating all
-            // the possibilities of the first two tokens being ops, zero-arg ops, or
-            // something else, and determining whether in each case the first token should
-            // be considered a label or the opcode. Ex: "NOP NOP" has a label, "NOP" does
-            // not, "BRZ" does, "BRZ NOP" does, "BRZ NOP, x0" does not. (The whole reason
-            // for this is the ambiguity of that first token, since labels have names that
-            // are also opcodes, and we have relaxed the column constraint, so other clues
-            // must be taken into account.) See CommonParserTest.testParseLine() for
-            // examples.
-            return parseLine(
-                line,
-                m.group(2).equals(".ORIG") || m.group(2).matches(zeroArgOps)
-                    ^ m.group(3).trim().length() != 0
-                    && m.group(2).matches(allOps + "|" + pseudoOps));
-        throw new ParseException("unknown puctuation in label or opcode fields");
+        return parseLine(line, line.substring(0, 1).matches("\\S"));
     }
 
     private static String[] parseLine(final String line, final boolean hasLabel)
@@ -91,11 +64,11 @@ public class CommonParser {
                 throw new ParseException("registers can not be labels");
         }
         if (line[1] != null)
-            if (line[1].matches(allOps)) {
+            if (line[1].matches(OPS)) {
                 if (!InstructionFormat.instructions.containsKey(line[1] + ":"
                     + (line.length - 2)))
                     throw new ParseException("incorrect number of arguments");
-            } else if (!line[1].matches(pseudoOps))
+            } else if (!line[1].matches(PSEUDO_OPS))
                 throw new ParseException("unknown opcode");
         return line;
     }
