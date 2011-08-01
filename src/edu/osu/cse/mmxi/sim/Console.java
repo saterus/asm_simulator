@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
@@ -94,8 +94,8 @@ public class Console {
                 m.ui.print("Breakpoints are set at:\n");
                 for (final Map.Entry<Short, Object> e : breakpoints.entrySet()) {
                     final short b = e.getKey(), inst = m.getMemory(b);
-                    m.ui.print("\n    " + MemoryUtilities.uShortToHex(b) + ":   ["
-                        + MemoryUtilities.uShortToHex(inst) + "] "
+                    m.ui.print("\n    " + Utilities.uShortToHex(b) + ":   ["
+                        + Utilities.uShortToHex(inst) + "] "
                         + m.alu.readInstruction(inst));
                 }
             }
@@ -112,10 +112,10 @@ public class Console {
                 breakpoints.remove((short) addr);
             else
                 m.ui.print("A breakpoint is already set at "
-                    + MemoryUtilities.uShortToHex((short) addr) + "\n");
+                    + Utilities.uShortToHex((short) addr) + "\n");
         } else if (del)
-            m.ui.print("No breakpoints set at "
-                + MemoryUtilities.uShortToHex((short) addr) + "\n");
+            m.ui.print("No breakpoints set at " + Utilities.uShortToHex((short) addr)
+                + "\n");
         else
             breakpoints.put((short) addr, null);
     }
@@ -178,7 +178,7 @@ public class Console {
                 m.ui.print(padRight("L" + lines.get((short) (mem + i)), 4, ' '));
             else
                 m.ui.print("    ");
-            m.ui.print(" [" + MemoryUtilities.uShortToHex(inst) + "] "
+            m.ui.print(" [" + Utilities.uShortToHex(inst) + "] "
                 + m.alu.readInstruction(inst));
             if (len == -1 && inst == (short) 0xF025 || len == -2
                 && (inst & 0xF000) == 0xD000 || len >= 0 && i + 2 > len)
@@ -224,8 +224,8 @@ public class Console {
             m.ui.print(padLeft(toSymb((short) (mem + 16 * i)), symbLength + 4, ' ')
                 + " | ");
             for (int j = 0; j < 16; j++)
-                m.ui.print(MemoryUtilities.uShortToHex(m
-                    .getMemory((short) (mem + 16 * i + j))) + " ");
+                m.ui.print(Utilities.uShortToHex(m.getMemory((short) (mem + 16 * i + j)))
+                    + " ");
             m.ui.print(" ");
             for (int j = 0; j < 16; j++) {
                 final short s = m.getMemory((short) (mem + 16 * i + j));
@@ -485,10 +485,9 @@ public class Console {
                 m.ui.print("    R" + i);
             m.ui.print("    PC   FLAGS\n ");
             for (int i = 0; i < 8; i++)
-                m.ui.print("  "
-                    + MemoryUtilities.uShortToHex(m.getRegister(i).getValue()));
-            m.ui.print("  " + MemoryUtilities.uShortToHex(m.getPCRegister().getValue()));
-            m.ui.print("  " + MemoryUtilities.uShortToHex(m.getFlags().getValue()));
+                m.ui.print("  " + Utilities.uShortToHex(m.getRegister(i).getValue()));
+            m.ui.print("  " + Utilities.uShortToHex(m.getPCRegister().getValue()));
+            m.ui.print("  " + Utilities.uShortToHex(m.getFlags().getValue()));
             return;
         }
         int value = -1;
@@ -501,7 +500,7 @@ public class Console {
         if (words[1].equalsIgnoreCase("pc")) {
             if (value != -1)
                 m.getPCRegister().setValue((short) value);
-            m.ui.print("PC: " + MemoryUtilities.uShortToHex(m.getPCRegister().getValue()));
+            m.ui.print("PC: " + Utilities.uShortToHex(m.getPCRegister().getValue()));
         } else if (words[1].equalsIgnoreCase("flags")) {
             if (value != -1) {
                 if (value != 1 && value != 2 && value != 4) {
@@ -510,8 +509,7 @@ public class Console {
                 }
                 m.getFlags().setValue((short) value);
             }
-            m.ui.print("FLAGS: " + MemoryUtilities.uShortToHex(m.getFlags().getValue())
-                + " [");
+            m.ui.print("FLAGS: " + Utilities.uShortToHex(m.getFlags().getValue()) + " [");
             m.ui.print((m.getFlags().getN() ? "n" : "-")
                 + (m.getFlags().getZ() ? "z" : "-") + (m.getFlags().getP() ? "p" : "-")
                 + "]");
@@ -520,7 +518,7 @@ public class Console {
             if (value != -1)
                 m.getRegister(rnum).setValue((short) value);
             m.ui.print("R" + rnum + ": "
-                + MemoryUtilities.uShortToHex(m.getRegister(rnum).getValue()));
+                + Utilities.uShortToHex(m.getRegister(rnum).getValue()));
         } else {
             m.ui.print("Malformed register '" + words[1] + "'\n");
             help("help", "reg");
@@ -584,7 +582,7 @@ public class Console {
             for (final String k : symbols.keySet())
                 if (k.startsWith(start))
                     m.ui.print(padLeft(k, symbLength + 3, ' ') + " = 0x"
-                        + MemoryUtilities.uShortToHex(symbols.get(k)) + "\n");
+                        + Utilities.uShortToHex(symbols.get(k)) + "\n");
         } else if (words[1].equalsIgnoreCase("-d"))
             if (symbols.containsKey(words[2])) {
                 symbols.remove(words[2]);
@@ -628,8 +626,8 @@ public class Console {
                 return;
             } else
                 memTrack = addr;
-            m.ui.print("Tracking address "
-                + MemoryUtilities.uShortToHex((short) memTrack) + ".");
+            m.ui.print("Tracking address " + Utilities.uShortToHex((short) memTrack)
+                + ".");
         }
     }
 
@@ -649,15 +647,12 @@ public class Console {
                 for (final Map.Entry<Integer, Short> e : watchpoints.entrySet()) {
                     final int b = e.getKey();
                     if (b < 0)
-                        m.ui.print("\n      R"
-                            + (b + 8)
-                            + ":    "
-                            + MemoryUtilities
-                                .uShortToHex(m.getRegister(b + 8).getValue()));
+                        m.ui.print("\n      R" + (b + 8) + ":    "
+                            + Utilities.uShortToHex(m.getRegister(b + 8).getValue()));
                     else {
                         final short inst = m.getMemory((short) b);
-                        m.ui.print("\n    " + MemoryUtilities.uShortToHex((short) b)
-                            + ":   [" + MemoryUtilities.uShortToHex(inst) + "] "
+                        m.ui.print("\n    " + Utilities.uShortToHex((short) b) + ":   ["
+                            + Utilities.uShortToHex(inst) + "] "
                             + m.alu.readInstruction(inst));
                     }
                 }
@@ -690,7 +685,7 @@ public class Console {
                 m.ui.print("A watchpoint is already set on register " + (pt + 8) + ".\n");
             else
                 m.ui.print("A watchpoint is already set on address "
-                    + MemoryUtilities.uShortToHex((short) pt) + "\n");
+                    + Utilities.uShortToHex((short) pt) + "\n");
         } else if (!del)
             watchpoints.put(pt,
                 pt < 0 ? m.getRegister(pt + 8).getValue() : m.getMemory((short) pt));
@@ -698,7 +693,7 @@ public class Console {
             m.ui.print("No watchpoints set on register " + (pt + 8) + ".\n");
         else
             m.ui.print("No watchpoints set on address "
-                + MemoryUtilities.uShortToHex((short) pt) + ".\n");
+                + Utilities.uShortToHex((short) pt) + ".\n");
     }
 
     private int runMachine(final int steps) {
@@ -712,8 +707,7 @@ public class Console {
             final short pc = m.getPCRegister().getValue();
             for (final Map.Entry<Short, Object> e : breakpoints.entrySet())
                 if (pc == e.getKey()) {
-                    m.ui.print("Breakpoint encountered at "
-                        + MemoryUtilities.uShortToHex(pc));
+                    m.ui.print("Breakpoint encountered at " + Utilities.uShortToHex(pc));
                     return 3;
                 }
             for (final Map.Entry<Integer, Short> e : watchpoints.entrySet()) {
@@ -725,10 +719,10 @@ public class Console {
                         m.ui.print("Watchpoint triggered on register " + (k + 8));
                     else
                         m.ui.print("Watchpoint triggered on memory location "
-                            + MemoryUtilities.uShortToHex((short) k));
+                            + Utilities.uShortToHex((short) k));
                     m.ui.print(": value changed from "
-                        + MemoryUtilities.uShortToHex(e.getValue()) + " to "
-                        + MemoryUtilities.uShortToHex(v));
+                        + Utilities.uShortToHex(e.getValue()) + " to "
+                        + Utilities.uShortToHex(v));
                     e.setValue(v);
                     return 4;
                 }
@@ -754,27 +748,26 @@ public class Console {
         m.ui.print("\n");
         for (int i = 0; i < 4; i++) {
             m.ui.print("R" + 2 * i + ": ");
-            m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i).getValue())
-                + "  ");
+            m.ui.print(Utilities.uShortToHex(m.getRegister(2 * i).getValue()) + "  ");
             m.ui.print("R" + (2 * i + 1) + ": ");
-            m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(2 * i + 1).getValue()));
+            m.ui.print(Utilities.uShortToHex(m.getRegister(2 * i + 1).getValue()));
             m.ui.print("  "
                 + padLeft(toSymb((short) (mem + 16 * i)), symbLength + 4, ' ') + " | ");
             for (int j = 0; j < 8; j++)
-                m.ui.print(MemoryUtilities.uShortToHex(m
-                    .getMemory((short) (mem + 8 * i + j))) + " ");
+                m.ui.print(Utilities.uShortToHex(m.getMemory((short) (mem + 8 * i + j)))
+                    + " ");
             m.ui.print("\n");
         }
     }
 
     private void printInstruction() {
         final short pc = m.getPCRegister().getValue();
-        m.ui.print("\n  PC: " + MemoryUtilities.uShortToHex(pc) + "  ");
+        m.ui.print("\n  PC: " + Utilities.uShortToHex(pc) + "  ");
         m.ui.print((m.getFlags().getN() ? "n" : "-") + (m.getFlags().getZ() ? "z" : "-")
             + (m.getFlags().getP() ? "p" : "-") + "  ");
         if (lines.containsKey(pc))
             m.ui.print("Line " + lines.get(pc) + ": ");
-        m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(pc)) + ": ");
+        m.ui.print(Utilities.uShortToHex(m.getMemory(pc)) + ": ");
         m.ui.print(m.alu.readInstructionAt(pc));
     }
 
@@ -809,7 +802,7 @@ public class Console {
         else if (s.matches("[rR][0-7]"))
             return m.getRegister(s.charAt(1) - '0').getValue();
         else
-            return MemoryUtilities.parseShort(s);
+            return Utilities.parseShort(s);
     }
 
     private String toSymb(final short addr) {
@@ -828,7 +821,7 @@ public class Console {
             }
         }
         if (cSymb == null || uAddr - closest >= 512)
-            return MemoryUtilities.uShortToHex(addr);
+            return Utilities.uShortToHex(addr);
         else
             return cSymb + (uAddr == closest ? "" : "+" + (uAddr - closest));
     }

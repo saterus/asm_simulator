@@ -1,6 +1,6 @@
 package edu.osu.cse.mmxi.sim.loader.parser;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 
 public class Exec extends Token {
 
@@ -17,8 +17,7 @@ public class Exec extends Token {
 
     @Override
     public String toString() {
-        return "Exec, " + super.toString() + ": 0x"
-            + MemoryUtilities.uShortToHex(address);
+        return "Exec, " + super.toString() + ": 0x" + Utilities.uShortToHex(address);
     }
 
 }

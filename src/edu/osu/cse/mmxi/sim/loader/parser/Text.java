@@ -1,6 +1,6 @@
 package edu.osu.cse.mmxi.sim.loader.parser;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 
 public class Text extends Token {
 
@@ -30,9 +30,8 @@ public class Text extends Token {
 
     @Override
     public String toString() {
-        return "Text, " + super.toString() + ": (0x"
-            + MemoryUtilities.uShortToHex(address) + ", 0x"
-            + MemoryUtilities.uShortToHex(value) + ")";
+        return "Text, " + super.toString() + ": (0x" + Utilities.uShortToHex(address)
+            + ", 0x" + Utilities.uShortToHex(value) + ")";
     }
 
 }

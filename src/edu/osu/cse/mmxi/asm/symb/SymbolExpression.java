@@ -66,6 +66,8 @@ public abstract class SymbolExpression {
             switch (op) {
             case GROUP:
                 return va;
+            case IF:
+                return (short) (va != 0 ? vb : 0);
             case OR:
                 return (short) (va | vb);
             case XOR:
@@ -103,40 +105,6 @@ public abstract class SymbolExpression {
         }
     }
 
-    public static class IfExp extends SymbolExpression {
-        public SymbolExpression cond, ifExp, elseExp;
-
-        public IfExp(final SymbolExpression c, final SymbolExpression i,
-            final SymbolExpression e) {
-            cond = c;
-            ifExp = i;
-            elseExp = e;
-        }
-
-        @Override
-        public String toString() {
-            if (cond instanceof OpExp && ((OpExp) cond).op == Operator.MINUS)
-                return "(" + ((OpExp) cond).operands[0] + " == "
-                    + ((OpExp) cond).operands[1] + " ? " + ifExp + " : " + elseExp + ")";
-            return "(" + cond + " == 0 ? " + ifExp + " : " + elseExp + ")";
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (o == null || !(o instanceof IfExp))
-                return false;
-            return cond.equals(((IfExp) o).cond) && ifExp.equals(((IfExp) o).ifExp)
-                && elseExp.equals(((IfExp) o).elseExp);
-        }
-
-        @Override
-        public Short evaluate(final Set<Symbol> used) {
-            final Short cVal = cond.evaluate(used);
-            return cVal == null ? null : cVal == 0 ? ifExp.evaluate(used) : elseExp
-                .evaluate(used);
-        }
-    }
-
     public static class NumExp extends SymbolExpression {
         public short value;
 
@@ -147,7 +115,7 @@ public abstract class SymbolExpression {
         @Override
         public String toString() {
             return (value < 0 ? "-x" : "x")
-                + Integer.toHexString(value < 0 ? -value : value);
+                + Integer.toHexString(value < 0 ? -value : value).toUpperCase();
         }
 
         @Override

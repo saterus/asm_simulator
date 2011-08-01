@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.sim.error.Error;
 import edu.osu.cse.mmxi.sim.error.ErrorCodes;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
@@ -46,17 +46,15 @@ public final class Simulator {
                     m.ui.print("  nzp inst\n");
                 }
 
-                m.ui.print(MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
-                    + " ");
+                m.ui.print(Utilities.uShortToHex(m.getPCRegister().getValue()) + " ");
                 for (int i = 0; i < 8; i++)
-                    m.ui.print(MemoryUtilities.uShortToHex(m.getRegister(i).getValue())
-                        + " ");
+                    m.ui.print(Utilities.uShortToHex(m.getRegister(i).getValue()) + " ");
                 m.ui.print((m.getFlags().getN() ? "n" : "-")
                     + (m.getFlags().getZ() ? "z" : "-")
                     + (m.getFlags().getP() ? "p" : "-") + " ");
 
-                m.ui.print(MemoryUtilities.uShortToHex(m.getMemory(m.getPCRegister()
-                    .getValue())) + " ");
+                m.ui.print(Utilities.uShortToHex(m
+                    .getMemory(m.getPCRegister().getValue())) + " ");
                 m.ui.print(m.alu.readInstructionAt(m.getPCRegister().getValue()) + "\n");
             }
 

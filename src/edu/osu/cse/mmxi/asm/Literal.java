@@ -4,7 +4,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import edu.osu.cse.mmxi.asm.symb.Operator;
+import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
+import edu.osu.cse.mmxi.common.ParseException;
 
 public class Literal extends Symbol {
     public static SortedMap<Short, Literal> table    = new TreeMap<Short, Literal>();
@@ -23,8 +24,12 @@ public class Literal extends Symbol {
 
     public void fill() {
         if (Literal.complete && value == null)
-            value = new OpExp(Operator.PLUS, Symbol.getSymb(":END"), new NumExp(
-                getIndex()));
+            try {
+                value = ArithmeticParser.parseF(":0 + :1", ":END", getIndex());
+            } catch (final ParseException e) {
+                // won't happen
+                System.err.println("wtf");
+            }
     }
 
     @Override

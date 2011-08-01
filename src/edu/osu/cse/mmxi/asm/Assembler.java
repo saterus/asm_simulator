@@ -26,7 +26,7 @@ public class Assembler {
             errors.add(new Error(ErrorCodes.IO_BAD_FILE));
             printErrors(ui, errors);
         }
-        final String interDat = Pass1Parser.parse(this);
+        final String interDat = new Pass1Parser(this).parse();
         if (intermediate == null)
             System.out.print(interDat);
         else
@@ -39,7 +39,7 @@ public class Assembler {
                 errors.add(new Error(ErrorCodes.IO_BAD_READ));
                 printErrors(ui, errors);
             }
-            Pass2Parser.parse(this);
+            new Pass2Parser(this).parse();
             io.closeWriters();
         }
         io.closeReader();

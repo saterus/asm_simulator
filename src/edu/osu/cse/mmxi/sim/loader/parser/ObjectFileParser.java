@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.ParseException;
 import edu.osu.cse.mmxi.sim.error.Error;
 import edu.osu.cse.mmxi.sim.error.ErrorCodes;
@@ -160,7 +160,7 @@ public class ObjectFileParser {
             try {
                 if (token.matches("(H|h).{6}[0-9A-Fa-f]{8}"))
                     header = parseHeader(token);
-                else if (token.matches("(T|t)[0-9A-Fa-f]{8}"))
+                else if (token.matches("(T|t)[0-9A-Fa-f]{8}(M[01])?"))
                     text.add(parseTextLine(token));
                 else if (token.matches("(E|e)[0-9A-Fa-f]{4}"))
                     exec = parseExec(token);
@@ -201,7 +201,7 @@ public class ObjectFileParser {
                     errors
                         .add(new Error(lineNumber, "invalid symbol name '" + symb + "'",
                             ErrorCodes.PARSE_EXECPTION));
-                final int v = MemoryUtilities.parseShort(token.substring(colon + 1,
+                final int v = Utilities.parseShort(token.substring(colon + 1,
                     token.length() - 1));
                 if (v == -1)
                     errors.add(new Error(lineNumber, "'"
@@ -226,7 +226,7 @@ public class ObjectFileParser {
         // It's not necessary to check for a good string here, because we
         // already have, with the pattern matching earlier.
         return new Text(lineNumber, sourceLine, sourceFile, (short) Integer.parseInt(
-            line.substring(1, 5), 16), (short) Integer.parseInt(line.substring(5), 16));
+            line.substring(1, 5), 16), (short) Integer.parseInt(line.substring(5, 9), 16));
     }
 
     /**

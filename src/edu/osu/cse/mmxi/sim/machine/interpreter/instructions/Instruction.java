@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.sim.Simulator;
 import edu.osu.cse.mmxi.sim.error.Error;
 import edu.osu.cse.mmxi.sim.error.ErrorCodes;
@@ -242,7 +242,7 @@ public abstract class Instruction {
         public String toString(final Machine context, final Map<String, Short> symb) {
             String addr;
             if (true)
-                addr = "x" + MemoryUtilities.uShortToHex(pgoff);
+                addr = "x" + Utilities.uShortToHex(pgoff);
             if (nzp == 0)
                 return pgoff == 0 ? "NOP" : "DATA " + addr;
             else if (nzp == 7)
@@ -274,13 +274,12 @@ public abstract class Instruction {
         public boolean execute(final Machine m) {
             for (int i = 0; i < 8; i++) {
                 m.ui.print("R" + i + " "
-                    + MemoryUtilities.uShortToHex(m.getRegister(i).getValue()) + "   ");
+                    + Utilities.uShortToHex(m.getRegister(i).getValue()) + "   ");
                 if (i == 3)
                     m.ui.print(m.getFlags() + "\n");
                 else if (i == 7)
                     m.ui.print("PC "
-                        + MemoryUtilities.uShortToHex(m.getPCRegister().getValue())
-                        + "\n\n");
+                        + Utilities.uShortToHex(m.getPCRegister().getValue()) + "\n\n");
             }
             return false;
         }
@@ -319,7 +318,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return (l ? "JSR" : "JMP") + " x" + MemoryUtilities.sShortToHex(pgoff);
+            return (l ? "JSR" : "JMP") + " x" + Utilities.sShortToHex(pgoff);
         }
     }
 
@@ -352,7 +351,7 @@ public abstract class Instruction {
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
             return (l ? "JSR" : "JMP") + "R R" + br + ", x"
-                + MemoryUtilities.sShortToHex(index);
+                + Utilities.sShortToHex(index);
         }
     }
 
@@ -381,7 +380,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "LD R" + dr + ", x" + MemoryUtilities.sShortToHex(pgoff);
+            return "LD R" + dr + ", x" + Utilities.sShortToHex(pgoff);
         }
     }
 
@@ -411,7 +410,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "LDI R" + dr + ", x" + MemoryUtilities.sShortToHex(pgoff);
+            return "LDI R" + dr + ", x" + Utilities.sShortToHex(pgoff);
         }
     }
 
@@ -444,8 +443,7 @@ public abstract class Instruction {
             if (index == 0)
                 return "LDR R" + dr + ", R" + br;
             else
-                return "LDR R" + dr + ", R" + br + ", x"
-                    + MemoryUtilities.sShortToHex(index);
+                return "LDR R" + dr + ", R" + br + ", x" + Utilities.sShortToHex(index);
         }
     }
 
@@ -474,7 +472,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "LEA R" + dr + ", x" + MemoryUtilities.sShortToHex(pgoff);
+            return "LEA R" + dr + ", x" + Utilities.sShortToHex(pgoff);
         }
     }
 
@@ -551,7 +549,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "ST R" + sr + ", x" + MemoryUtilities.sShortToHex(pgoff);
+            return "ST R" + sr + ", x" + Utilities.sShortToHex(pgoff);
         }
     }
 
@@ -580,7 +578,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "STI R" + sr + ", x" + MemoryUtilities.sShortToHex(pgoff);
+            return "STI R" + sr + ", x" + Utilities.sShortToHex(pgoff);
         }
     }
 
@@ -608,7 +606,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "STR R" + sr + ", R" + br + ", x" + MemoryUtilities.sShortToHex(index);
+            return "STR R" + sr + ", R" + br + ", x" + Utilities.sShortToHex(index);
         }
     }
 
@@ -654,9 +652,10 @@ public abstract class Instruction {
             case OUT: // write the char in R0 to the console
                 if ((m.getRegister(0).getValue() & 0xff80) != 0) {
                     final String msg = "at 0x"
-                        + MemoryUtilities.uShortToHex((short) (m.getPCRegister()
-                            .getValue() - 1)) + ": value is R0 = 0x"
-                        + MemoryUtilities.uShortToHex(m.getRegister(0).getValue());
+                        + Utilities
+                            .uShortToHex((short) (m.getPCRegister().getValue() - 1))
+                        + ": value is R0 = 0x"
+                        + Utilities.uShortToHex(m.getRegister(0).getValue());
                     Simulator.printErrors(m.ui, new Error(msg, ErrorCodes.EXEC_TRAP_OUT));
                 }
                 m.ui.print("" + (char) (m.getRegister(0).getValue() & 0x7f));
@@ -685,11 +684,11 @@ public abstract class Instruction {
                 m.getRegister(0).setValue(m.ui.getShort());
                 break; // prompt
             case RND: // store a random number in R0
-                m.getRegister(0).setValue(MemoryUtilities.randomShort());
+                m.getRegister(0).setValue(Utilities.randomShort());
                 break;
             default:
                 final List<Error> errors = new ArrayList<Error>();
-                errors.add(new Error("at 0x" + MemoryUtilities.sShortToHex(vector),
+                errors.add(new Error("at 0x" + Utilities.sShortToHex(vector),
                     ErrorCodes.EXEC_TRAP_UNKN));
                 Simulator.printErrors(m.ui, errors);
             }
@@ -714,7 +713,7 @@ public abstract class Instruction {
             case 0x43:
                 return "TRAP RND";
             default:
-                return "TRAP x" + MemoryUtilities.sShortToHex(vector);
+                return "TRAP x" + Utilities.sShortToHex(vector);
             }
         }
     }
