@@ -15,7 +15,7 @@ public class ArithmeticParserTest {
     @Test
     public void test2() throws ParseException {
         final SymbolExpression se = ArithmeticParser.parse("2");
-        assertEquals("2", se.toString());
+        assertEquals("x2", se.toString());
         assertEquals(2, (short) se.evaluate());
     }
 
@@ -23,9 +23,9 @@ public class ArithmeticParserTest {
     public void test2plus2() throws ParseException {
         final SymbolExpression se = ArithmeticParser.parse("2+2");
         if (ArithmeticParser.collapseIfEvaluable)
-            assertEquals("4", se.toString());
+            assertEquals("x4", se.toString());
         else
-            assertEquals("2 + 2", se.toString());
+            assertEquals("x2 + x2", se.toString());
         assertEquals(4, (short) se.evaluate());
     }
 
@@ -33,7 +33,7 @@ public class ArithmeticParserTest {
     public void testPrec() throws ParseException {
         final SymbolExpression se = ArithmeticParser.parse("1+2*4-12%5/3&6^0xA**2**2");
         if (ArithmeticParser.collapseIfEvaluable)
-            assertEquals("10000", se.toString());
+            assertEquals("x2710", se.toString());
         else
             assertEquals("1 + 2 * 4 - 12 % 5 / 3 & 6 ^ 10 ** 2 ** 2", se.toString());
         assertEquals(10000, (short) se.evaluate());
@@ -44,7 +44,7 @@ public class ArithmeticParserTest {
         final SymbolExpression se = ArithmeticParser
             .parse("(1+((2*4)-(12))%(5/(((3))&6))^(0xA**2)**2)");
         if (ArithmeticParser.collapseIfEvaluable)
-            assertEquals("10001", se.toString());
+            assertEquals("x2711", se.toString());
         else
             assertEquals("1 + (2 * 4 - 12) % (5 / (3 & 6)) ^ (10 ** 2) ** 2",
                 se.toString());
@@ -59,20 +59,20 @@ public class ArithmeticParserTest {
         Symbol.getSymb("z").set(ArithmeticParser.parse("y*y>>>2"));
         assertEquals("y - z", Symbol.getSymb("x").value.toString());
         if (ArithmeticParser.collapseIfEvaluable)
-            assertEquals("16", Symbol.getSymb("y").value.toString());
+            assertEquals("x10", Symbol.getSymb("y").value.toString());
         else
             assertEquals("4 << 2", Symbol.getSymb("y").value.toString());
         if (ArithmeticParser.collapseIfEvaluable)
-            assertEquals("64", Symbol.getSymb("z").value.toString());
+            assertEquals("x40", Symbol.getSymb("z").value.toString());
         else
             assertEquals("y * y >>> 2", Symbol.getSymb("z").value.toString());
         assertEquals(-48, (short) Symbol.getSymb("x").evaluate());
         assertEquals(16, (short) Symbol.getSymb("y").evaluate());
         assertEquals(64, (short) Symbol.getSymb("z").evaluate());
         if (ArithmeticParser.collapseIfEvaluable)
-            assertEquals("2 + x * y - z", se.toString());
+            assertEquals("x2 + x * y - z", se.toString());
         else
-            assertEquals("4 - 2 + x * y - z", se.toString());
+            assertEquals("x4 - x2 + x * y - z", se.toString());
         assertEquals(-830, (short) se.evaluate());
     }
 
@@ -82,27 +82,27 @@ public class ArithmeticParserTest {
             fail("this test requires collapseIfEvaluable = true");
         Symbol.symbs.clear();
         SymbolExpression se = ArithmeticParser.parse("x+1-(y+2-3)-z-z");
-        assertEquals("x + 1 - (y + 2 - 3) - z - z", se.toString());
+        assertEquals("x + x1 - (y + x2 - x3) - z - z", se.toString());
         se = ArithmeticParser.simplify(se);
-        assertEquals("x - y - 2 * z + 2", se.toString());
+        assertEquals("x - y - x2 * z + x2", se.toString());
 
         se = ArithmeticParser.parse("x+5-(x+2-y)");
-        assertEquals("x + 5 - (x + 2 - y)", se.toString());
+        assertEquals("x + x5 - (x + x2 - y)", se.toString());
         se = ArithmeticParser.simplify(se);
-        assertEquals("y + 3", se.toString());
+        assertEquals("y + x3", se.toString());
 
         se = ArithmeticParser.parse("x+5-(x+7)");
-        assertEquals("x + 5 - (x + 7)", se.toString());
+        assertEquals("x + x5 - (x + x7)", se.toString());
         se = ArithmeticParser.simplify(se);
-        assertEquals("-2", se.toString());
+        assertEquals("-x2", se.toString());
 
         se = ArithmeticParser.parse("x+5-(x+5)");
-        assertEquals("x + 5 - (x + 5)", se.toString());
+        assertEquals("x + x5 - (x + x5)", se.toString());
         se = ArithmeticParser.simplify(se);
-        assertEquals("0", se.toString());
+        assertEquals("x0", se.toString());
 
         se = ArithmeticParser.parse("x+5-(y+5)");
-        assertEquals("x + 5 - (y + 5)", se.toString());
+        assertEquals("x + x5 - (y + x5)", se.toString());
         se = ArithmeticParser.simplify(se);
         assertEquals("x - y", se.toString());
     }

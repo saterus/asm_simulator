@@ -17,19 +17,19 @@ public class CommonParserTest {
         assertArrayEquals(new String[] { null, null }, parseLine("; comment"));
         assertArrayEquals(new String[] { "bla", null }, parseLine("bla "));
         assertArrayEquals(new String[] { null, "NOP" }, parseLine(" nop"));
-        assertArrayEquals(new String[] { null, "NOP" }, parseLine("NOP ; comment"));
+        assertArrayEquals(new String[] { null, "NOP" }, parseLine(" NOP ; comment"));
         assertArrayEquals(new String[] { "BRz", null }, parseLine("BRz"));
         assertArrayEquals(new String[] { "bla", "NOP" }, parseLine("bla NOP"));
         assertArrayEquals(new String[] { "bla", "BRZ", "x0" }, parseLine("bla BRz x0"));
         assertArrayEquals(new String[] { "NOP", "NOP" }, parseLine("NOP NOP"));
         assertArrayEquals(new String[] { "NOP", "BRZ", "x0" }, parseLine("NOP BRz x0"));
-        assertArrayEquals(new String[] { null, "BRZ", "x0" }, parseLine("BRz x0"));
+        assertArrayEquals(new String[] { null, "BRZ", "x0" }, parseLine(" BRz x0"));
         assertArrayEquals(new String[] { null, "LDR", "R0", "x0" },
-            parseLine("LDR R0, x0"));
+            parseLine(" LDR R0, x0"));
         assertArrayEquals(new String[] { "BRz", "NOP" }, parseLine("BRz NOP"));
         assertArrayEquals(new String[] { null, "LDR", "NOP", "x0" },
-            parseLine("LDR NOP, x0"));
-        assertArrayEquals(new String[] { null, "BRZ", "BRz" }, parseLine("BRz BRz"));
+            parseLine(" LDR NOP, x0"));
+        assertArrayEquals(new String[] { null, "BRZ", "BRz" }, parseLine(" BRz BRz"));
         assertArrayEquals(new String[] { "BRz", "BRZ", "x0" }, parseLine("BRz BRz x0"));
     }
 
