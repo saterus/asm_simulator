@@ -81,6 +81,26 @@ public class Utilities {
         }
     }
 
+    public static int parseInt(String s) {
+        int radix = 10;
+        if (s.startsWith("0x") || s.startsWith("0X")) {
+            radix = 16;
+            s = s.substring(2);
+        } else if (s.substring(0, 1).equalsIgnoreCase("x")) {
+            radix = 16;
+            s = s.substring(1);
+        } else if (s.startsWith("0b") || s.startsWith("0B")) {
+            radix = 2;
+            s = s.substring(2);
+        } else if (s.length() > 1 && s.startsWith("0"))
+            radix = 8;
+        try {
+            return Integer.parseInt(s, radix);
+        } catch (final NumberFormatException e) {
+            return -1;
+        }
+    }
+
     /**
      * Attempts to parse the given quoted string, accepting backslash-quoted ASCII values.
      * 

@@ -98,11 +98,9 @@ public class Pass1Parser {
 
             // verify the addres is within range
             final int parsedAddress = Utilities
-                .parseShort(((ExpressionArg) inst.args[0]).val.toString());
-            if (parsedAddress < 0 || parsedAddress > 0xFFFF) {
-                System.out.println(parsedAddress);
+                .parseInt(((ExpressionArg) inst.args[0]).val.toString());
+            if (parsedAddress < 0 || parsedAddress > 0xFFFF)
                 throw new ParseException(ErrorCodes.P1_INST_BAD_ORIG_ADDR);
-            }
         }
     }
 
