@@ -31,7 +31,12 @@ import edu.osu.cse.mmxi.common.ParseException;
 public class ArithmeticParser {
     public static final boolean collapseIfEvaluable = true;
 
-    public static SymbolExpression parse(String s) throws ParseException {
+    public static SymbolExpression parse(final String s) throws ParseException {
+        return parseF(s, new Object[0]);
+    }
+
+    public static SymbolExpression parseF(String s, final Object... args)
+        throws ParseException {
         // Holds Operator and SymbolExpression objects
         final Deque<Object> stack = new ArrayDeque<Object>();
         s += ")";
@@ -58,11 +63,11 @@ public class ArithmeticParser {
                     stack.push(o);
                     continue loop;
                 }
-            final String leaf = s.substring(0, leafLength(s));
+            final String leaf = s.substring(0, leafLength(s, args.length));
             s = s.substring(leaf.length());
             if (stack.peek() instanceof SymbolExpression)
                 throw new ParseException("two operands in a row");
-            stack.push(parseLeaf(leaf));
+            stack.push(parseLeaf(leaf, args));
         }
         final SymbolExpression res = (SymbolExpression) stack.poll();
         if (stack.size() != 0)
@@ -124,14 +129,19 @@ public class ArithmeticParser {
         }
     }
 
-    private static int leafLength(final String s) throws ParseException {
-        final Matcher m = Pattern.compile("^'.*?(?<!\\\\)'").matcher(s);
+    private static int leafLength(final String s, final int argc) throws ParseException {
+        Matcher m = Pattern.compile("^'.*?(?<!\\\\)'").matcher(s);
         if (m.find())
             return m.end();
-        final String token = s.split("[^0-9A-Za-z_]", 2)[0];
-        if (token.matches("[rR][0-7]"))
+        m = Pattern.compile("^:?[0-9A-Za-z_]+").matcher(s);
+        if (!m.find())
+            return 0;
+        final String token = m.group();
+        if (token.matches(":\\d+") && Integer.parseInt(token.substring(1)) < argc)
+            return token.length();
+        else if (token.matches("[rR][0-7]"))
             throw new ParseException("symbols can not be register names");
-        else if (token.length() == 0)
+        else if (token.length() == 0 || token.charAt(0) == ':')
             throw new ParseException("symbols must begin with an alphabetic character");
         else if (MemoryUtilities.parseShort(token) == -1
             && Character.isDigit(s.charAt(0)))
@@ -139,7 +149,8 @@ public class ArithmeticParser {
         return token.length();
     }
 
-    private static SymbolExpression parseLeaf(final String leaf) throws ParseException {
+    private static SymbolExpression parseLeaf(final String leaf, final Object[] args)
+        throws ParseException {
         if (leaf.matches("'.*'")) {
             final String c = MemoryUtilities.parseString(leaf.substring(1,
                 leaf.length() - 1));
@@ -147,6 +158,17 @@ public class ArithmeticParser {
                 throw new ParseException("character literal " + leaf
                     + " must contain exactly one character");
             return new NumExp((short) c.charAt(0));
+        } else if (leaf.matches(":\\d+")) {
+            final Object o = args[Integer.parseInt(leaf.substring(1))];
+            if (o instanceof Integer)
+                return new NumExp((short) (int) (Integer) o);
+            else if (o instanceof Short)
+                return new NumExp((Short) o);
+            else if (o instanceof String)
+                return Symbol.getSymb((String) o);
+            else
+                return (SymbolExpression) o; // throw ClassCastException for other objects
+
         }
         final int v = MemoryUtilities.parseShort(leaf);
         if (v != -1)

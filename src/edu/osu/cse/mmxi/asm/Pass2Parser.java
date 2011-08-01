@@ -10,10 +10,7 @@ import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
-import edu.osu.cse.mmxi.asm.symb.Operator;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
@@ -62,10 +59,8 @@ public class Pass2Parser {
     }
 
     private void encodeHeader() throws IOException, ParseException {
-        // evaluate :END + [# literals] - :START to get program length
-        final SymbolExpression se = ArithmeticParser.simplify(new OpExp(Operator.MINUS,
-            new OpExp(Operator.PLUS, Symbol.getSymb(":END"), new NumExp(
-                (short) Literal.table.size())), Symbol.getSymb(":START")));
+        final SymbolExpression se = ArithmeticParser.simplify(ArithmeticParser.parseF(
+            ":0 + :1 - :2", ":END", Literal.table.size(), ":START"));
         final Short len = se.evaluate();
         if (len == null) {
             errorOnUndefinedSymbols(se);

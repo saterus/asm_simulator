@@ -9,10 +9,8 @@ import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.Label;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.StringArg;
-import edu.osu.cse.mmxi.asm.symb.Operator;
+import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class Pass1Parser {
@@ -41,7 +39,7 @@ public class Pass1Parser {
                 inst = parsed[1] == null ? null : new InstructionLine(parsed);
                 if ((inst == null || !inst.opcode.matches("[.]ORIG|[.]EQU"))
                     && label != null)
-                    label.symb.set(new OpExp(Operator.PLUS, lcBase, new NumExp(lc)));
+                    label.symb.set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
                 if (inst != null)
                     if (inst.opcode.charAt(0) == '.') {
                         if (inst.args.length != 1 && !inst.opcode.equals(".ORIG"))
@@ -120,8 +118,7 @@ public class Pass1Parser {
             lc += val;
         else {
             lcBase = Symbol.getSymb(":T" + ++tempNumber).set(
-                new OpExp(Operator.PLUS,
-                    new OpExp(Operator.PLUS, lcBase, new NumExp(lc)), len));
+                ArithmeticParser.parseF(":0 + :1 + :2", lcBase, lc, len));
             lc = 0;
         }
     }
@@ -133,15 +130,14 @@ public class Pass1Parser {
             lc += val;
         else {
             lcBase = Symbol.getSymb(":T" + ++tempNumber).set(
-                new OpExp(Operator.PLUS,
-                    new OpExp(Operator.PLUS, lcBase, new NumExp(lc)), len));
+                ArithmeticParser.parseF(":0 + :1 + :2", lcBase, lc, len));
             lc = 0;
         }
     }
 
     private void cleanupSymbols() {
         try {
-            Symbol.getSymb(":END").set(new OpExp(Operator.PLUS, lcBase, new NumExp(lc)));
+            Symbol.getSymb(":END").set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
             Literal.complete = true;
         } catch (final ParseException e) {
             System.err.println(e.getMessage());

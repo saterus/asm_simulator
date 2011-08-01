@@ -115,7 +115,7 @@ public abstract class SymbolExpression {
         @Override
         public String toString() {
             return (value < 0 ? "-x" : "x")
-                + Integer.toHexString(value < 0 ? -value : value);
+                + Integer.toHexString(value < 0 ? -value : value).toUpperCase();
         }
 
         @Override
