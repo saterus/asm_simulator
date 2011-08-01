@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<project basedir="." default="build" name="Simulator">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+
+    <path id="Simulator.classpath">
+        <pathelement location="bin"/>
+    </path>
+
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+
+    <target depends="build-subprojects,build-project" name="build"/>
+
+    <target name="build-subprojects"/>
+
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="Simulator.classpath"/>
+        </javac>
+    </target>
+
+    <target name="Simulator">
+        <java classname="edu.osu.cse.mmxi.sim.Simulator" failonerror="true" fork="yes">
+            <arg line="${args}"/>
+            <classpath refid="Simulator.classpath"/>
+        </java>
+    </target>
+
+    <target name="Assembler">
+        <java classname="edu.osu.cse.mmxi.asm.Assembler" failonerror="true" fork="yes">
+            <arg line="${args}"/>
+            <classpath refid="Simulator.classpath"/>
+        </java>
+    </target>
+
+    <target name="Help">
+        <echo message="Guide to Running MMXI Simulator/Assembler with Aapche Ant."/>
+        <echo message="Use '$ ./list_targets.sh' to see all available options."/>
+        <echo message="'ant clean' will clean out old version."/>
+        <echo message="'ant build' will compile a new version."/>
+        <echo message="'ant -Dargs=YOURFILE.asm Assembler' will assemble an input assembly file."/>
+        <echo message="'ant -Dargs=YOURFILE.o Simulator' will run an object file in the Simulator."/>
+    </target>
+
+</project>
