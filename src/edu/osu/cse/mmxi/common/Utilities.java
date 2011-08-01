@@ -1,34 +1,12 @@
 package edu.osu.cse.mmxi.common;
 
 /**
- * The <code>MemoryUtilities</code> class contains several methods of general-purpose use
- * which are used throughout the program.
+ * The <code>Utilities</code> class contains several methods of general-purpose use which
+ * are used throughout the program.
  * 
  */
-public class MemoryUtilities {
+public class Utilities {
     private static long seed = System.nanoTime(), rand = 0;
-
-    /**
-     * Gets the page number of a 16-bit memory address by extracting the high 7 bits.
-     * 
-     * @param addr
-     *            the address in memory
-     * @return the page number
-     */
-    public static byte pageAddress(final short addr) {
-        return (byte) (addr >> 9 & 0x7f);
-    }
-
-    /**
-     * Gets the page offset of a 16-bit memory address by extracting the low 9 bits.
-     * 
-     * @param addr
-     *            the address in memory
-     * @return the page offset
-     */
-    public static short addressOffset(final short addr) {
-        return (short) (addr & 0x1ff);
-    }
 
     /**
      * Converts the incoming word argument to a 4-digit padded capital hexadecimal string.

@@ -25,7 +25,7 @@ import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class ArithmeticParser {
@@ -143,8 +143,7 @@ public class ArithmeticParser {
             throw new ParseException("symbols can not be register names");
         else if (token.length() == 0 || token.charAt(0) == ':')
             throw new ParseException("symbols must begin with an alphabetic character");
-        else if (MemoryUtilities.parseShort(token) == -1
-            && Character.isDigit(s.charAt(0)))
+        else if (Utilities.parseShort(token) == -1 && Character.isDigit(s.charAt(0)))
             throw new ParseException("symbols must not begin with digits");
         return token.length();
     }
@@ -152,8 +151,7 @@ public class ArithmeticParser {
     private static SymbolExpression parseLeaf(final String leaf, final Object[] args)
         throws ParseException {
         if (leaf.matches("'.*'")) {
-            final String c = MemoryUtilities.parseString(leaf.substring(1,
-                leaf.length() - 1));
+            final String c = Utilities.parseString(leaf.substring(1, leaf.length() - 1));
             if (c.length() != 1)
                 throw new ParseException("character literal " + leaf
                     + " must contain exactly one character");
@@ -170,7 +168,7 @@ public class ArithmeticParser {
                 return (SymbolExpression) o; // throw ClassCastException for other objects
 
         }
-        final int v = MemoryUtilities.parseShort(leaf);
+        final int v = Utilities.parseShort(leaf);
         if (v != -1)
             return new NumExp((short) v);
         final Symbol s = Symbol.getSymb(leaf);

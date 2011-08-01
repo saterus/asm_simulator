@@ -1,6 +1,6 @@
 package edu.osu.cse.mmxi.sim.machine;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 
 /**
  * A specific Register that comes with an atomic operation for retrieving and incrementing
@@ -11,7 +11,7 @@ public class FlagsRegister extends Register {
     public FlagsRegister(final int fill) {
         this(false, false, false);
         if (fill == -1)
-            registerValue = (short) (1 << (MemoryUtilities.randomShort() & 0xFFFF) % 3);
+            registerValue = (short) (1 << (Utilities.randomShort() & 0xFFFF) % 3);
         else
             setFlags((short) fill);
     }

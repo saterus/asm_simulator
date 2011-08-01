@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.ParseException;
 import edu.osu.cse.mmxi.sim.error.Error;
 import edu.osu.cse.mmxi.sim.error.ErrorCodes;
@@ -201,7 +201,7 @@ public class ObjectFileParser {
                     errors
                         .add(new Error(lineNumber, "invalid symbol name '" + symb + "'",
                             ErrorCodes.PARSE_EXECPTION));
-                final int v = MemoryUtilities.parseShort(token.substring(colon + 1,
+                final int v = Utilities.parseShort(token.substring(colon + 1,
                     token.length() - 1));
                 if (v == -1)
                     errors.add(new Error(lineNumber, "'"

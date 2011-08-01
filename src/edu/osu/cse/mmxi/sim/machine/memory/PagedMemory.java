@@ -1,7 +1,5 @@
 package edu.osu.cse.mmxi.sim.machine.memory;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
-
 /**
  * <p>
  * A representation of random access memory within a hardware computer system. Memory is
@@ -62,8 +60,8 @@ public abstract class PagedMemory implements Memory {
      */
     @Override
     public short getMemory(final short absoluteAddress) {
-        return this.getMemory(MemoryUtilities.pageAddress(absoluteAddress),
-            MemoryUtilities.addressOffset(absoluteAddress));
+        return this.getMemory(pageAddress(absoluteAddress),
+            addressOffset(absoluteAddress));
     }
 
     /**
@@ -95,8 +93,8 @@ public abstract class PagedMemory implements Memory {
      */
     @Override
     public void setMemory(final short absoluteAddress, final short value) {
-        this.setMemory(MemoryUtilities.pageAddress(absoluteAddress),
-            MemoryUtilities.addressOffset(absoluteAddress), value);
+        this.setMemory(pageAddress(absoluteAddress), addressOffset(absoluteAddress),
+            value);
     }
 
     /**
@@ -124,4 +122,26 @@ public abstract class PagedMemory implements Memory {
      * @return the words of memory that make up the <i>i</i>th page.
      */
     protected abstract short[] getPage(final byte page);
+
+    /**
+     * Gets the page number of a 16-bit memory address by extracting the high 7 bits.
+     * 
+     * @param addr
+     *            the address in memory
+     * @return the page number
+     */
+    public static byte pageAddress(final short addr) {
+        return (byte) (addr >> 9 & 0x7f);
+    }
+
+    /**
+     * Gets the page offset of a 16-bit memory address by extracting the low 9 bits.
+     * 
+     * @param addr
+     *            the address in memory
+     * @return the page offset
+     */
+    public static short addressOffset(final short addr) {
+        return (short) (addr & 0x1ff);
+    }
 }

@@ -1,6 +1,6 @@
 package edu.osu.cse.mmxi.sim.machine.memory;
 
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 
 /**
  * An implementation of physical memory where all words in all pages are initialized to
@@ -40,7 +40,7 @@ public class RandomizedMemory extends PagedMemory {
         if (memory[page] == null) {
             memory[page] = new short[0x200];
             for (int i = 0; i < 0x200; i++)
-                memory[page][i] = MemoryUtilities.randomShort();
+                memory[page][i] = Utilities.randomShort();
         }
         return memory[page];
     }

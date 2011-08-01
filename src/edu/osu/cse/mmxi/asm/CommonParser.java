@@ -10,7 +10,7 @@ import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.asm.table.PsuedoOpTable;
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class CommonParser {
@@ -49,7 +49,7 @@ public class CommonParser {
         if (tokens[l + 1].matches("\\s*\".*(?<!\\\\)\"\\s*")) {
             String str = tokens[l + 1].trim();
             str = str.substring(1, str.length() - 1);
-            args = new String[] { "\"" + MemoryUtilities.parseString(str) + "\"" };
+            args = new String[] { "\"" + Utilities.parseString(str) + "\"" };
         } else
             args = tokens[l + 1].split(",");
         final String[] ret = new String[args.length + 2];
@@ -62,7 +62,7 @@ public class CommonParser {
 
     public static String[] checkLine(final String[] line) throws ParseException {
         if (line[0] != null) {
-            if (MemoryUtilities.parseShort(line[0]) != -1)
+            if (Utilities.parseShort(line[0]) != -1)
                 throw new ParseException("numbers can not be labels");
             if (line[0].matches("[rR][0-7]"))
                 throw new ParseException("registers can not be labels");

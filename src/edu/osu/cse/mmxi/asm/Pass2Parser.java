@@ -11,7 +11,7 @@ import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public class Pass2Parser {
@@ -69,8 +69,7 @@ public class Pass2Parser {
         if (a.segName == null)
             a.ui.error("No .ORIG line found!");
         a.io.writeOLine("H" + padRight(a.segName, 6, ' ')
-            + MemoryUtilities.uShortToHex((short) lc.address)
-            + MemoryUtilities.uShortToHex(len));
+            + Utilities.uShortToHex((short) lc.address) + Utilities.uShortToHex(len));
     }
 
     private void encodeLiterals() throws IOException {
@@ -88,7 +87,7 @@ public class Pass2Parser {
             errorOnUndefinedSymbols(se);
             throw new ParseException("Execution address " + se + " too complex to encode");
         }
-        a.io.writeOLine("E" + MemoryUtilities.uShortToHex((short) exec.address));
+        a.io.writeOLine("E" + Utilities.uShortToHex((short) exec.address));
     }
 
     private void parseSTRZ() throws IOException {
@@ -140,7 +139,7 @@ public class Pass2Parser {
     private void write(final short[] data, final int[] m) throws IOException {
         if (data.length == 0)
             a.io.writeLLine((lc == null ? "      " : "("
-                + MemoryUtilities.uShortToHex((short) lc.address) + ")")
+                + Utilities.uShortToHex((short) lc.address) + ")")
                 + padLeft("", 26, ' ')
                 + "("
                 + padLeft("" + lineNumber, 4, ' ')
@@ -148,14 +147,13 @@ public class Pass2Parser {
                 + line);
         else
             for (int i = 0; i < data.length; i++) {
-                a.io.writeOLine("T" + MemoryUtilities.uShortToHex((short) lc.address)
-                    + MemoryUtilities.uShortToHex(data[i]) + (m[i] < 0 ? "" : "M" + m[i]));
-                a.io.writeLLine("(" + MemoryUtilities.uShortToHex((short) lc.address)
-                    + ") " + MemoryUtilities.uShortToHex(data[i])
-                    + (m[i] < 0 ? "   " : " M" + m[i]) + " "
-                    + padLeft(Integer.toBinaryString(data[i] & 0xFFFF), 16, '0') + " ("
-                    + padLeft(lineNumber == 0 ? "lit" : "" + lineNumber, 4, ' ') + ")\t"
-                    + (i == 0 ? line : ""));
+                a.io.writeOLine("T" + Utilities.uShortToHex((short) lc.address)
+                    + Utilities.uShortToHex(data[i]) + (m[i] < 0 ? "" : "M" + m[i]));
+                a.io.writeLLine("(" + Utilities.uShortToHex((short) lc.address) + ") "
+                    + Utilities.uShortToHex(data[i]) + (m[i] < 0 ? "   " : " M" + m[i])
+                    + " " + padLeft(Integer.toBinaryString(data[i] & 0xFFFF), 16, '0')
+                    + " (" + padLeft(lineNumber == 0 ? "lit" : "" + lineNumber, 4, ' ')
+                    + ")\t" + (i == 0 ? line : ""));
                 lc.address++;
             }
     }

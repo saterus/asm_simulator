@@ -5,7 +5,7 @@ import edu.osu.cse.mmxi.asm.Symbol;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
-import edu.osu.cse.mmxi.common.MemoryUtilities;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.ParseException;
 
 public interface AssemblyLine {
@@ -37,7 +37,7 @@ public interface AssemblyLine {
                         num = num.substring(1);
                     if (num.charAt(0) == '#')
                         num = num.substring(1);
-                    final int v = MemoryUtilities.parseShort(num);
+                    final int v = Utilities.parseShort(num);
                     if (v == -1)
                         try {
                             args[i] = new ExpressionArg(arg);
