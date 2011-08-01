@@ -22,6 +22,7 @@
 
     <target name="clean">
         <delete dir="bin"/>
+        <delete dir="doc"/>
     </target>
 
     <target depends="build-subprojects,build-project" name="build"/>
@@ -36,27 +37,77 @@
         </javac>
     </target>
 
-    <target name="Simulator">
+    <target name="simulator">
         <java classname="edu.osu.cse.mmxi.sim.Simulator" failonerror="true" fork="yes">
             <arg line="${args}"/>
             <classpath refid="Simulator.classpath"/>
         </java>
     </target>
 
-    <target name="Assembler">
+    <target name="assembler">
         <java classname="edu.osu.cse.mmxi.asm.Assembler" failonerror="true" fork="yes">
             <arg line="${args}"/>
             <classpath refid="Simulator.classpath"/>
         </java>
     </target>
 
+    <target name="targets">
+      <exec executable="/bin/sh">
+        <arg value="./list_targets.sh"/>
+      </exec>
+    </target>
+
     <target name="Help">
         <echo message="Guide to Running MMXI Simulator/Assembler with Aapche Ant."/>
-        <echo message="Use '$ ./list_targets.sh' to see all available options."/>
-        <echo message="'ant clean' will clean out old version."/>
-        <echo message="'ant build' will compile a new version."/>
-        <echo message="'ant -Dargs=YOURFILE.asm Assembler' will assemble an input assembly file."/>
-        <echo message="'ant -Dargs=YOURFILE.o Simulator' will run an object file in the Simulator."/>
+        <echo message="Usage: 'ant targets' to see all available options. (UNIX ONLY)"/>
+        <echo message="       'ant clean' will clean out old version."/>
+        <echo message="       'ant build' will compile a new version."/>
+        <echo message="       'ant javadoc will compile a new version of the javadoc locally."/>
+        <echo message="       'ant -Dargs=YOURFILE.asm assembler' will assemble an input assembly file."/>
+        <echo message="       'ant -Dargs=YOURFILE.o simulator' will run an object file in the Simulator."/>
     </target>
+
+    <target depends="build" name="javadoc">
+      <javadoc access="private"
+               author="false"
+               destdir="doc"
+               doctitle="Module Descriptions &amp; Data Element Dictionary"
+               nodeprecated="false"
+               nodeprecatedlist="false"
+               noindex="false"
+               nonavbar="true"
+               notree="true"
+               packagenames="edu.osu.cse.mmxi.sim.machine.memory,edu.osu.cse.mmxi.asm.io,edu.osu.cse.mmxi.sim.machine,edu.osu.cse.mmxi.junit.sim,edu.osu.cse.mmxi.sim.loader,edu.osu.cse.mmxi.sim.machine.interpreter.instructions,edu.osu.cse.mmxi.sim.loader.parser,edu.osu.cse.mmxi.common,edu.osu.cse.mmxi.asm,edu.osu.cse.mmxi.common.error,edu.osu.cse.mmxi.asm.table,edu.osu.cse.mmxi.sim.machine.interpreter,edu.osu.cse.mmxi.asm.error,edu.osu.cse.mmxi.asm.line,edu.osu.cse.mmxi.sim.ui,edu.osu.cse.mmxi.junit.asm,edu.osu.cse.mmxi.asm.ui,edu.osu.cse.mmxi.sim,edu.osu.cse.mmxi.asm.symb,edu.osu.cse.mmxi.sim.error"
+               source="1.6"
+               sourcepath="src"
+               use="true"
+               version="true"/>
+    </target>
+
+    <target depends="build" name="web-javadoc">
+      <javadoc access="private"
+               author="false"
+               destdir="doc"
+               doctitle="Module Descriptions &amp; Data Element Dictionary"
+               nodeprecated="false"
+               nodeprecatedlist="false"
+               noindex="false"
+               nonavbar="false"
+               notree="false"
+               packagenames="edu.osu.cse.mmxi.sim.machine.memory,edu.osu.cse.mmxi.asm.io,edu.osu.cse.mmxi.sim.machine,edu.osu.cse.mmxi.junit.sim,edu.osu.cse.mmxi.sim.loader,edu.osu.cse.mmxi.sim.machine.interpreter.instructions,edu.osu.cse.mmxi.sim.loader.parser,edu.osu.cse.mmxi.common,edu.osu.cse.mmxi.asm,edu.osu.cse.mmxi.common.error,edu.osu.cse.mmxi.asm.table,edu.osu.cse.mmxi.sim.machine.interpreter,edu.osu.cse.mmxi.asm.error,edu.osu.cse.mmxi.asm.line,edu.osu.cse.mmxi.sim.ui,edu.osu.cse.mmxi.junit.asm,edu.osu.cse.mmxi.asm.ui,edu.osu.cse.mmxi.sim,edu.osu.cse.mmxi.asm.symb,edu.osu.cse.mmxi.sim.error"
+               source="1.6"
+               sourcepath="src"
+               splitindex="true"
+               use="true"
+               version="true"/>
+    </target>
+
+    <target depends="javadoc" name="pdf-javadoc">
+      <exec executable="htmldoc">
+        <arg value="--batch"/>
+        <arg value="doc_compiler.book"/>
+      </exec>
+    </target>
+
 
 </project>
