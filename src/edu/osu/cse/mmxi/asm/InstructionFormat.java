@@ -106,69 +106,72 @@ public class InstructionFormat {
         {"XCHG",  "RRR",  "0101C--A--111111",  // XCHG Ra, Rb, Rj*  = MOV Rj, Ra
                           "0101A--B--111111",  //      [j != a, b]    MOV Ra, Rb
                           "0101B--C--111111"}, //                     MOV Rb, Rj
-        {"XNOR*", "RRRR", "1001A--B--xxxxxx",  // XNOR Rd,Ra,Rb,Rj* = NOT Rd, Ra
+        {"XNOR",  "RRR",  "1001A--B--xxxxxx",  // XNOR Rd,Ra*,Rb*   = NOT Rd, Ra
+                          "0101A--A--0xxC--",  //      [a != b]       AND Rd, Rb
+                          "1001C--C--xxxxxx",  //                     NOT Rb
+                          "0101C--C--0xxB--",  //                     AND Rb, Ra
+                          "1001C--C--xxxxxx",  //                     NOT Rb
+                          "1001A--A--xxxxxx",  //                     NOT Rd
+                          "0101A--A--0xxC--"}, //                     AND Rd, Rb
+        {"XNOR",  "RRRR", "1001A--B--xxxxxx",  // XNOR Rd,Ra,Rb,Rj* = NOT Rd, Ra
                           "1001D--C--xxxxxx",  //      [j != a != b]  NOT Rj, Rb
                           "0101D--D--0xxB--",  //                     AND Rj, Ra
                           "0101A--A--0xxC--",  //                     AND Rd, Rb
                           "1001D--D--xxxxxx",  //                     NOT Rj
                           "1001A--A--xxxxxx",  //                     NOT Rd
                           "0101A--A--0xxD--"}, //                     AND Rd, Rj
-        {"XNOR*", "RRRR", "1001A--B--xxxxxx",  // XNOR Rd,Ra*,Rb*,Rj= NOT Rd, Ra
-                          "0101A--A--0xxC--",  //      [a != b == j]  AND Rd, Rb
+        {"XOR",   "RRR",  "0101A--B--0xxC--",  // XOR  Rd,Ra*,Rb*   = AND Rd, Ra, Rb
+                          "1001B--B--xxxxxx",  //      [a != b]       NOT Ra
                           "1001C--C--xxxxxx",  //                     NOT Rb
                           "0101C--C--0xxB--",  //                     AND Rb, Ra
                           "1001C--C--xxxxxx",  //                     NOT Rb
                           "1001A--A--xxxxxx",  //                     NOT Rd
                           "0101A--A--0xxC--"}, //                     AND Rd, Rb
-        {"XNOR*", "RRRR", "0101A--B--111111"}, // XNOR Rd,Ra,Rb,Rj [a == b] = MOV Rd, Ra
-        {"XOR*",  "RRRR", "1001A--B--xxxxxx",  // XOR  Rd,Ra,Rb,Rj* = NOT Rd, Ra
+        {"XOR",   "RRRR", "1001A--B--xxxxxx",  // XOR  Rd,Ra,Rb,Rj* = NOT Rd, Ra
                           "1001D--C--xxxxxx",  //      [j != a != b]  NOT Rj, Rb
                           "0101D--D--0xxA--",  //                     AND Rj, Rd
                           "0101A--B--0xxC--",  //                     AND Rd, Ra, Rb
                           "1001D--D--xxxxxx",  //                     NOT Rj
                           "1001A--A--xxxxxx",  //                     NOT Rd
-                          "0101A--A--0xxD--"}, //                     AND Rd, Rj
-        {"XOR*",  "RRRR", "0101A--B--0xxC--",  // XOR  Rd,Ra*,Rb*,Rj= AND Rd, Ra, Rb
-                          "1001B--B--xxxxxx",  //      [a != b == j]  NOT Ra
-                          "1001C--C--xxxxxx",  //                     NOT Rb
-                          "0101C--C--0xxB--",  //                     AND Rb, Ra
-                          "1001C--C--xxxxxx",  //                     NOT Rb
-                          "1001A--A--xxxxxx",  //                     NOT Rd
-                          "0101A--A--0xxC--"}, //                     AND Rd, Rb
-        {"XOR*",  "RRRR", "0101A--A--100000"}};// XOR  Rd,Ra,Rb,Rj [a == b] = CLR Rd
+                          "0101A--A--0xxD--"}};//                     AND Rd, Rj
     // @formatter:on
     public static final Map<String, List<IFRecord>> instructions = new HashMap<String, List<IFRecord>>();
     static {
         for (final String[] inst : INST) {
-            final IFRecord r = new IFRecord();
-            if (inst[0].contains("*"))
-                r.special = true;
-            r.name = inst[0].replace("*", ""); // name contains the opcode name
-            r.signature = inst[1]; // signature contains a string with the types of each
-                                   // argument in the characters
-            // template contains the list of shorts before putting values in the fields
-            // (all bits are 0 except required 1's)
-            r.template = new short[inst.length - 2];
-            final List<int[]> l = new ArrayList<int[]>();
-            for (int i = 2; i < inst.length; i++) {
-                r.template[i - 2] = (short) Integer.parseInt(
-                    inst[i].replaceAll("[^1]", "0"), 2);
-                final Matcher m = Pattern.compile("[A-Z]-*").matcher(inst[i]);
-                while (m.find())
-                    l.add(new int[] { inst[i].charAt(m.start()) - 'A', i - 2,
-                    /**/16 - m.end(), m.end() - m.start() });
-            }
-            // replacements contains a list of tuples (arg, index, start, len), where arg
-            // is the index of the argument in the argument list, index is the choice of
-            // which word (of a multi-word or synthetic instruction) to replace, start is
-            // the index of the least significant bit in the word, and len is the number
-            // of bits to replace
-            r.replacements = l.toArray(new int[0][]);
+            final IFRecord r = interpretTextIFRecord(inst);
             final String key = r.name.toUpperCase() + ":" + r.signature.length();
             if (!instructions.containsKey(key))
                 instructions.put(key, new ArrayList<IFRecord>());
             instructions.get(key).add(r);
         }
+    }
+
+    private static IFRecord interpretTextIFRecord(final String[] inst) {
+        final IFRecord r = new IFRecord();
+        if (inst[0].contains("*"))
+            r.special = true;
+        r.name = inst[0].replace("*", ""); // name contains the opcode name
+        r.signature = inst[1]; // signature contains a string with the types of each
+                               // argument in the characters
+        // template contains the list of shorts before putting values in the fields
+        // (all bits are 0 except required 1's)
+        r.template = new short[inst.length - 2];
+        final List<int[]> l = new ArrayList<int[]>();
+        for (int i = 2; i < inst.length; i++) {
+            r.template[i - 2] = (short) Integer.parseInt(inst[i].replaceAll("[^1]", "0"),
+                2);
+            final Matcher m = Pattern.compile("[A-Z]-*").matcher(inst[i]);
+            while (m.find())
+                l.add(new int[] { inst[i].charAt(m.start()) - 'A', i - 2,
+                /**/16 - m.end(), m.end() - m.start() });
+        }
+        // replacements contains a list of tuples (arg, index, start, len), where arg
+        // is the index of the argument in the argument list, index is the choice of
+        // which word (of a multi-word or synthetic instruction) to replace, start is
+        // the index of the least significant bit in the word, and len is the number
+        // of bits to replace
+        r.replacements = l.toArray(new int[0][]);
+        return r;
     }
 
     private static List<IFRecord> getInstruction(final String name, final int[] isReg)
@@ -305,13 +308,8 @@ public class InstructionFormat {
                     inst.replacements[i * shl.replacements.length + j] = arr;
                 }
             }
-        } else if (key.equals("SUB:3")) {
+        } else if (key.equals("SUB:3"))
             if (values[0].address == values[1].address)
-                inst = candidates.get(1);
-        } else if (key.equals("XNOR:4") || key.equals("XOR:4"))
-            if (values[1].address == values[2].address)
-                inst = candidates.get(2);
-            else if (values[2] == values[3])
                 inst = candidates.get(1);
         return inst;
     }
@@ -337,22 +335,6 @@ public class InstructionFormat {
                 return new NumExp(val);
             else
                 return ((ExpressionArg) inst.args[1]).val;
-        } else if (key.equals("XNOR:4") || key.equals("XOR:4")) {
-            final Short reg1, reg2;
-            SymbolExpression exp1, exp2;
-            if (inst.args[1] instanceof RegisterArg)
-                exp1 = new NumExp(reg1 = ((RegisterArg) inst.args[1]).reg);
-            else
-                reg1 = (exp1 = ((ExpressionArg) inst.args[1]).val).evaluate();
-            if (inst.args[2] instanceof RegisterArg)
-                exp2 = new NumExp(reg2 = ((RegisterArg) inst.args[2]).reg);
-            else
-                reg2 = (exp2 = ((ExpressionArg) inst.args[2]).val).evaluate();
-            if (reg1 != null && reg2 != null)
-                return new NumExp((short) (reg1 == reg2 ? 1 : 7));
-            else
-                return new IfExp(new OpExp(Operator.MINUS, exp1, exp2), new NumExp(
-                    (short) 1), new NumExp((short) 7));
         }
         return null;
     }
