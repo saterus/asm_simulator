@@ -73,9 +73,8 @@ public class Pass1Parser {
             } catch (final ParseException e) {
                 // handle the error
                 String msg = e.getMessage();
-                msg = msg == null ? "" : "\n" + msg;
-                final Error err = new Error(lineNumber, "\"" + line + "\" " + msg,
-                    e.getErrorCode());
+                msg = msg == null ? "" : "\"" + line + "\"\n" + msg;
+                final Error err = new Error(lineNumber, msg, e.getErrorCode());
                 errors.add(err);
             }
             lineNumber++;
@@ -100,8 +99,10 @@ public class Pass1Parser {
             // verify the addres is within range
             final int parsedAddress = Utilities
                 .parseShort(((ExpressionArg) inst.args[0]).val.toString());
-            if (parsedAddress < 0 || parsedAddress > 0xFFFF)
+            if (parsedAddress < 0 || parsedAddress > 0xFFFF) {
+                System.out.println(parsedAddress);
                 throw new ParseException(ErrorCodes.P1_INST_BAD_ORIG_ADDR);
+            }
         }
     }
 
