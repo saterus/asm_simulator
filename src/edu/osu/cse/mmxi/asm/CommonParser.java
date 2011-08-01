@@ -1,10 +1,15 @@
 package edu.osu.cse.mmxi.asm;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression.IfExp;
+import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.asm.table.PsuedoOpTable;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
 import edu.osu.cse.mmxi.common.ParseException;
@@ -68,8 +73,51 @@ public class CommonParser {
                 if (!InstructionFormat.instructions.containsKey(line[1] + ":"
                     + (line.length - 2)))
                     throw new ParseException("incorrect number of arguments");
-            } else if (!line[1].matches(PSEUDO_OPS))
+            } else if (line[1].matches(PSEUDO_OPS))
+                ;
+            else if (line[0] != null
+                && (line[0].matches(OPS) || line[0].matches(PSEUDO_OPS)))
+                throw new ParseException("instruction lines must begin with whitespace");
+            else
                 throw new ParseException("unknown opcode");
         return line;
+    }
+
+    public static void errorOnUndefinedSymbols(final SymbolExpression se)
+        throws ParseException {
+        errorOnUndefinedSymbols(undefinedSymbols(se));
+    }
+
+    public static void errorOnUndefinedSymbols(final Set<Symbol> undef)
+        throws ParseException {
+        if (undef.size() != 0) {
+            String str = "undefined symbols: ";
+            for (final Symbol s : undef)
+                str += s.name + ", ";
+            throw new ParseException(str.substring(0, str.length() - 2));
+        }
+    }
+
+    private static Set<Symbol> undefinedSymbols(final SymbolExpression se) {
+        final Set<Symbol> undef = new HashSet<Symbol>();
+        undefinedSymbols(undef, se);
+        return undef;
+    }
+
+    public static void undefinedSymbols(final Set<Symbol> undef, final SymbolExpression se) {
+        if (se == null)
+            return;
+        if (se instanceof OpExp)
+            for (final SymbolExpression operand : ((OpExp) se).operands)
+                undefinedSymbols(undef, operand);
+        else if (se instanceof IfExp) {
+            undefinedSymbols(undef, ((IfExp) se).cond);
+            undefinedSymbols(undef, ((IfExp) se).ifExp);
+            undefinedSymbols(undef, ((IfExp) se).elseExp);
+        } else if (se instanceof Symbol)
+            if (((Symbol) se).value != null)
+                undefinedSymbols(undef, ((Symbol) se).value);
+            else if (se != Symbol.getSymb(":START"))
+                undef.add((Symbol) se);
     }
 }

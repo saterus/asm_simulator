@@ -2,9 +2,11 @@ package edu.osu.cse.mmxi.asm;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -228,6 +230,8 @@ public class InstructionFormat {
         throws ParseException {
         final int[] isReg = new int[inst.args.length];
         final Location[] values = new Location[inst.args.length];
+        boolean hasNull = false;
+        final Set<Symbol> undef = new HashSet<Symbol>();
         for (int i = 0; i < isReg.length; i++) {
             isReg[i] = inst.args[i].isReg();
             if (inst.args[i] instanceof RegisterArg)
@@ -236,9 +240,15 @@ public class InstructionFormat {
                 final SymbolExpression se = ArithmeticParser
                     .simplify(((ExpressionArg) inst.args[i]).val);
                 values[i] = Location.convertToRelative(se);
-                if (values[i] == null)
-                    throw new ParseException("Argument " + se + " too complex to encode");
+                if (values[i] == null) {
+                    CommonParser.undefinedSymbols(undef, se);
+                    hasNull = true;
+                }
             }
+        }
+        if (hasNull) {
+            CommonParser.errorOnUndefinedSymbols(undef);
+            throw new ParseException("Arguments too complex to encode");
         }
         final List<IFRecord> candidates = getInstruction(inst.opcode, isReg);
         final String key = inst.opcode + ":" + isReg.length;

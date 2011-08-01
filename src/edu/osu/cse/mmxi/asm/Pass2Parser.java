@@ -1,6 +1,7 @@
 package edu.osu.cse.mmxi.asm;
 
 import static edu.osu.cse.mmxi.asm.CommonParser.checkLine;
+import static edu.osu.cse.mmxi.asm.CommonParser.errorOnUndefinedSymbols;
 import static edu.osu.cse.mmxi.asm.CommonParser.parseLine;
 
 import java.io.IOException;
@@ -28,53 +29,48 @@ public class Pass2Parser {
     }
 
     public void parse() throws IOException {
-        checkSymbolsDefined();
-        lc = Location.convertToRelative(Symbol.getSymb(":START"));
-        encodeHeader();
-        lineNumber = 1;
-        while ((line = a.io.getLine()) != null) {
-            try {
-                final String[] parsed = checkLine(parseLine(line));
-                inst = parsed[1] == null ? null : new InstructionLine(parsed);
-                if (inst != null)
-                    if (inst.opcode.charAt(0) == '.') {
-                        if (inst.opcode.equals(".STRZ"))
-                            parseSTRZ();
-                        else if (inst.opcode.equals(".FILL"))
-                            parseFILL();
-                        else if (inst.opcode.equals(".BLKW"))
-                            parseBLKW();
-                        else
-                            write(new short[0], new int[0]);
-                    } else
-                        parseInstruction();
-            } catch (final ParseException e) {
-                System.err.println("At line " + lineNumber + ": " + e.getMessage());
+        try {
+            lc = Location.convertToRelative(Symbol.getSymb(":START"));
+            encodeHeader();
+            lineNumber = 1;
+            while ((line = a.io.getLine()) != null) {
+                try {
+                    final String[] parsed = checkLine(parseLine(line));
+                    inst = parsed[1] == null ? null : new InstructionLine(parsed);
+                    if (inst != null)
+                        if (inst.opcode.charAt(0) == '.') {
+                            if (inst.opcode.equals(".STRZ"))
+                                parseSTRZ();
+                            else if (inst.opcode.equals(".FILL"))
+                                parseFILL();
+                            else if (inst.opcode.equals(".BLKW"))
+                                parseBLKW();
+                            else
+                                write(new short[0], new int[0]);
+                        } else
+                            parseInstruction();
+                } catch (final ParseException e) {
+                    System.err.println("At line " + lineNumber + ": " + e.getMessage());
+                }
+                lineNumber++;
             }
-            lineNumber++;
+            encodeLiterals();
+            encodeExec();
+        } catch (final ParseException e) {
+            System.err.println(e.getMessage());
         }
-        encodeLiterals();
-        encodeExec();
     }
 
-    private void checkSymbolsDefined() {
-        for (final Symbol s : Symbol.symbs.values())
-            if (s.value == null)
-                if (s.name.equals(":EXEC"))
-                    a.ui.error("No end record found");
-                else if (!s.name.equals(":START"))
-                    a.ui.error("Symbol '" + s.name + "' not defined");
-
-    }
-
-    private void encodeHeader() throws IOException {
+    private void encodeHeader() throws IOException, ParseException {
         // evaluate :END + [# literals] - :START to get program length
         final SymbolExpression se = ArithmeticParser.simplify(new OpExp(Operator.MINUS,
             new OpExp(Operator.PLUS, Symbol.getSymb(":END"), new NumExp(
                 (short) Literal.table.size())), Symbol.getSymb(":START")));
         final Short len = se.evaluate();
-        if (len == null)
-            a.ui.error("Program length " + se + " too complex to encode");
+        if (len == null) {
+            errorOnUndefinedSymbols(se);
+            throw new ParseException("Program length " + se + " too complex to encode");
+        }
         if (a.segName == null)
             a.ui.error("No .ORIG line found!");
         a.io.writeOLine("H" + padRight(a.segName, 6, ' ')
@@ -89,12 +85,14 @@ public class Pass2Parser {
             write(new short[] { l.contents }, new int[] { -1 });
     }
 
-    private void encodeExec() throws IOException {
+    private void encodeExec() throws IOException, ParseException {
         final Location exec = Location.convertToRelative(Symbol.getSymb(":EXEC"));
-        if (exec == null || lc.isRelative ^ exec.isRelative)
-            a.ui.error("Execution address "
-                + ArithmeticParser.simplify(Symbol.getSymb(":EXEC"))
-                + " too complex to encode");
+        if (exec == null || lc.isRelative ^ exec.isRelative) {
+            final SymbolExpression se = ArithmeticParser
+                .simplify(Symbol.getSymb(":EXEC"));
+            errorOnUndefinedSymbols(se);
+            throw new ParseException("Execution address " + se + " too complex to encode");
+        }
         a.io.writeOLine("E" + MemoryUtilities.uShortToHex((short) exec.address));
     }
 
@@ -114,8 +112,10 @@ public class Pass2Parser {
         final SymbolExpression arg = ArithmeticParser.simplify(
             ((ExpressionArg) inst.args[0]).val, true);
         final Location l = Location.convertToRelative(arg);
-        if (l == null)
+        if (l == null) {
+            errorOnUndefinedSymbols(arg);
             throw new ParseException("relation " + arg + " too complex to encode");
+        }
         write(new short[] { (short) l.address }, new int[] { l.isRelative ? 1 : -1 });
     }
 
@@ -123,8 +123,10 @@ public class Pass2Parser {
         final SymbolExpression se = ArithmeticParser
             .simplify(((ExpressionArg) inst.args[0]).val);
         final Short len = se.evaluate();
-        if (len == null)
+        if (len == null) {
+            errorOnUndefinedSymbols(se);
             throw new ParseException("block length " + se + " too complex to encode");
+        }
         write(new short[0], new int[0]);
         lc.address += len;
     }
@@ -144,22 +146,22 @@ public class Pass2Parser {
         if (data.length == 0)
             a.io.writeLLine((lc == null ? "      " : "("
                 + MemoryUtilities.uShortToHex((short) lc.address) + ")")
-                + padLeft("", 24, ' ')
+                + padLeft("", 26, ' ')
                 + "("
                 + padLeft("" + lineNumber, 4, ' ')
-                + ") "
+                + ")\t"
                 + line);
         else
             for (int i = 0; i < data.length; i++) {
                 a.io.writeOLine("T" + MemoryUtilities.uShortToHex((short) lc.address)
                     + MemoryUtilities.uShortToHex(data[i]) + (m[i] < 0 ? "" : "M" + m[i]));
                 a.io.writeLLine("(" + MemoryUtilities.uShortToHex((short) lc.address)
-                    + ") " + MemoryUtilities.uShortToHex(data[i]) + "  "
+                    + ") " + MemoryUtilities.uShortToHex(data[i])
+                    + (m[i] < 0 ? "   " : " M" + m[i]) + " "
                     + padLeft(Integer.toBinaryString(data[i] & 0xFFFF), 16, '0') + " ("
-                    + padLeft(lineNumber == 0 ? "lit" : "" + lineNumber, 4, ' ') + ") "
-                    + line);
+                    + padLeft(lineNumber == 0 ? "lit" : "" + lineNumber, 4, ' ') + ")\t"
+                    + (i == 0 ? line : ""));
                 lc.address++;
-                line = "";
             }
     }
 
