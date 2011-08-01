@@ -8,6 +8,7 @@ import java.util.List;
 
 import edu.osu.cse.mmxi.asm.error.Error;
 import edu.osu.cse.mmxi.asm.error.ErrorCodes;
+import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.io.InputOutput;
 import edu.osu.cse.mmxi.asm.ui.UI;
 
@@ -26,9 +27,20 @@ public class Assembler {
             errors.add(new Error(ErrorCodes.IO_BAD_FILE));
             printErrors(ui, errors);
         }
-        final String interDat = new Pass1Parser(this).parse();
+
+        String interDat = null;
+
+        try {
+            interDat = new Pass1Parser(this, errors).parse();
+        } catch (final ParseException e) {
+            final Error error = new Error(e.getLineNumber(), e.getMessage(),
+                e.getErrorCode());
+            errors.add(error);
+        }
+
         if (intermediate == null)
-            System.out.print(interDat);
+            // System.out.print(interDat);
+            Assembler.printErrors(ui, errors);
         else
             InputOutput.writeFile(intermediate, interDat);
         if (out != null) {

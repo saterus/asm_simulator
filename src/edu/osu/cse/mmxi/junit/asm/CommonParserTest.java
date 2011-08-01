@@ -8,7 +8,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import edu.osu.cse.mmxi.common.ParseException;
+import edu.osu.cse.mmxi.asm.error.ParseException;
 
 public class CommonParserTest {
 

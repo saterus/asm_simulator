@@ -7,10 +7,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
+import edu.osu.cse.mmxi.asm.error.ErrorCodes;
+import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.asm.table.PsuedoOpTable;
-import edu.osu.cse.mmxi.common.ParseException;
 import edu.osu.cse.mmxi.common.Utilities;
 
 public class CommonParser {
@@ -34,14 +35,26 @@ public class CommonParser {
             line = line.substring(0, line.indexOf(';'));
         if (line.trim().length() == 0)
             return new String[] { null, null };
+        // instructions start with a white space, labels and programs name do not
         return parseLine(line, line.substring(0, 1).matches("\\S"));
     }
 
+    /**
+     * Parses a line. Really no checking occurs before this. It is presumed to be an
+     * instruction.
+     * 
+     * @param line
+     * @param hasLabel
+     *            True if this is a label, False if this is an instruciton
+     * @return
+     * @throws ParseException
+     */
     private static String[] parseLine(final String line, final boolean hasLabel)
         throws ParseException {
         final int l = hasLabel ? 1 : 0;
         final String[] tokens = line.trim().split("\\s+", l + 2);
         final String label = hasLabel ? tokens[0] : null;
+
         if (tokens.length <= l + 1)
             return new String[] { label,
                     tokens.length == l ? null : tokens[l].toUpperCase() };
@@ -63,22 +76,22 @@ public class CommonParser {
     public static String[] checkLine(final String[] line) throws ParseException {
         if (line[0] != null) {
             if (Utilities.parseShort(line[0]) != -1)
-                throw new ParseException("numbers can not be labels");
+                throw new ParseException(ErrorCodes.P1_INST_BAD_LABEL);
             if (line[0].matches("[rR][0-7]"))
-                throw new ParseException("registers can not be labels");
+                throw new ParseException(ErrorCodes.P1_INST_BAD_REG);
         }
         if (line[1] != null)
             if (line[1].matches(OPS)) {
                 if (!InstructionFormat.instructions.containsKey(line[1] + ":"
                     + (line.length - 2)))
-                    throw new ParseException("incorrect number of arguments");
+                    throw new ParseException(ErrorCodes.P1_INST_WRONG_PARAMS);
             } else if (line[1].matches(PSEUDO_OPS))
                 ;
             else if (line[0] != null
                 && (line[0].matches(OPS) || line[0].matches(PSEUDO_OPS)))
-                throw new ParseException("instruction lines must begin with whitespace");
+                throw new ParseException(ErrorCodes.P1_INST_BAD_LINE_FORMAT);
             else
-                throw new ParseException("unknown opcode");
+                throw new ParseException(ErrorCodes.P1_INST_BAD_OP_CODE);
         return line;
     }
 
@@ -93,7 +106,9 @@ public class CommonParser {
             String str = "undefined symbols: ";
             for (final Symbol s : undef)
                 str += s.name + ", ";
-            throw new ParseException(str.substring(0, str.length() - 2));
+
+            str = str.substring(0, str.length() - 2);
+            throw new ParseException(ErrorCodes.P1_INST_BAD_SYMBOL, str);
         }
     }
 

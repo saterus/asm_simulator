@@ -2,11 +2,11 @@ package edu.osu.cse.mmxi.asm.line;
 
 import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
+import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.common.Utilities;
-import edu.osu.cse.mmxi.common.ParseException;
 
 public interface AssemblyLine {
     public static class Label implements AssemblyLine {

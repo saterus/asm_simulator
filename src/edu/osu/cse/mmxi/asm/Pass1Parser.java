@@ -4,30 +4,36 @@ import static edu.osu.cse.mmxi.asm.CommonParser.checkLine;
 import static edu.osu.cse.mmxi.asm.CommonParser.parseLine;
 
 import java.io.IOException;
+import java.util.List;
 
+import edu.osu.cse.mmxi.asm.error.Error;
+import edu.osu.cse.mmxi.asm.error.ErrorCodes;
+import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.Label;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.common.ParseException;
+import edu.osu.cse.mmxi.common.Utilities;
 
 public class Pass1Parser {
-    private final Assembler a;
-    private Symbol          lcBase;
-    private short           lc;
-    private int             lineNumber;
-    private int             tempNumber;
-    private String          line;
-    private Label           label;
-    private InstructionLine inst;
+    private final Assembler   a;
+    private Symbol            lcBase;
+    private short             lc;
+    private int               lineNumber;
+    private int               tempNumber;
+    private String            line;
+    private Label             label;
+    private InstructionLine   inst;
+    private final List<Error> errors;
 
-    public Pass1Parser(final Assembler a) {
+    public Pass1Parser(final Assembler a, final List<Error> errors) {
         this.a = a;
+        this.errors = errors;
     }
 
-    public String parse() throws IOException {
+    public String parse() throws IOException, ParseException {
         lcBase = Symbol.getSymb(":START");
         lc = 0;
         lineNumber = 1;
@@ -35,16 +41,21 @@ public class Pass1Parser {
         while ((line = a.io.getLine()) != null) {
             try {
                 final String[] parsed = checkLine(parseLine(line));
+
                 label = parsed[0] == null ? null : new Label(parsed[0]);
+
                 inst = parsed[1] == null ? null : new InstructionLine(parsed);
+
                 if ((inst == null || !inst.opcode.matches("[.]ORIG|[.]EQU"))
                     && label != null)
                     label.symb.set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
+
                 if (inst != null)
                     if (inst.opcode.charAt(0) == '.') {
                         if (inst.args.length != 1 && !inst.opcode.equals(".ORIG"))
-                            throw new ParseException(inst.opcode
-                                + " takes exactly one argument");
+                            throw new ParseException(lineNumber,
+                                ErrorCodes.P1_INST_WRONG_PARAMS, inst.opcode
+                                    + " takes exactly one argument");
                         if (inst.opcode.equals(".ORIG"))
                             parseORIG();
                         else if (inst.opcode.equals(".EQU"))
@@ -60,7 +71,12 @@ public class Pass1Parser {
                     } else
                         parseInstruction();
             } catch (final ParseException e) {
-                System.err.println("At line " + lineNumber + ": " + e.getMessage());
+                // handle the error
+                String msg = e.getMessage();
+                msg = msg == null ? "" : "\n" + msg;
+                final Error err = new Error(lineNumber, "\"" + line + "\" " + msg,
+                    e.getErrorCode());
+                errors.add(err);
             }
             lineNumber++;
         }
@@ -70,16 +86,22 @@ public class Pass1Parser {
 
     private void parseORIG() throws ParseException {
         if (inst.args.length > 1)
-            throw new ParseException("too many args for .ORIG");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_ORIG_ARGS);
         if (label == null)
-            throw new ParseException("no segment name given");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_LABEL);
         Symbol.removeSymb(a.segName = label.symb.name);
         if (a.segName.length() > 6)
             a.segName = a.segName.substring(0, 6);
         if (inst.args.length > 0) {
             if (!(inst.args[0] instanceof ExpressionArg))
-                throw new ParseException("argument must be an immediate or expression");
+                throw new ParseException(ErrorCodes.P1_INST_BAD_ORIG_TYPE);
             Symbol.getSymb(":START").set(((ExpressionArg) inst.args[0]).val);
+
+            // verify the addres is within range
+            final int parsedAddress = Utilities
+                .parseShort(((ExpressionArg) inst.args[0]).val.toString());
+            if (parsedAddress < 0 || parsedAddress > 0xFFFF)
+                throw new ParseException(ErrorCodes.P1_INST_BAD_ORIG_ADDR);
         }
     }
 

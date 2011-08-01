@@ -10,13 +10,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.RegisterArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
-import edu.osu.cse.mmxi.common.ParseException;
 
 public class InstructionFormat {
 
