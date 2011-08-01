@@ -36,6 +36,22 @@ public enum ErrorCodes {
 
     P1_INST_BAD_SYMBOL(211, "Invalid Symbol.", ErrorLevels.FATAL),
 
+    P1_INST_BAD_EQU_LABEL(220, ".EQU requires a label", ErrorLevels.FATAL),
+
+    P1_INST_BAD_EQU_IMM(221, "Argument must be an immediate or expression.",
+        ErrorLevels.FATAL),
+
+    P1_INST_BAD_END_IMM(230, "Argument must be an immediate or expression.",
+        ErrorLevels.FATAL),
+
+    P1_INST_BAD_STRZ(240, "Argument must be a string.", ErrorLevels.FATAL),
+
+    P1_INST_BAD_FILL(245, "Argument must be an immediate or expressing.",
+        ErrorLevels.FATAL),
+
+    P1_INST_BAD_BLKW(250, "Argument must be an immediate or expression",
+        ErrorLevels.FATAL),
+
     EXEC_END_OF_FILE(402, "End of File reached prematurely.", ErrorLevels.FATAL),
 
     // unknown error

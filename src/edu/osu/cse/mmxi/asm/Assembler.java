@@ -36,6 +36,8 @@ public class Assembler {
             final Error error = new Error(e.getLineNumber(), e.getMessage(),
                 e.getErrorCode());
             errors.add(error);
+        } catch (final IOException e) {
+            errors.add(new Error(ErrorCodes.IO_BAD_READ));
         }
 
         if (intermediate == null)

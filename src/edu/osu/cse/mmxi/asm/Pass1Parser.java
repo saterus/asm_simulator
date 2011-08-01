@@ -107,33 +107,33 @@ public class Pass1Parser {
 
     private void parseEQU() throws ParseException {
         if (label == null)
-            throw new ParseException(".EQU requires a label");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_EQU_LABEL);
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException("argument must be an immediate or expression");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_EQU_IMM);
         label.symb.set(((ExpressionArg) inst.args[0]).val);
     }
 
     private void parseEND() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException("argument must be an immediate or expression");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_END_IMM);
         Symbol.getSymb(":EXEC").set(((ExpressionArg) inst.args[0]).val);
     }
 
     private void parseSTRZ() throws ParseException {
         if (!(inst.args[0] instanceof StringArg))
-            throw new ParseException("argument must be a string");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_STRZ);
         lc += ((StringArg) inst.args[0]).arg.length() + 1;
     }
 
     private void parseFILL() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException("argument must be a immediate or expression");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_FILL);
         lc++;
     }
 
     private void parseBLKW() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException("argument must be an immediate or expression");
+            throw new ParseException(ErrorCodes.P1_INST_BAD_BLKW);
         final SymbolExpression len = ((ExpressionArg) inst.args[0]).val;
         final Short val = len.evaluate();
         if (val != null)
