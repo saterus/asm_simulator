@@ -16,7 +16,6 @@ import edu.osu.cse.mmxi.asm.line.AssemblyLine.RegisterArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.Operator;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.IfExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.ParseException;
@@ -326,9 +325,9 @@ public class InstructionFormat {
             if (reg0 != null)
                 return new NumExp((short) (reg0 == reg1 ? 1 : 3));
             else
-                return new IfExp(new OpExp(Operator.MINUS,
-                    ((ExpressionArg) inst.args[0]).val, new NumExp(reg1)), new NumExp(
-                    (short) 1), new NumExp((short) 3));
+                return new OpExp(Operator.PLUS, new OpExp(Operator.IF,
+                    new OpExp(Operator.MINUS, ((ExpressionArg) inst.args[0]).val,
+                        new NumExp(reg1)), new NumExp((short) 2)), new NumExp((short) 1));
         } else if (key.equals("SHL:2")) {
             final Short val = ((ExpressionArg) inst.args[1]).val.evaluate();
             if (val != null)

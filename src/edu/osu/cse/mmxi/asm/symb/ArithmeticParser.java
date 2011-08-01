@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.IfExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
@@ -249,11 +248,7 @@ public class ArithmeticParser {
         if (node instanceof OpExp)
             for (int i = 0; i < ((OpExp) node).operands.length; i++)
                 ((OpExp) node).operands[i] = expand(((OpExp) node).operands[i], parent);
-        else if (node instanceof IfExp) {
-            ((IfExp) node).cond = expand(((IfExp) node).cond, parent);
-            ((IfExp) node).ifExp = expand(((IfExp) node).ifExp, parent);
-            ((IfExp) node).elseExp = expand(((IfExp) node).elseExp, parent);
-        } else {
+        else {
             if (node instanceof Literal)
                 ((Literal) node).fill();
             if (node instanceof Symbol && node != parent && ((Symbol) node).value != null)

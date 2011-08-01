@@ -3,24 +3,26 @@ package edu.osu.cse.mmxi.asm.symb;
 public enum Operator {
     GROUP(0, "(", 5),
 
-    OR(1, "|", 3),
+    IF(1, "?", 3),
 
-    XOR(2, "^", 3),
+    OR(2, "|", 3),
 
-    AND(3, "&", 3),
+    XOR(3, "^", 3),
 
-    USHR(4, ">>>", 3), SHR(4, ">>", 3), SHL(4, "<<", 3),
+    AND(4, "&", 3),
 
-    PLUS(5, "+", 7), MINUS(5, "-", 7),
+    USHR(5, ">>>", 3), SHR(5, ">>", 3), SHL(5, "<<", 3),
+
+    PLUS(6, "+", 7), MINUS(6, "-", 7),
 
     // this one is out of prec. order because TIMES has an operator that is a prefix of
     // this one, so POWER must come first (same with USHR and SHR)
-    POWER(7, "**", 2),
+    POWER(8, "**", 2),
 
-    TIMES(6, "*", 3), DIV(6, "/", 3), MOD(6, "%", 3),
+    TIMES(7, "*", 3), DIV(7, "/", 3), MOD(7, "%", 3),
 
     // unary operators automatically get top precedence
-    NOT(8, "~", 4), HASH(8, "#", 4), LIT(8, "=", 4);
+    NOT(9, "~", 4), HASH(9, "#", 4), LIT(9, "=", 4);
 
     public int    prec;
     public String value;

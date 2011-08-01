@@ -8,7 +8,6 @@ import java.util.TreeSet;
 
 import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.asm.symb.SymbolExpression.IfExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.asm.table.PsuedoOpTable;
 import edu.osu.cse.mmxi.common.MemoryUtilities;
@@ -110,11 +109,7 @@ public class CommonParser {
         if (se instanceof OpExp)
             for (final SymbolExpression operand : ((OpExp) se).operands)
                 undefinedSymbols(undef, operand);
-        else if (se instanceof IfExp) {
-            undefinedSymbols(undef, ((IfExp) se).cond);
-            undefinedSymbols(undef, ((IfExp) se).ifExp);
-            undefinedSymbols(undef, ((IfExp) se).elseExp);
-        } else if (se instanceof Symbol)
+        else if (se instanceof Symbol)
             if (((Symbol) se).value != null)
                 undefinedSymbols(undef, ((Symbol) se).value);
             else if (se != Symbol.getSymb(":START"))
