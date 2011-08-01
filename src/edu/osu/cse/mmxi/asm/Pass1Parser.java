@@ -73,8 +73,15 @@ public class Pass1Parser {
             } catch (final ParseException e) {
                 // handle the error
                 String msg = e.getMessage();
-                msg = msg == null ? "" : "\"" + line + "\"\n" + msg;
-                final Error err = new Error(lineNumber, msg, e.getErrorCode());
+                Error err = null;
+
+                if (msg == null)
+                    err = new Error(lineNumber, line, e.getErrorCode());
+                else {
+                    msg = msg + "\n\tContext: \"" + line + "\"";
+                    err = new Error(lineNumber, msg, e.getErrorCode());
+                }
+
                 errors.add(err);
             }
             lineNumber++;

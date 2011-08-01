@@ -91,7 +91,7 @@ public class CommonParser {
                 && (line[0].matches(OPS) || line[0].matches(PSEUDO_OPS)))
                 throw new ParseException(ErrorCodes.P1_INST_BAD_LINE_FORMAT);
             else
-                throw new ParseException(ErrorCodes.P1_INST_BAD_OP_CODE);
+                throw new ParseException(ErrorCodes.P1_INST_BAD_OP_CODE, line[1]);
         return line;
     }
 
