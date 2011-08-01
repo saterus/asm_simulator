@@ -38,6 +38,7 @@ public class CommonParser {
             line = line.substring(0, line.indexOf(';'));
         if (line.trim().length() == 0)
             return new String[] { null, null };
+
         if (line.matches("\\s*[0-9A-Za-z_]+\\s*"))
             return parseLine(line, !line.trim().toUpperCase().matches(zeroArgOps));
         final Matcher m = Pattern.compile("\\s*(\\S+)\\s+(\\S+)(.*)").matcher(
