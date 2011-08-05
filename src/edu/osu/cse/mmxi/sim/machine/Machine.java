@@ -24,10 +24,10 @@ public class Machine {
         ui = new UI();
         registers = new Register[8];
         alu = new Interpreter(this);
-        reset(-1);
+        reset(null);
     }
 
-    public void reset(final int fill) {
+    public void reset(final Short fill) {
         clockCount = 1;
         halted = false;
 
@@ -35,10 +35,10 @@ public class Machine {
             registers[i] = new Register(fill);
         pc = new Register(fill);
         nzp = new FlagsRegister(fill);
-        if (fill == -1)
+        if (fill == null)
             memory = new RandomizedMemory();
         else
-            memory = new FillMemory((short) fill);
+            memory = new FillMemory(fill);
     }
 
     /**

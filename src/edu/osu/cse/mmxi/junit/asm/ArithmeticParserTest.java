@@ -106,4 +106,52 @@ public class ArithmeticParserTest {
         se = ArithmeticParser.simplify(se);
         assertEquals("x - y", se.toString());
     }
+
+    @Test
+    public void inClass() throws ParseException {
+        Symbol.getSymb("x").set(ArithmeticParser.parse("ST+16"));
+        Symbol.getSymb("y").set(ArithmeticParser.parse("ST+6"));
+        Symbol.getSymb("z").set(ArithmeticParser.parse("4"));
+
+        SymbolExpression se = ArithmeticParser.parse("x+1-z");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("x+1-z");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("2+x/y");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("z+x");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("z-y");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("y-z");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("(x-z)/2");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("((x-y)-(z+y))*y");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("(x/2)-(z/2)");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+        se = ArithmeticParser.parse("(x-z)/2");
+        se = ArithmeticParser.simplify(se);
+        System.out.println(se);
+
+    }
 }

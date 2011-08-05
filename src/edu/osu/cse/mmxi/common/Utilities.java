@@ -61,7 +61,7 @@ public class Utilities {
      *            the string to parse
      * @return the short result, or -1 if the format was not followed
      */
-    public static int parseShort(String s) {
+    public static Short parseShort(String s) {
         int radix = 10;
         if (s.startsWith("0x") || s.startsWith("0X")) {
             radix = 16;
@@ -77,7 +77,7 @@ public class Utilities {
         try {
             return (short) Integer.parseInt(s, radix);
         } catch (final NumberFormatException e) {
-            return -1;
+            return null;
         }
     }
 

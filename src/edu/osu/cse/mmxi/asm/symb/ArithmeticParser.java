@@ -143,7 +143,7 @@ public class ArithmeticParser {
             throw new ParseException("symbols can not be register names");
         else if (token.length() == 0 || token.charAt(0) == ':')
             throw new ParseException("symbols must begin with an alphabetic character");
-        else if (Utilities.parseShort(token) == -1 && Character.isDigit(s.charAt(0)))
+        else if (Utilities.parseShort(token) == null && Character.isDigit(s.charAt(0)))
             throw new ParseException("symbols must not begin with digits");
         return token.length();
     }
@@ -168,9 +168,9 @@ public class ArithmeticParser {
                 return (SymbolExpression) o; // throw ClassCastException for other objects
 
         }
-        final int v = Utilities.parseShort(leaf);
-        if (v != -1)
-            return new NumExp((short) v);
+        final Short v = Utilities.parseShort(leaf);
+        if (v != null)
+            return new NumExp(v);
         final Symbol s = Symbol.getSymb(leaf);
         if (collapseIfEvaluable && s.value != null)
             return s.value;

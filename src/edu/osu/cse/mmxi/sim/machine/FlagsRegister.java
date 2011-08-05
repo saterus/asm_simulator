@@ -8,12 +8,12 @@ import edu.osu.cse.mmxi.common.Utilities;
  */
 public class FlagsRegister extends Register {
 
-    public FlagsRegister(final int fill) {
+    public FlagsRegister(final Short fill) {
         this(false, false, false);
-        if (fill == -1)
+        if (fill == null)
             registerValue = (short) (1 << (Utilities.randomShort() & 0xFFFF) % 3);
         else
-            setFlags((short) fill);
+            setFlags(fill);
     }
 
     public FlagsRegister(final boolean initialN, final boolean initialZ,

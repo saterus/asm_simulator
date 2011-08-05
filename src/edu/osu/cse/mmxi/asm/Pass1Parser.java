@@ -15,7 +15,6 @@ import edu.osu.cse.mmxi.asm.line.AssemblyLine.Label;
 import edu.osu.cse.mmxi.asm.line.AssemblyLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.common.Utilities;
 
 public class Pass1Parser {
     private final Assembler   a;
@@ -103,9 +102,8 @@ public class Pass1Parser {
                 throw new ParseException(ErrorCodes.P1_INST_BAD_ORIG_TYPE);
             Symbol.getSymb(":START").set(((ExpressionArg) inst.args[0]).val);
 
-            // verify the addres is within range
-            final int parsedAddress = Utilities
-                .parseInt(((ExpressionArg) inst.args[0]).val.toString());
+            // verify the address is within range
+            final int parsedAddress = ((ExpressionArg) inst.args[0]).val.evaluate();
             if (parsedAddress < 0 || parsedAddress > 0xFFFF)
                 throw new ParseException(ErrorCodes.P1_INST_BAD_ORIG_ADDR);
         }

@@ -9,8 +9,8 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.ParseException;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.sim.error.Error;
 import edu.osu.cse.mmxi.sim.error.ErrorCodes;
 
@@ -201,14 +201,14 @@ public class ObjectFileParser {
                     errors
                         .add(new Error(lineNumber, "invalid symbol name '" + symb + "'",
                             ErrorCodes.PARSE_EXECPTION));
-                final int v = Utilities.parseShort(token.substring(colon + 1,
+                final Short v = Utilities.parseShort(token.substring(colon + 1,
                     token.length() - 1));
-                if (v == -1)
+                if (v == null)
                     errors.add(new Error(lineNumber, "'"
                         + token.substring(colon + 1, token.length() - 1)
                         + "' is not a number", ErrorCodes.PARSE_EXECPTION));
-                if (!bad && v != -1)
-                    symbols.put(symb, (short) v);
+                if (!bad && v != null)
+                    symbols.put(symb, v);
             }
             break;
         }

@@ -11,7 +11,7 @@ import edu.osu.cse.mmxi.sim.machine.Machine;
 public class Console {
     private final Machine             m;
     private int                       maxClock;
-    private int                       memTrack;
+    private Short                     memTrack;
     private String                    file;
     private final Map<Short, Object>  breakpoints;
     private final Map<Integer, Short> watchpoints;
@@ -22,7 +22,7 @@ public class Console {
     public Console(final Machine _m, final String _file) {
         m = _m;
         maxClock = Simulator.MAX_CLOCK_COUNT;
-        memTrack = -1;
+        memTrack = null;
         file = null;
         breakpoints = new TreeMap<Short, Object>();
         watchpoints = new TreeMap<Integer, Short>();
@@ -101,23 +101,22 @@ public class Console {
             }
             return;
         }
-        int addr;
-        if ((addr = readSymbAddr(words[del ? 2 : 1])) == -1) {
+        Short addr;
+        if ((addr = readSymbAddr(words[del ? 2 : 1])) == null) {
             m.ui.print("Malformed address '" + words[del ? 2 : 1] + "'\n");
             help("help", "break");
             return;
         }
-        if (breakpoints.containsKey((short) addr)) {
+        if (breakpoints.containsKey(addr)) {
             if (del)
-                breakpoints.remove((short) addr);
+                breakpoints.remove(addr);
             else
                 m.ui.print("A breakpoint is already set at "
-                    + Utilities.uShortToHex((short) addr) + "\n");
+                    + Utilities.uShortToHex(addr) + "\n");
         } else if (del)
-            m.ui.print("No breakpoints set at " + Utilities.uShortToHex((short) addr)
-                + "\n");
+            m.ui.print("No breakpoints set at " + Utilities.uShortToHex(addr) + "\n");
         else
-            breakpoints.put((short) addr, null);
+            breakpoints.put(addr, null);
     }
 
     private void clock(final String... words) {
@@ -142,9 +141,10 @@ public class Console {
     }
 
     private void disasm(final String... words) {
-        int base = memTrack, len = 16;
+        Short base = memTrack;
+        int len = 16;
         if (words.length > 1) {
-            if ((base = readSymbAddr(words[1])) == -1) {
+            if ((base = readSymbAddr(words[1])) == null) {
                 m.ui.print("Malformed address '" + words[1] + "'\n");
                 help("help", "disasm");
                 return;
@@ -155,19 +155,20 @@ public class Console {
                 else if (words[2].equalsIgnoreCase("ret"))
                     len = -2;
                 else {
-                    len = readSymbAddr(words[2]);
-                    if (len == -1) {
+                    final Short v = readSymbAddr(words[2]);
+                    if (v == null) {
                         m.ui.print("Malformed length parameter '" + words[2] + "'\n");
                         help("help", "disasm");
                         return;
                     }
+                    len = v & 0xFFFF;
                 }
         }
         short mem;
-        if (base == -1)
+        if (base == null)
             mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
         else
-            mem = (short) base;
+            mem = base;
         for (int i = 0;; i++) {
             final short inst = m.getMemory((short) (mem + i));
             m.ui.print("\n  " + padLeft(toSymb((short) (mem + i)), symbLength + 4, ' ')
@@ -187,9 +188,10 @@ public class Console {
     }
 
     private void dump(final String... words) {
-        int base = memTrack, len = 8;
+        Short base = memTrack;
+        int len = 8;
         if (words.length > 1) {
-            if ((base = readSymbAddr(words[1])) == -1) {
+            if ((base = readSymbAddr(words[1])) == null) {
                 m.ui.print("Malformed address '" + words[1] + "'\n");
                 help("help", "dump");
                 return;
@@ -209,10 +211,10 @@ public class Console {
                 }
         }
         short mem;
-        if (base == -1)
+        if (base == null)
             mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
         else
-            mem = (short) base;
+            mem = base;
         m.ui.print("\n  " + padLeft("", symbLength + 4, ' '));
         for (int j = 0; j < 16; j++)
             m.ui.print(" --" + Integer.toHexString(mem + j & 15).toUpperCase() + "-");
@@ -239,18 +241,18 @@ public class Console {
             help("help", "edit");
             return;
         }
-        int addr, value;
-        if ((addr = readSymbAddr(words[1])) == -1) {
+        Short addr, value;
+        if ((addr = readSymbAddr(words[1])) == null) {
             m.ui.print("Malformed address '" + words[1] + "'\n");
             help("help", "edit");
             return;
         }
-        if ((value = readSymbAddr(words[2])) == -1) {
+        if ((value = readSymbAddr(words[2])) == null) {
             m.ui.print("Malformed value '" + words[2] + "'\n");
             help("help", "edit");
             return;
         }
-        m.setMemory((short) addr, (short) value);
+        m.setMemory(addr, value);
     }
 
     private void help(final String... words) {
@@ -490,24 +492,24 @@ public class Console {
             m.ui.print("  " + Utilities.uShortToHex(m.getFlags().getValue()));
             return;
         }
-        int value = -1;
+        Short value = null;
         if (words.length > 2)
-            if ((value = readSymbAddr(words[2])) == -1) {
+            if ((value = readSymbAddr(words[2])) == null) {
                 m.ui.print("Malformed value '" + words[2] + "'\n");
                 help("help", "reg");
                 return;
             }
         if (words[1].equalsIgnoreCase("pc")) {
-            if (value != -1)
-                m.getPCRegister().setValue((short) value);
+            if (value != null)
+                m.getPCRegister().setValue(value);
             m.ui.print("PC: " + Utilities.uShortToHex(m.getPCRegister().getValue()));
         } else if (words[1].equalsIgnoreCase("flags")) {
-            if (value != -1) {
+            if (value != null) {
                 if (value != 1 && value != 2 && value != 4) {
                     m.ui.print("The FLAGS register may only be set to the values 1, 2, or 4.");
                     return;
                 }
-                m.getFlags().setValue((short) value);
+                m.getFlags().setValue(value);
             }
             m.ui.print("FLAGS: " + Utilities.uShortToHex(m.getFlags().getValue()) + " [");
             m.ui.print((m.getFlags().getN() ? "n" : "-")
@@ -515,8 +517,8 @@ public class Console {
                 + "]");
         } else if (words[1].matches("[rR][0-7]")) {
             final int rnum = words[1].charAt(1) - '0';
-            if (value != -1)
-                m.getRegister(rnum).setValue((short) value);
+            if (value != null)
+                m.getRegister(rnum).setValue(value);
             m.ui.print("R" + rnum + ": "
                 + Utilities.uShortToHex(m.getRegister(rnum).getValue()));
         } else {
@@ -530,9 +532,9 @@ public class Console {
         int load = 0;
         if (words.length > 1 && words[1].equals("-l"))
             load++;
-        int fill = -1;
+        Short fill = null;
         if (words.length > load + 1)
-            if ((fill = readSymbAddr(words[load + 1])) == -1
+            if ((fill = readSymbAddr(words[load + 1])) == null
                 && !words[load + 1].equals("rand")) {
                 m.ui.print("Malformed fill mode parameter '" + words[load + 1] + "'\n");
                 help("help", "reset");
@@ -593,16 +595,16 @@ public class Console {
             } else
                 m.ui.print("Symbol '" + words[2] + "' is not defined.");
         else {
-            final int v = readSymbAddr(words[2]);
+            final Short v = readSymbAddr(words[2]);
             if (words[1].contains("+") || words[1].contains("-")
-                || words[1].contains(":") || readAddr(words[1]) != -1)
+                || words[1].contains(":") || readAddr(words[1]) != null)
                 m.ui.print("'" + words[1]
                     + "' is not a valid symbol name. See 'help symb' for syntax.");
-            else if (v == -1)
+            else if (v == null)
                 m.ui.print("Malformed value '" + words[2]
                     + "' encountered. See 'help symb' for syntax.");
             else {
-                symbols.put(words[1], (short) v);
+                symbols.put(words[1], v);
                 if (words[1].length() > symbLength)
                     symbLength = words[1].length();
             }
@@ -617,17 +619,16 @@ public class Console {
         }
         if (words[1].equalsIgnoreCase("pc")) {
             m.ui.print("Tracking Program Counter.");
-            memTrack = -1;
+            memTrack = null;
         } else {
-            final int addr = readSymbAddr(words[1]);
-            if (addr == -1) {
+            final Short addr = readSymbAddr(words[1]);
+            if (addr == null) {
                 m.ui.print("Invalid tracking address.");
                 help("help", "track");
                 return;
             } else
                 memTrack = addr;
-            m.ui.print("Tracking address " + Utilities.uShortToHex((short) memTrack)
-                + ".");
+            m.ui.print("Tracking address " + Utilities.uShortToHex(memTrack) + ".");
         }
     }
 
@@ -738,10 +739,10 @@ public class Console {
 
     private void printRegistersAndShortMemory() {
         short mem;
-        if (memTrack == -1)
+        if (memTrack == null)
             mem = (short) ((m.getPCRegister().getValue() & 0xfff8) - 8);
         else
-            mem = (short) memTrack;
+            mem = memTrack;
         m.ui.print("\n" + padLeft("", symbLength + 26, ' '));
         for (int j = 0; j < 8; j++)
             m.ui.print(" --" + (mem + j & 7) + "-");
@@ -771,7 +772,7 @@ public class Console {
         m.ui.print(m.alu.readInstructionAt(pc));
     }
 
-    private int readSymbAddr(final String s) {
+    private Short readSymbAddr(final String s) {
         int d = s.lastIndexOf('+');
         int sgn = 1;
         if (d < s.lastIndexOf('-')) {
@@ -779,24 +780,24 @@ public class Console {
             d = s.lastIndexOf('-');
         }
         if (d == -1) {
-            int a = readAddr(s);
-            if (a == -1 && symbols.containsKey(s)) {
+            Short a = readAddr(s);
+            if (a == null && symbols.containsKey(s)) {
                 final Short v = symbols.get(s);
                 if (v != null)
                     a = v;
             }
             return a;
         } else {
-            final int l = readSymbAddr(s.substring(0, d));
-            final int r = readSymbAddr(s.substring(d + 1));
-            if (l == -1 || r == -1)
-                return -1;
+            final Short l = readSymbAddr(s.substring(0, d));
+            final Short r = readSymbAddr(s.substring(d + 1));
+            if (l == null || r == null)
+                return null;
             else
-                return l + sgn * r;
+                return (short) (l + sgn * r);
         }
     }
 
-    private int readAddr(final String s) {
+    private Short readAddr(final String s) {
         if (s.equalsIgnoreCase("pc"))
             return m.getPCRegister().getValue();
         else if (s.matches("[rR][0-7]"))

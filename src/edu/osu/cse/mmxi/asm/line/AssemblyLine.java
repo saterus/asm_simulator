@@ -37,8 +37,8 @@ public interface AssemblyLine {
                         num = num.substring(1);
                     if (num.charAt(0) == '#')
                         num = num.substring(1);
-                    final int v = Utilities.parseShort(num);
-                    if (v == -1)
+                    final Short v = Utilities.parseShort(num);
+                    if (v == null)
                         try {
                             args[i] = new ExpressionArg(arg);
                         } catch (final ParseException e) {
@@ -46,9 +46,9 @@ public interface AssemblyLine {
                                 + e.getMessage());
                         }
                     else if (isLiteral)
-                        args[i] = new LiteralArg((short) v);
+                        args[i] = new LiteralArg(v);
                     else
-                        args[i] = new ImmediateArg((short) v);
+                        args[i] = new ImmediateArg(v);
                 }
             }
         }

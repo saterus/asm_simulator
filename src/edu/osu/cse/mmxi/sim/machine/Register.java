@@ -6,12 +6,8 @@ public class Register {
 
     protected short registerValue;
 
-    public Register(final int fill) {
-        registerValue = fill == -1 ? Utilities.randomShort() : (short) fill;
-    }
-
-    public Register(final short initialValue) {
-        registerValue = initialValue;
+    public Register(final Short fill) {
+        registerValue = fill == null ? Utilities.randomShort() : fill;
     }
 
     /**

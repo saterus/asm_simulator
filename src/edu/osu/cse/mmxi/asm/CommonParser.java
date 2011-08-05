@@ -11,23 +11,19 @@ import edu.osu.cse.mmxi.asm.error.ErrorCodes;
 import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
-import edu.osu.cse.mmxi.asm.table.PsuedoOpTable;
 import edu.osu.cse.mmxi.common.Utilities;
 
 public class CommonParser {
-    private static final String OPS, PSEUDO_OPS;
+    private static final String OPS, PSEUDO_OPS = "[.](ORIG|END|EQU|FILL|STRZ|BLKW)";
     static {
         final SortedSet<String> ao = new TreeSet<String>();
         for (final List<IFRecord> i : InstructionFormat.instructions.values())
             for (final IFRecord j : i)
                 ao.add(j.name.toUpperCase());
-        String aoS = "", poS = "";
+        String aoS = "";
         for (final String op : ao)
             aoS += "|" + op;
-        for (final String op : PsuedoOpTable.table.keySet())
-            poS += "|" + op.substring(1).toUpperCase();
         OPS = aoS.substring(1);
-        PSEUDO_OPS = "[.](" + poS.substring(1) + ")";
     }
 
     public static String[] parseLine(String line) throws ParseException {
@@ -75,7 +71,7 @@ public class CommonParser {
 
     public static String[] checkLine(final String[] line) throws ParseException {
         if (line[0] != null) {
-            if (Utilities.parseShort(line[0]) != -1)
+            if (Utilities.parseShort(line[0]) != null)
                 throw new ParseException(ErrorCodes.P1_INST_BAD_LABEL);
             if (line[0].matches("[rR][0-7]"))
                 throw new ParseException(ErrorCodes.P1_INST_BAD_REG);

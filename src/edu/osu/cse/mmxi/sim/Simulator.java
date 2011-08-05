@@ -13,8 +13,8 @@ import edu.osu.cse.mmxi.sim.ui.UI;
 import edu.osu.cse.mmxi.sim.ui.UI.UIMode;
 
 public final class Simulator {
-    public static int        MAX_CLOCK_COUNT = 10000;
-    private static final int FILL            = 0xED6E;
+    public static int          MAX_CLOCK_COUNT = 10000;
+    private static final short FILL            = (short) 0xED6E;
 
     /**
      * <p>
@@ -173,11 +173,11 @@ public final class Simulator {
                     else if (word.equals("step"))
                         setMode(m.ui, UIMode.STEP, errors);
                     else if (word.equals("zero"))
-                        fillSet = setFill(m, 0, fillSet, errors);
+                        fillSet = setFill(m, (short) 0, fillSet, errors);
                     else if (word.equals("fill"))
                         fillSet = setFill(m, FILL, fillSet, errors);
                     else if (word.equals("rand"))
-                        fillSet = setFill(m, -1, fillSet, errors);
+                        fillSet = setFill(m, null, fillSet, errors);
                     else
                         errors.add(new Error("command is --" + word,
                             ErrorCodes.UI_UNKN_CMD));
@@ -202,13 +202,13 @@ public final class Simulator {
                             setMode(m.ui, UIMode.STEP, errors);
                             break;
                         case 'z':
-                            fillSet = setFill(m, 0, fillSet, errors);
+                            fillSet = setFill(m, (short) 0, fillSet, errors);
                             break;
                         case 'f':
                             fillSet = setFill(m, FILL, fillSet, errors);
                             break;
                         case 'r':
-                            fillSet = setFill(m, -1, fillSet, errors);
+                            fillSet = setFill(m, null, fillSet, errors);
                             break;
                         default:
                             errors.add(new Error("command is -" + word.charAt(j)
@@ -247,7 +247,7 @@ public final class Simulator {
                 ErrorCodes.UI_MULTI_SETTINGS));
     }
 
-    private static boolean setFill(final Machine m, final int fill,
+    private static boolean setFill(final Machine m, final Short fill,
         final boolean fillSet, final List<Error> errors) {
         m.reset(fill);
         if (fillSet)
