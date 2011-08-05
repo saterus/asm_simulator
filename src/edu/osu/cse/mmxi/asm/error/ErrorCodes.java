@@ -10,6 +10,8 @@ public enum ErrorCodes {
 
     IO_BAD_FILE(102, "File was empty.", ErrorLevels.FATAL),
 
+    IO_BAD_INPUT(103, "No assembly file was given.", ErrorLevels.FATAL),
+
     P1_BAD_LINE(200, "Failed to parse line on Pass 1.", ErrorLevels.FATAL),
 
     P1_INST_WRONG_PARAMS(201, "Invalid parameter count", ErrorLevels.FATAL),
