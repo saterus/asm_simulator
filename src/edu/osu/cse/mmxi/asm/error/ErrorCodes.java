@@ -53,6 +53,31 @@ public enum ErrorCodes {
 
     P1_INST_BAD_BLKW(250, "Argument must be an immediate or expression",
         ErrorLevels.FATAL),
+    
+
+
+    P2_LEN_CMX(300,"Program length " + se + " too complex to encode" , ErrorLevels.FATAL),
+    P2_EXE_ADDR_CMX(301,"Execution address " + se + " too complex to encode" , ErrorLevels.FATAL),
+    P2_REL_CMX(302,"relation " + arg + " too complex to encode" , ErrorLevels.FATAL),
+    P2_BLK_CMX(303,"block length " + se + " too complex to encode"  , ErrorLevels.FATAL),
+
+    IF_BAD_OP_CODE(500, "Unknown opcode or signature", ErrorLevels.FATAL),
+
+    IF_REG_IMM(501, "Immediate used in place of register or vice-versa", ErrorLevels.FATAL),
+
+    IF_COMPLEX(502, "Arguments too complex to encode", ErrorLevels.FATAL),
+
+    IF_REG_IMM2(503, "Immediate used in place of register or vice-versa", ErrorLevels.FATAL),
+
+    IF_BAD_ABS_ADDR(504,  "absolute page address used in relative program", ErrorLevels.FATAL),
+
+    IF_BAD_LABEL_REF(505, "label dereferences to incorrect page", ErrorLevels.FATAL),
+    
+    IF_BAD_REL_PAR(506, "relative parameter used in field which does not support it", ErrorLevels.FATAL),
+
+   
+
+   
 
     EXEC_END_OF_FILE(402, "End of File reached prematurely.", ErrorLevels.FATAL),
 
