@@ -21,8 +21,18 @@ import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
+/**
+ * This contains the format used for all instructions and psuedo operations. This is used
+ * to check each line for proper format and parse into Symbols and command.
+ * 
+ */
 public class InstructionFormat {
 
+    /**
+     * Static representation of all instructions and their formats including custom
+     * instructions. This can be altered to include your own custom instructions. See the
+     * developers guide for more information.
+     */
     // @formatter:off
     public static final String[][] INST = {
         {"ADD",   "RRR",  "0001A--B--0xxC--"}, // ADD  Rd, Rs1, Rs2
@@ -134,7 +144,10 @@ public class InstructionFormat {
                           "1001D--D--xxxxxx",  //                     NOT Rj
                           "1001A--A--xxxxxx",  //                     NOT Rd
                           "0101A--A--0xxD--"}};//                     AND Rd, Rj
-    // @formatter:on
+ //     @formatter:on
+    /**
+     * Representation of a Map of instrucitons
+     */
     public static final Map<String, List<IFRecord>> instructions = new HashMap<String, List<IFRecord>>();
     static {
         for (final String[] inst : INST) {
@@ -146,6 +159,18 @@ public class InstructionFormat {
         }
     }
 
+    /**
+     * creates an if record from the instruction object
+     * 
+     * Result contains a list of tuples (arg, index, start, len), where arg is the index
+     * of the argument in the argument list, index is the choice of which word (of a
+     * multi-word or synthetic instruction) to replace, start is the index of the least
+     * significant bit in the word, and len is the number of bits to replace
+     * 
+     * @param inst
+     *            An array of strings created by the instruction parser.
+     * @return IFRecord The IFRecord representation.
+     */
     private static IFRecord interpretTextIFRecord(final String[] inst) {
         final IFRecord r = new IFRecord();
         if (inst[0].contains("*"))
@@ -198,6 +223,14 @@ public class InstructionFormat {
         return candidates;
     }
 
+    /**
+     * Get the length.
+     * 
+     * @param inst
+     *            The instruction object
+     * @return
+     * @throws ParseException
+     */
     public static SymbolExpression getLength(final InstructionLine inst)
         throws ParseException {
         final int[] isReg = new int[inst.args.length];

@@ -13,7 +13,14 @@ import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
+/**
+ * This is the common parser used by pass 1 and pass 2 for parsing of instruction line.
+ * 
+ */
 public class CommonParser {
+    /**
+     * THis handles the psuedo op parsing.
+     */
     private static final String OPS, PSEUDO_OPS = "[.](ORIG|END|EQU|FILL|STRZ|BLKW)";
     static {
         final SortedSet<String> ao = new TreeSet<String>();
@@ -26,6 +33,14 @@ public class CommonParser {
         OPS = aoS.substring(1);
     }
 
+    /**
+     * Breaks lines into its parts, labels, instruction, and arguments for line parsing.
+     * 
+     * @param line
+     *            The line to parse.
+     * @return Returns a parseLine object string.
+     * @throws ParseException
+     */
     public static String[] parseLine(String line) throws ParseException {
         if (line.contains(";"))
             line = line.substring(0, line.indexOf(';'));
@@ -69,6 +84,14 @@ public class CommonParser {
         return ret;
     }
 
+    /**
+     * Checks the line for invalid symbol names and instructions.
+     * 
+     * @param line
+     *            The line string to check.
+     * @return Returns the parsed line object
+     * @throws ParseException
+     */
     public static String[] checkLine(final String[] line) throws ParseException {
         if (line[0] != null) {
             if (Utilities.parseShort(line[0]) != null)
@@ -94,6 +117,13 @@ public class CommonParser {
         return line;
     }
 
+    /**
+     * Throw a specific error for undefined symbol.
+     * 
+     * @param se
+     *            The symbol that could not be resolved
+     * @throws ParseException
+     */
     public static void errorOnUndefinedSymbols(final SymbolExpression se)
         throws ParseException {
         errorOnUndefinedSymbols(undefinedSymbols(se));
@@ -111,12 +141,27 @@ public class CommonParser {
         }
     }
 
+    /**
+     * Create a set for undefined symbol with the given symbol in hte set.
+     * 
+     * @param se
+     *            The symbol
+     * @return A set containing the given symbol
+     */
     private static Set<Symbol> undefinedSymbols(final SymbolExpression se) {
         final Set<Symbol> undef = new HashSet<Symbol>();
         undefinedSymbols(undef, se);
         return undef;
     }
 
+    /**
+     * Add undefined symbols to the symbol set.
+     * 
+     * @param undef
+     *            The undefined symbol set
+     * @param se
+     *            The symbol to be added.
+     */
     public static void undefinedSymbols(final Set<Symbol> undef, final SymbolExpression se) {
         if (se == null)
             return;
