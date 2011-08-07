@@ -10,13 +10,15 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.osu.cse.mmxi.asm.error.ParseException;
-import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
-import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
-import edu.osu.cse.mmxi.asm.line.AssemblyLine.RegisterArg;
+import edu.osu.cse.mmxi.asm.error.AsmCodes;
+import edu.osu.cse.mmxi.asm.line.InstructionLine;
+import edu.osu.cse.mmxi.asm.line.InstructionLine.Argument;
+import edu.osu.cse.mmxi.asm.line.InstructionLine.ExpressionArg;
+import edu.osu.cse.mmxi.asm.line.InstructionLine.RegisterArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
+import edu.osu.cse.mmxi.common.error.ParseException;
 
 public class InstructionFormat {
 
@@ -248,7 +250,11 @@ public class InstructionFormat {
         }
         if (hasNull) {
             CommonParser.errorOnUndefinedSymbols(undef);
-            throw new ParseException("Arguments too complex to encode");
+            String s = "";
+            for (final Argument arg : inst.args)
+                s += ", " + arg;
+            throw new ParseException(AsmCodes.IF_COMPLEX, "Attempted to encode "
+                + inst.opcode + " " + s.substring(2));
         }
         final List<IFRecord> candidates = getInstruction(inst.opcode, isReg);
         final String key = inst.opcode + ":" + isReg.length;
@@ -328,7 +334,7 @@ public class InstructionFormat {
                         ((ExpressionArg) inst.args[0]).val, reg1);
                 } catch (final ParseException e) {
                     // won't happen
-                    System.err.println("wtf");
+                    throw new RuntimeException("wtf");
                 }
         } else if (key.equals("SHL:2")) {
             final Short val = ((ExpressionArg) inst.args[1]).val.evaluate();

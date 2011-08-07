@@ -7,11 +7,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import edu.osu.cse.mmxi.asm.InstructionFormat.IFRecord;
-import edu.osu.cse.mmxi.asm.error.ErrorCodes;
-import edu.osu.cse.mmxi.asm.error.ParseException;
+import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.Utilities;
+import edu.osu.cse.mmxi.common.error.ParseException;
 
 public class CommonParser {
     private static final String OPS, PSEUDO_OPS = "[.](ORIG|END|EQU|FILL|STRZ|BLKW)";
@@ -72,22 +72,22 @@ public class CommonParser {
     public static String[] checkLine(final String[] line) throws ParseException {
         if (line[0] != null) {
             if (Utilities.parseShort(line[0]) != null)
-                throw new ParseException(ErrorCodes.P1_INST_BAD_LABEL);
+                throw new ParseException(AsmCodes.P1_INST_BAD_LABEL);
             if (line[0].matches("[rR][0-7]"))
-                throw new ParseException(ErrorCodes.P1_INST_BAD_REG);
+                throw new ParseException(AsmCodes.P1_INST_BAD_REG);
         }
         if (line[1] != null)
             if (line[1].matches(OPS)) {
                 if (!InstructionFormat.instructions.containsKey(line[1] + ":"
                     + (line.length - 2)))
-                    throw new ParseException(ErrorCodes.P1_INST_WRONG_PARAMS);
+                    throw new ParseException(AsmCodes.P1_INST_WRONG_PARAMS);
             } else if (line[1].matches(PSEUDO_OPS))
                 ;
             else if (line[0] != null
                 && (line[0].matches(OPS) || line[0].matches(PSEUDO_OPS)))
-                throw new ParseException(ErrorCodes.P1_INST_BAD_LINE_FORMAT);
+                throw new ParseException(AsmCodes.P1_INST_BAD_LINE_FORMAT);
             else
-                throw new ParseException(ErrorCodes.P1_INST_BAD_OP_CODE, line[1]);
+                throw new ParseException(AsmCodes.P1_INST_BAD_OP_CODE, line[1]);
         return line;
     }
 
@@ -104,7 +104,7 @@ public class CommonParser {
                 str += s.name + ", ";
 
             str = str.substring(0, str.length() - 2);
-            throw new ParseException(ErrorCodes.P1_INST_BAD_SYMBOL, str);
+            throw new ParseException(AsmCodes.P1_INST_BAD_SYMBOL, str);
         }
     }
 

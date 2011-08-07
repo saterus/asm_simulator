@@ -4,9 +4,9 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
+import edu.osu.cse.mmxi.common.error.ParseException;
 
 public class Symbol extends SymbolExpression {
     public static SortedMap<String, Symbol> symbs = new TreeMap<String, Symbol>();

@@ -5,7 +5,7 @@ import edu.osu.cse.mmxi.sim.machine.interpreter.Interpreter;
 import edu.osu.cse.mmxi.sim.machine.memory.FillMemory;
 import edu.osu.cse.mmxi.sim.machine.memory.Memory;
 import edu.osu.cse.mmxi.sim.machine.memory.RandomizedMemory;
-import edu.osu.cse.mmxi.sim.ui.UI;
+import edu.osu.cse.mmxi.sim.ui.SimUI;
 
 public class Machine {
 
@@ -18,10 +18,10 @@ public class Machine {
     private int              clockCount;
     private boolean          halted;
 
-    public UI                ui;
+    public SimUI                ui;
 
     public Machine() {
-        ui = new UI();
+        ui = new SimUI();
         registers = new Register[8];
         alu = new Interpreter(this);
         reset(null);

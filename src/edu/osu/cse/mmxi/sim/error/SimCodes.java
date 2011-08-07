@@ -1,8 +1,9 @@
 package edu.osu.cse.mmxi.sim.error;
 
+import edu.osu.cse.mmxi.common.error.ErrorCodes;
 import edu.osu.cse.mmxi.common.error.ErrorLevels;
 
-public enum ErrorCodes {
+public enum SimCodes implements ErrorCodes {
     // simpleLoaderErrors IO
     IO_BAD_PATH(100, "File path does not refer to a file", ErrorLevels.FATAL),
 
@@ -59,7 +60,7 @@ public enum ErrorCodes {
     private String      str;
     private ErrorLevels level;
 
-    ErrorCodes(final int code, final String str, final ErrorLevels level) {
+    SimCodes(final int code, final String str, final ErrorLevels level) {
         this.str = str;
         this.code = code;
         this.level = level;

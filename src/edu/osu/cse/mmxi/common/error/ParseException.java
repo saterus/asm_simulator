@@ -1,10 +1,11 @@
-package edu.osu.cse.mmxi.asm.error;
+package edu.osu.cse.mmxi.common.error;
+
 
 public class ParseException extends Exception {
 
-    private Integer    line = -1;
+    private Integer   line = -1;
     // private String msg = null;
-    private ErrorCodes err  = ErrorCodes.UNKNOWN;
+    private ErrorCodes err  = new ErrorCodes.Unknown();
 
     public ParseException() {
     }

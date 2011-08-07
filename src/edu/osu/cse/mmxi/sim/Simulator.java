@@ -1,16 +1,15 @@
 package edu.osu.cse.mmxi.sim;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import edu.osu.cse.mmxi.common.Utilities;
-import edu.osu.cse.mmxi.sim.error.Error;
-import edu.osu.cse.mmxi.sim.error.ErrorCodes;
+import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.sim.error.SimCodes;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
-import edu.osu.cse.mmxi.sim.ui.UI;
-import edu.osu.cse.mmxi.sim.ui.UI.UIMode;
+import edu.osu.cse.mmxi.sim.ui.SimUI;
+import edu.osu.cse.mmxi.sim.ui.SimUI.UIMode;
 
 public final class Simulator {
     public static int          MAX_CLOCK_COUNT = 10000;
@@ -148,7 +147,7 @@ public final class Simulator {
                 clockMode = false;
                 if (clockSet)
                     errors.add(new Error("clock setting '" + word
-                        + "' found; ignoring...", ErrorCodes.UI_MULTI_CLOCK));
+                        + "' found; ignoring...", SimCodes.UI_MULTI_CLOCK));
                 else
                     try {
                         if (word.length() > 2
@@ -159,7 +158,7 @@ public final class Simulator {
                         clockSet = true;
                     } catch (final NumberFormatException e) {
                         errors.add(new Error("in invalid format; ignoring...",
-                            ErrorCodes.UI_MAX_CLOCK));
+                            SimCodes.UI_MAX_CLOCK));
                     }
             } else if (word.length() > 1 && word.charAt(0) == '-') {
                 if (word.length() > 2 && word.charAt(1) == '-') {
@@ -179,8 +178,8 @@ public final class Simulator {
                     else if (word.equals("rand"))
                         fillSet = setFill(m, null, fillSet, errors);
                     else
-                        errors.add(new Error("command is --" + word,
-                            ErrorCodes.UI_UNKN_CMD));
+                        errors
+                            .add(new Error("command is --" + word, SimCodes.UI_UNKN_CMD));
                 } else
                     for (int j = 1; j < word.length(); j++)
                         switch (word.charAt(j)) {
@@ -212,25 +211,25 @@ public final class Simulator {
                             break;
                         default:
                             errors.add(new Error("command is -" + word.charAt(j)
-                                + " from " + word, ErrorCodes.UI_UNKN_CMD));
+                                + " from " + word, SimCodes.UI_UNKN_CMD));
                         }
             } else if (file == null)
                 file = word;
             else
-                errors.add(new Error("ignoring " + word + ".", ErrorCodes.UI_MULTI_FILE));
+                errors.add(new Error("ignoring " + word + ".", SimCodes.UI_MULTI_FILE));
         }
         if (m.ui.getMode() == null)
             m.ui.setMode(file == null ? UIMode.STEP : UIMode.QUIET);
         if (file == null && m.ui.getMode() != UIMode.STEP)
-            errors.add(new Error(ErrorCodes.UI_NO_FILE));
+            errors.add(new Error(SimCodes.UI_NO_FILE));
         if (errors.size() != 0) {
             errors.add(new Error("Proper syntax:\n"
                 + "java Simulator [-c num|--max-clock-ticks num]\n"
                 + "               [-s|-t|-q|--step|--trace|--quiet]\n"
                 + "               [-z|-f|-r|--zero|--fill|--rand]\n"
-                + "               file.txt", ErrorCodes.MSG_SYNTAX));
+                + "               file.txt", SimCodes.MSG_SYNTAX));
 
-            Simulator.printErrors(m.ui, errors);
+            m.ui.printErrors(errors);
         }
         if (file == null && m.ui.getMode() != UIMode.STEP)
             System.exit(1);
@@ -240,11 +239,12 @@ public final class Simulator {
         return file;
     }
 
-    private static void setMode(final UI ui, final UIMode mode, final List<Error> errors) {
+    private static void setMode(final SimUI ui, final UIMode mode,
+        final List<Error> errors) {
         if (!ui.setMode(mode))
             errors.add(new Error(
                 "Overriding old run mode; setting to " + mode + " mode.",
-                ErrorCodes.UI_MULTI_SETTINGS));
+                SimCodes.UI_MULTI_SETTINGS));
     }
 
     private static boolean setFill(final Machine m, final Short fill,
@@ -253,64 +253,8 @@ public final class Simulator {
         if (fillSet)
             errors.add(new Error("Overriding old fill mode; setting to "
                 + (fill == 0 ? "zero-" : fill == -1 ? "randomized " : "repeat-")
-                + "fill mode.", ErrorCodes.UI_MULTI_SETTINGS));
+                + "fill mode.", SimCodes.UI_MULTI_SETTINGS));
         return true;
-    }
-
-    /**
-     * Wrapper for printing errors returned from SimpleLoader
-     * 
-     * @param ui
-     *            Reference to the User Interface (UI)
-     * @param errors
-     *            List of errors
-     * @see edu.osu.cse.mmxi.sim.loader.SimpleLoader
-     */
-    public static void printErrors(final UI ui, final Error... errors) {
-        printErrors(ui, Arrays.asList(errors));
-    }
-
-    /**
-     * Wrapper for printing errors returned from SimpleLoader
-     * 
-     * @param ui
-     *            Reference to the User Interface (UI)
-     * @param errors
-     *            List of errors
-     * @see edu.osu.cse.mmxi.sim.loader.SimpleLoader
-     */
-    public static void printErrors(final UI ui, final List<Error> errors) {
-        // flag for warn
-        boolean warn = false;
-        boolean fatal = false;
-
-        for (final Error e : errors)
-            switch (e.getLevel()) {
-            case FATAL:
-                fatal = true;
-                ui.warn(e.toString());
-                break;
-            default:
-            case WARN:
-                warn = true;
-                ui.warn(e.toString());
-                break;
-            case MSG:
-                ui.print(e.toString());
-                break;
-            }
-
-        if (fatal)
-            ui.error("Fatal Errors Detected.  Exiting Program.");
-        else if (warn) {
-            String input = null;
-            input = ui.prompt("\nWarnings Detected.  Continue or Quit (q)?");
-            if (input.equalsIgnoreCase("q")) {
-                ui.print("Exiting...");
-                ui.exit();
-            }
-        } else if (errors.size() != 0)
-            ui.prompt("Messages Detected. Press any key to continue.");
     }
 
     public static void main(final String[] args) {
@@ -322,8 +266,7 @@ public final class Simulator {
             new Console(machine, file);
         else {
             if (file != null)
-                Simulator.printErrors(machine.ui,
-                    SimpleLoader.load(file, machine, null, null));
+                machine.ui.printErrors(SimpleLoader.load(file, machine, null, null));
             startClockLoop(machine);
         }
     }

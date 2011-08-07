@@ -6,13 +6,14 @@ import static edu.osu.cse.mmxi.asm.CommonParser.parseLine;
 
 import java.io.IOException;
 
-import edu.osu.cse.mmxi.asm.error.ParseException;
-import edu.osu.cse.mmxi.asm.line.AssemblyLine.ExpressionArg;
-import edu.osu.cse.mmxi.asm.line.AssemblyLine.InstructionLine;
-import edu.osu.cse.mmxi.asm.line.AssemblyLine.StringArg;
+import edu.osu.cse.mmxi.asm.error.AsmCodes;
+import edu.osu.cse.mmxi.asm.line.InstructionLine;
+import edu.osu.cse.mmxi.asm.line.InstructionLine.ExpressionArg;
+import edu.osu.cse.mmxi.asm.line.InstructionLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.common.Utilities;
+import edu.osu.cse.mmxi.common.error.ParseException;
 
 public class Pass2Parser {
     private final Assembler a;
@@ -64,7 +65,7 @@ public class Pass2Parser {
         final Short len = se.evaluate();
         if (len == null) {
             errorOnUndefinedSymbols(se);
-            throw new ParseException("Program length " + se + " too complex to encode");
+            throw new ParseException(AsmCodes.P2_LEN_CMX, "length = " + se);
         }
         if (a.segName == null)
             a.ui.error("No .ORIG line found!");
@@ -85,7 +86,7 @@ public class Pass2Parser {
             final SymbolExpression se = ArithmeticParser
                 .simplify(Symbol.getSymb(":EXEC"));
             errorOnUndefinedSymbols(se);
-            throw new ParseException("Execution address " + se + " too complex to encode");
+            throw new ParseException(AsmCodes.P2_EXE_ADDR_CMX, "exec = " + se);
         }
         a.io.writeOLine("E" + Utilities.uShortToHex((short) exec.address));
     }
@@ -108,7 +109,7 @@ public class Pass2Parser {
         final Location l = Location.convertToRelative(arg);
         if (l == null) {
             errorOnUndefinedSymbols(arg);
-            throw new ParseException("relation " + arg + " too complex to encode");
+            throw new ParseException(AsmCodes.P2_FILL_CMX, "fill value = " + arg);
         }
         write(new short[] { (short) l.address }, new int[] { l.isRelative ? 1 : -1 });
     }
@@ -119,7 +120,7 @@ public class Pass2Parser {
         final Short len = se.evaluate();
         if (len == null) {
             errorOnUndefinedSymbols(se);
-            throw new ParseException("block length " + se + " too complex to encode");
+            throw new ParseException(AsmCodes.P2_BLK_CMX, "length = " + se);
         }
         write(new short[0], new int[0]);
         lc.address += len;

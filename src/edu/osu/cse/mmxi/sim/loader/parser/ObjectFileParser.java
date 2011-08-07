@@ -9,10 +9,9 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.osu.cse.mmxi.common.ParseException;
 import edu.osu.cse.mmxi.common.Utilities;
-import edu.osu.cse.mmxi.sim.error.Error;
-import edu.osu.cse.mmxi.sim.error.ErrorCodes;
+import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.sim.error.SimCodes;
 
 /**
  * <p>
@@ -112,7 +111,7 @@ public class ObjectFileParser {
             line = reader.readLine();
         } catch (final IOException e) {
             errors.add(new Error("IO error while reading first line: " + e.getMessage(),
-                ErrorCodes.IO_BAD_READ));
+                SimCodes.IO_BAD_READ));
         }
 
         while (line != null) {
@@ -123,19 +122,19 @@ public class ObjectFileParser {
                 line = reader.readLine();
             } catch (final IOException e) {
                 errors.add(new Error("IO error while reading line " + lineNumber + ": "
-                    + e.getMessage(), ErrorCodes.IO_BAD_READ));
+                    + e.getMessage(), SimCodes.IO_BAD_READ));
             }
         }
 
         if (header == null && exec == null && text.size() == 0)
-            errors.add(new Error(ErrorCodes.PARSE_EMPTY));
+            errors.add(new Error(SimCodes.PARSE_EMPTY));
         else {
             if (header == null)
-                errors.add(new Error(ErrorCodes.PARSE_NO_HEADER));
+                errors.add(new Error(SimCodes.PARSE_NO_HEADER));
             if (text.size() == 0)
-                errors.add(new Error(ErrorCodes.PARSE_NO_RECORDS));
+                errors.add(new Error(SimCodes.PARSE_NO_RECORDS));
             if (exec == null)
-                errors.add(new Error(ErrorCodes.PARSE_NO_EXEC));
+                errors.add(new Error(SimCodes.PARSE_NO_EXEC));
         }
         return errors;
     }
@@ -157,20 +156,14 @@ public class ObjectFileParser {
         while (m.find())
             parsePreprocessorCommand(m.group());
         if (token.length() > 0)
-            try {
-                if (token.matches("(H|h).{6}[0-9A-Fa-f]{8}"))
-                    header = parseHeader(token);
-                else if (token.matches("(T|t)[0-9A-Fa-f]{8}(M[01])?"))
-                    text.add(parseTextLine(token));
-                else if (token.matches("(E|e)[0-9A-Fa-f]{4}"))
-                    exec = parseExec(token);
-                else
-                    errors.add(new Error(lineNumber, token, ErrorCodes.PARSE_BAD_TEXT));
-            } catch (final ParseException e) {
-                errors.add(new Error(lineNumber, e.getMessage(),
-                    ErrorCodes.PARSE_EXECPTION));
-            }
-
+            if (token.matches("(H|h).{6}[0-9A-Fa-f]{8}"))
+                header = parseHeader(token);
+            else if (token.matches("(T|t)[0-9A-Fa-f]{8}(M[01])?"))
+                text.add(parseTextLine(token));
+            else if (token.matches("(E|e)[0-9A-Fa-f]{4}"))
+                exec = parseExec(token);
+            else
+                errors.add(new Error(lineNumber, token, SimCodes.PARSE_BAD_TEXT));
     }
 
     private void parsePreprocessorCommand(final String token) {
@@ -182,31 +175,32 @@ public class ObjectFileParser {
             try {
                 sourceLine = Integer.parseInt(token.substring(3, token.length() - 1));
             } catch (final NumberFormatException e) {
-                errors.add(new Error(lineNumber,
-                    "could not read LINE preprocessor command",
-                    ErrorCodes.PARSE_EXECPTION));
+                errors
+                    .add(new Error(lineNumber,
+                        "could not read LINE preprocessor command",
+                        SimCodes.PARSE_EXECPTION));
             }
             break;
         case 'S':
             final int colon = token.lastIndexOf(":");
             if (colon == -1)
-                errors.add(new Error(lineNumber,
-                    "could not read SYMB preprocessor command",
-                    ErrorCodes.PARSE_EXECPTION));
+                errors
+                    .add(new Error(lineNumber,
+                        "could not read SYMB preprocessor command",
+                        SimCodes.PARSE_EXECPTION));
             else {
                 final String symb = token.substring(3, colon);
                 final boolean bad = symb.contains("+") || symb.contains("-")
                     || symb.contains(":") || symb.toLowerCase().matches("pc|r[0-7]");
                 if (bad)
-                    errors
-                        .add(new Error(lineNumber, "invalid symbol name '" + symb + "'",
-                            ErrorCodes.PARSE_EXECPTION));
+                    errors.add(new Error(lineNumber,
+                        "invalid symbol name '" + symb + "'", SimCodes.PARSE_EXECPTION));
                 final Short v = Utilities.parseShort(token.substring(colon + 1,
                     token.length() - 1));
                 if (v == null)
                     errors.add(new Error(lineNumber, "'"
                         + token.substring(colon + 1, token.length() - 1)
-                        + "' is not a number", ErrorCodes.PARSE_EXECPTION));
+                        + "' is not a number", SimCodes.PARSE_EXECPTION));
                 if (!bad && v != null)
                     symbols.put(symb, v);
             }
@@ -222,7 +216,7 @@ public class ObjectFileParser {
      * @throws ParseException
      *             if the line does not conform to the format.
      */
-    private Text parseTextLine(final String line) throws ParseException {
+    private Text parseTextLine(final String line) {
         // It's not necessary to check for a good string here, because we
         // already have, with the pattern matching earlier.
         return new Text(lineNumber, sourceLine, sourceFile, (short) Integer.parseInt(
@@ -237,7 +231,7 @@ public class ObjectFileParser {
      * @throws ParseException
      *             if the line does not conform to the format.
      */
-    private Header parseHeader(final String line) throws ParseException {
+    private Header parseHeader(final String line) {
         final String name = line.substring(1, 7);
         // TODO: Is there any checking we need to do on the segment name?
         // if (false) {

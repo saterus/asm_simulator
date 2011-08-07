@@ -23,10 +23,10 @@ import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
-import edu.osu.cse.mmxi.asm.error.ParseException;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.Utilities;
+import edu.osu.cse.mmxi.common.error.ParseException;
 
 public class ArithmeticParser {
     public static final boolean collapseIfEvaluable = true;

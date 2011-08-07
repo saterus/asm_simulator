@@ -1,47 +1,37 @@
-package edu.osu.cse.mmxi.common;
+package edu.osu.cse.mmxi.sim.ui;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-/**
- * Do not call directly. This is intended to be extended and overwriting of
- * printErrorEndOfFile().
- * 
- */
-public class UImain {
-    protected InputStream in = System.in;
-    protected PrintStream out = System.out, err = System.err;
+import edu.osu.cse.mmxi.common.UI;
+import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.sim.error.SimCodes;
 
-    public void error(final String msg) {
-        warn(msg);
-        System.exit(1);
+public class SimUI extends UI {
+
+    public enum UIMode {
+        QUIET, TRACE, STEP
+    };
+
+    private UIMode mode;
+
+    public SimUI() {
+        this(null);
     }
 
-    /**
-     * Wrapper for system.exit(1)
-     */
-    public void exit() {
-        System.exit(1);
+    public SimUI(final UIMode _mode) {
+        mode = _mode;
     }
 
-    public void warn(final String msg) {
-        err.println(msg);
+    public boolean setMode(final UIMode _mode) {
+        final boolean ret = mode == null;
+        mode = _mode;
+        return ret;
     }
 
-    public void print(final String msg) {
-        out.print(msg);
-    }
-
-    public void println(final String msg) {
-        out.println(msg);
-    }
-
-    public String prompt(final String msg) {
-        print(msg);
-        return new Scanner(in).nextLine();
+    public UIMode getMode() {
+        return mode;
     }
 
     public byte getChar() {
@@ -67,7 +57,7 @@ public class UImain {
             try {
                 num = sc.next("-?(0[xX][0-9A-Fa-f]+|[0-9]+)");
             } catch (final NoSuchElementException e) {
-                printErrorEndOfFile();
+                printErrors(new Error("while reading number", SimCodes.EXEC_END_OF_FILE));
             }
             if (num == null)
                 prompt = "You can do better than that. Put your heart into it: ";
@@ -84,12 +74,5 @@ public class UImain {
         else
             s = Short.parseShort((neg ? "-" : "") + num);
         return s;
-    }
-
-    /**
-     * Must be overwritten
-     */
-    public void printErrorEndOfFile() {
-
     }
 }

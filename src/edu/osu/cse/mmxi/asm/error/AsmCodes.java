@@ -1,8 +1,9 @@
 package edu.osu.cse.mmxi.asm.error;
 
+import edu.osu.cse.mmxi.common.error.ErrorCodes;
 import edu.osu.cse.mmxi.common.error.ErrorLevels;
 
-public enum ErrorCodes {
+public enum AsmCodes implements ErrorCodes {
     // simpleLoaderErrors IO
     IO_BAD_PATH(100, "File path does not refer to a file.", ErrorLevels.FATAL),
 
@@ -55,55 +56,56 @@ public enum ErrorCodes {
 
     P1_INST_BAD_BLKW(250, "Argument must be an immediate or expression",
         ErrorLevels.FATAL),
-    
 
+    P2_LEN_CMX(300, "Program length too complex to encode", ErrorLevels.FATAL),
 
-    P2_LEN_CMX(300,"Program length " + se + " too complex to encode" , ErrorLevels.FATAL),
-    P2_EXE_ADDR_CMX(301,"Execution address " + se + " too complex to encode" , ErrorLevels.FATAL),
-    P2_REL_CMX(302,"relation " + arg + " too complex to encode" , ErrorLevels.FATAL),
-    P2_BLK_CMX(303,"block length " + se + " too complex to encode"  , ErrorLevels.FATAL),
+    P2_EXE_ADDR_CMX(301, "Execution address too complex to encode", ErrorLevels.FATAL),
 
-    IF_BAD_OP_CODE(500, "Unknown opcode or signature", ErrorLevels.FATAL),
+    P2_FILL_CMX(302, "Relation too complex to encode", ErrorLevels.FATAL),
 
-    IF_REG_IMM(501, "Immediate used in place of register or vice-versa", ErrorLevels.FATAL),
-
-    IF_COMPLEX(502, "Arguments too complex to encode", ErrorLevels.FATAL),
-
-    IF_REG_IMM2(503, "Immediate used in place of register or vice-versa", ErrorLevels.FATAL),
-
-    IF_BAD_ABS_ADDR(504,  "absolute page address used in relative program", ErrorLevels.FATAL),
-
-    IF_BAD_LABEL_REF(505, "label dereferences to incorrect page", ErrorLevels.FATAL),
-    
-    IF_BAD_REL_PAR(506, "relative parameter used in field which does not support it", ErrorLevels.FATAL),
-
-   
-
-   
+    P2_BLK_CMX(303, "Block length too complex to encode", ErrorLevels.FATAL),
 
     EXEC_END_OF_FILE(402, "End of File reached prematurely.", ErrorLevels.FATAL),
 
-    // unknown error
-    UNKNOWN(999, "Unknown Error", ErrorLevels.WARN);
+    IF_BAD_OP_CODE(500, "Unknown opcode or signature", ErrorLevels.FATAL),
+
+    IF_REG_IMM(501, "Immediate used in place of register or vice-versa",
+        ErrorLevels.FATAL),
+
+    IF_COMPLEX(502, "Arguments too complex to encode", ErrorLevels.FATAL),
+
+    IF_REG_IMM2(503, "Immediate used in place of register or vice-versa",
+        ErrorLevels.FATAL),
+
+    IF_BAD_ABS_ADDR(504, "absolute page address used in relative program",
+        ErrorLevels.FATAL),
+
+    IF_BAD_LABEL_REF(505, "Label dereferences to incorrect page", ErrorLevels.FATAL),
+
+    IF_BAD_REL_PAR(506, "relative parameter used in field which does not support it",
+        ErrorLevels.FATAL);
 
     private int         code;
     private String      str;
     private ErrorLevels level;
 
-    ErrorCodes(final int code, final String str, final ErrorLevels level) {
+    AsmCodes(final int code, final String str, final ErrorLevels level) {
         this.str = str;
         this.code = code;
         this.level = level;
     }
 
+    @Override
     public String getMsg() {
         return str;
     }
 
+    @Override
     public int getCode() {
         return code;
     }
 
+    @Override
     public ErrorLevels getLevel() {
         return level;
     }

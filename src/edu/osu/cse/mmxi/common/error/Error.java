@@ -1,10 +1,9 @@
-package edu.osu.cse.mmxi.asm.error;
+package edu.osu.cse.mmxi.common.error;
 
-import edu.osu.cse.mmxi.common.error.ErrorLevels;
 
 public class Error {
-    private final int        line;
-    private final String     message;
+    private final int       line;
+    private final String    message;
     private final ErrorCodes code;
 
     public Error(final ErrorCodes c) {
@@ -12,19 +11,15 @@ public class Error {
     }
 
     public Error(final String m) {
-        this(-1, m, ErrorCodes.UNKNOWN);
+        this(-1, m, new ErrorCodes.Unknown());
     }
 
     public Error(final String m, final ErrorCodes c) {
         this(-1, m, c);
     }
 
-    public Error(final String m, final ErrorLevels l) {
-        this(-1, m, ErrorCodes.UNKNOWN);
-    }
-
     public Error(final int line, final String m) {
-        this(line, m, ErrorCodes.UNKNOWN);
+        this(line, m, new ErrorCodes.Unknown());
     }
 
     public Error(final int line, final ErrorCodes c) {

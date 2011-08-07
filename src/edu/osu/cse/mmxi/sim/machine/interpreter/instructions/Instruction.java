@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import edu.osu.cse.mmxi.common.Utilities;
-import edu.osu.cse.mmxi.sim.Simulator;
-import edu.osu.cse.mmxi.sim.error.Error;
-import edu.osu.cse.mmxi.sim.error.ErrorCodes;
+import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.sim.error.SimCodes;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
 public abstract class Instruction {
@@ -656,7 +655,7 @@ public abstract class Instruction {
                             .uShortToHex((short) (m.getPCRegister().getValue() - 1))
                         + ": value is R0 = 0x"
                         + Utilities.uShortToHex(m.getRegister(0).getValue());
-                    Simulator.printErrors(m.ui, new Error(msg, ErrorCodes.EXEC_TRAP_OUT));
+                    m.ui.printErrors(new Error(msg, SimCodes.EXEC_TRAP_OUT));
                 }
                 m.ui.print("" + (char) (m.getRegister(0).getValue() & 0x7f));
                 break;
@@ -689,8 +688,8 @@ public abstract class Instruction {
             default:
                 final List<Error> errors = new ArrayList<Error>();
                 errors.add(new Error("at 0x" + Utilities.sShortToHex(vector),
-                    ErrorCodes.EXEC_TRAP_UNKN));
-                Simulator.printErrors(m.ui, errors);
+                    SimCodes.EXEC_TRAP_UNKN));
+                m.ui.printErrors(errors);
             }
             return false;
         }

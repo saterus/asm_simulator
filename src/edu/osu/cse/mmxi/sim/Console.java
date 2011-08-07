@@ -481,7 +481,7 @@ public class Console {
         m.ui.print("Loading file: " + file + "\n");
         lines.clear();
         symbols.clear();
-        Simulator.printErrors(m.ui, SimpleLoader.load(file, m, lines, symbols));
+        m.ui.printErrors(SimpleLoader.load(file, m, lines, symbols));
         symbLength = 0;
         for (final String k : symbols.keySet())
             if (k.length() > symbLength)
