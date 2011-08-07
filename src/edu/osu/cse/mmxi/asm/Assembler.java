@@ -10,12 +10,34 @@ import edu.osu.cse.mmxi.common.UI;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
+/**
+ * This is the file contains the executing main. In addition the user interface,
+ * input/output, and errors are instantiated here. This file runs the both passes and
+ * prints console error ouputs and warnings.
+ * 
+ */
 public class Assembler {
     public IO         io;
     public String     segName = null;
     final List<Error> errors  = new ArrayList<Error>();
     final UI          ui;
 
+    /**
+     * Constructor used for creating opening reading/writing IO and handling errors for
+     * Pass 1 and Pass parsing.
+     * 
+     * @param ui
+     *            The User Interface object used for printing errors to screen and
+     *            prompting for user input on warning level errors.
+     * @param in
+     *            The in filename.
+     * @param out
+     *            The out filename.
+     * @param intermediate
+     *            The intermediate filename.
+     * @throws IOException
+     *             Catches file writing/reading errors.
+     */
     public Assembler(final UI ui, final String in, final String out,
         final String intermediate) throws IOException {
         this.ui = ui;
@@ -56,6 +78,18 @@ public class Assembler {
         io.closeReader();
     }
 
+    /**
+     * Main executing static method for the Assembler. Handles the user input args from
+     * the command line.
+     * 
+     * @param args
+     *            The user command line arguments for assebler. args[0] The assembly file
+     *            to parse. args[1] (optional) The -i flag for wring an intermediate file.
+     *            The filename will be parsed for trailing extension name and will replace
+     *            with ".o" for the machine code object file and ".i" for the intermediate
+     *            file name.
+     * @throws IOException
+     */
     public static void main(final String[] args) throws IOException {
         final UI ui = new UI();
         String file = null;

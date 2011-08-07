@@ -16,19 +16,56 @@ import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
+/**
+ * Handles the actual parsing of the input file and finalizing the literals and symbols.
+ */
 public class Pass2Parser {
+    /**
+     * Reference to the assembler
+     */
     private final Assembler   a;
+
+    /**
+     * The location counter
+     */
     private Location          lc;
+
+    /**
+     * The current line number being read from file.
+     */
     private int               lineNumber;
+
+    /**
+     * The current line being read.
+     */
     private String            line;
+
+    /**
+     * The instruction for the current line.
+     */
     private InstructionLine   inst;
+
+    /**
+     * The error list for holding parseExceptions and errors
+     */
     private final List<Error> errors;
 
+    /**
+     * Constructor for Pass2Parser. Makes references for assebler and error list.
+     * 
+     * @param a
+     *            The reference to the assembler object
+     * @param errors
+     *            The reference to the errors
+     */
     public Pass2Parser(final Assembler a, final List<Error> errors) {
         this.a = a;
         this.errors = errors;
     }
 
+    /**
+     * Performs the actual parsing for pass 2.
+     */
     public void parse() {
         lc = Location.convertToRelative(Symbol.getSymb(":START"));
         lineNumber = 1;
@@ -76,6 +113,11 @@ public class Pass2Parser {
         }
     }
 
+    /**
+     * Encode the machine language header record.
+     * 
+     * @throws ParseException
+     */
     private void encodeHeader() throws ParseException {
         final SymbolExpression se = ArithmeticParser.simplify(ArithmeticParser.parseF(
             ":0 + :1 - :2", ":END", Literal.table.size(), ":START"));
@@ -90,6 +132,11 @@ public class Pass2Parser {
             + Utilities.uShortToHex((short) lc.address) + Utilities.uShortToHex(len));
     }
 
+    /**
+     * Encode the literals into machine language.
+     * 
+     * @throws ParseException
+     */
     private void encodeLiterals() throws ParseException {
         lineNumber = 0;
         line = "";
@@ -97,6 +144,11 @@ public class Pass2Parser {
             write(new short[] { l.contents }, new int[] { -1 });
     }
 
+    /**
+     * Encode the the exec record into machine language.
+     * 
+     * @throws ParseException
+     */
     private void encodeExec() throws ParseException {
         final Location exec = Location.convertToRelative(Symbol.getSymb(":EXEC"));
         if (exec == null || lc.isRelative ^ exec.isRelative) {
@@ -110,6 +162,12 @@ public class Pass2Parser {
         a.io.writeOLine("E" + Utilities.uShortToHex((short) exec.address));
     }
 
+    /**
+     * Take a .STRZ pseudo op record and add each character including a null byte
+     * character for machine code.
+     * 
+     * @throws ParseException
+     */
     private void parseSTRZ() throws ParseException {
         final String str = ((StringArg) inst.args[0]).arg;
         final short[] dat = new short[str.length() + 1];
@@ -122,6 +180,9 @@ public class Pass2Parser {
         write(dat, m);
     }
 
+    /*
+     * Take a .FILL pseudo op record and put into machine language.
+     */
     private void parseFILL() throws ParseException {
         final SymbolExpression arg = ArithmeticParser.simplify(
             ((ExpressionArg) inst.args[0]).val, true);
@@ -133,6 +194,12 @@ public class Pass2Parser {
         write(new short[] { (short) l.address }, new int[] { l.isRelative ? 1 : -1 });
     }
 
+    /**
+     * Parse the .BLKW pseudo op record and put into machine language. Increments the
+     * location counter to skip appropriate record count.
+     * 
+     * @throws ParseException
+     */
     private void parseBLKW() throws ParseException {
         final SymbolExpression se = ArithmeticParser
             .simplify(((ExpressionArg) inst.args[0]).val);
@@ -145,6 +212,11 @@ public class Pass2Parser {
         lc.address += len;
     }
 
+    /**
+     * Parse the instruction and convert into machine language.
+     * 
+     * @throws ParseException
+     */
     private void parseInstruction() throws ParseException {
         final short[][] words = InstructionFormat.getInstruction(lc, inst);
         final short[] dat = new short[words.length];
@@ -156,6 +228,16 @@ public class Pass2Parser {
         write(dat, m);
     }
 
+    /**
+     * Used by the parsing instructions to perform the actual file writing.
+     * 
+     * @param data
+     *            The 16 bit address value to write
+     * @param m
+     *            The M record to indicate if the is a 9 bit or full 16 bit record for
+     *            movable programs.
+     * @throws ParseException
+     */
     private void write(final short[] data, final int[] m) throws ParseException {
         if (data.length == 0)
             a.io.writeLLine((lc == null ? "      " : "("
@@ -178,6 +260,17 @@ public class Pass2Parser {
             }
     }
 
+    /**
+     * Static method to pad a string left with a character
+     * 
+     * @param s
+     *            The string to be padded
+     * @param len
+     *            The length to pad to
+     * @param pad
+     *            The character used for the padding
+     * @return
+     */
     private static String padLeft(final String s, int len, final char pad) {
         len -= s.length();
         if (len < 0)
@@ -185,6 +278,17 @@ public class Pass2Parser {
         return new String(new char[len]).replace('\0', pad) + s;
     }
 
+    /**
+     * Static method to pad a string right with a character
+     * 
+     * @param s
+     *            The string to be padded
+     * @param len
+     *            The length to pad string to
+     * @param pad
+     *            The character to use for padding
+     * @return
+     */
     private static String padRight(final String s, int len, final char pad) {
         len -= s.length();
         if (len < 0)

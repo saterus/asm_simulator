@@ -16,22 +16,75 @@ import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
+/**
+ * Handles the actual parsing of the input file and pass 1 parsing. View First Pass
+ * details for more information.
+ * 
+ */
 public class Pass1Parser {
+    /**
+     * The assebler object
+     */
     private final Assembler   a;
+
+    /**
+     * The locaiton counter base, used for determing the offset.
+     */
     private Symbol            lcBase;
+
+    /**
+     * The location counter for the program
+     */
     private short             lc;
+
+    /**
+     * The current line Number being read.
+     */
     private int               lineNumber;
+
     private int               tempNumber;
+
+    /**
+     * The line currently being read
+     */
     private String            line;
+
+    /**
+     * The label portion of the line
+     */
     private Label             label;
+
+    /**
+     * The instruction portion of the line
+     */
     private InstructionLine   inst;
+
+    /**
+     * Used for tracking all parseExceptions
+     */
     private final List<Error> errors;
 
+    /**
+     * Initialize the parser
+     * 
+     * @param a
+     *            The assembler reference
+     * @param errors
+     *            The error list reference
+     */
     public Pass1Parser(final Assembler a, final List<Error> errors) {
         this.a = a;
         this.errors = errors;
     }
 
+    /**
+     * This does the actual work for parsing the file. Will read the input file line by
+     * line and parse of pseudo operations and symbols.
+     * 
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     */
     public String parse() throws IOException, ParseException {
         lcBase = Symbol.getSymb(":START");
         lc = 0;
@@ -75,6 +128,11 @@ public class Pass1Parser {
         return Symbol.printSymbs();
     }
 
+    /**
+     * Parse an .ORIG line for all of its parts.
+     * 
+     * @throws ParseException
+     */
     private void parseORIG() throws ParseException {
         if (label == null)
             throw new ParseException(AsmCodes.IF_BAD_ARG_NUM,
@@ -89,6 +147,11 @@ public class Pass1Parser {
         }
     }
 
+    /**
+     * Parse an .EQU line for all of its parts.
+     * 
+     * @throws ParseException
+     */
     private void parseEQU() throws ParseException {
         if (label == null)
             throw new ParseException(AsmCodes.IF_BAD_ARG_NUM, ".EQU requires a label");
@@ -97,12 +160,22 @@ public class Pass1Parser {
         label.symb.set(((ExpressionArg) inst.args[0]).val);
     }
 
+    /**
+     * Parse an .END line for all of its parts
+     * 
+     * @throws ParseException
+     */
     private void parseEND() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
             throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
         Symbol.getSymb(":EXEC").set(((ExpressionArg) inst.args[0]).val);
     }
 
+    /**
+     * Parse a .STRZ line for all of its parts
+     * 
+     * @throws ParseException
+     */
     private void parseSTRZ() throws ParseException {
         if (!(inst.args[0] instanceof StringArg))
             throw new ParseException(AsmCodes.P1_INST_BAD_STRZ);
@@ -115,6 +188,11 @@ public class Pass1Parser {
         lc++;
     }
 
+    /**
+     * Parse a .BLKW line for all of its parts.
+     * 
+     * @throws ParseException
+     */
     private void parseBLKW() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
             throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
@@ -129,6 +207,11 @@ public class Pass1Parser {
         }
     }
 
+    /**
+     * Parse a standard instruction line (non-psuedo op line) for all of its parts.
+     * 
+     * @throws ParseException
+     */
     private void parseInstruction() throws ParseException {
         final SymbolExpression len = InstructionFormat.getLength(inst);
         final Short val = len.evaluate();
@@ -141,6 +224,10 @@ public class Pass1Parser {
         }
     }
 
+    /**
+     * Tell the literal table and sumbol table they are complete and print any errors
+     * which occurred during the pass 1 parsing process.
+     */
     private void cleanupSymbols() {
         try {
             Symbol.getSymb(":END").set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
