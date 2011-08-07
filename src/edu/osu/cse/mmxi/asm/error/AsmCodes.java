@@ -5,85 +5,57 @@ import edu.osu.cse.mmxi.common.error.ErrorLevels;
 
 public enum AsmCodes implements ErrorCodes {
     // simpleLoaderErrors IO
-    IO_BAD_PATH(100, "File path does not refer to a file.", ErrorLevels.FATAL),
+    IO_BAD_PATH(100, "File path does not refer to a file", ErrorLevels.FATAL),
 
-    IO_BAD_READ(101, "Failed to read file.", ErrorLevels.FATAL),
+    IO_BAD_READ(101, "Failed to read file", ErrorLevels.FATAL),
 
-    IO_BAD_FILE(102, "File was empty.", ErrorLevels.FATAL),
+    IO_BAD_WRITE(102, "Failed to write file", ErrorLevels.FATAL),
 
-    IO_BAD_INPUT(103, "No assembly file was given.", ErrorLevels.FATAL),
+    IO_NO_INPUT(110, "No assembly file was given", ErrorLevels.FATAL),
 
-    IO_MANY_INPUT(103, "Multiple assembly files given.", ErrorLevels.WARN),
+    IO_MANY_INPUT(111, "Multiple assembly files given", ErrorLevels.WARN),
 
-    P1_BAD_LINE(200, "Failed to parse line on Pass 1.", ErrorLevels.FATAL),
-
-    P1_INST_WRONG_PARAMS(201, "Invalid parameter count", ErrorLevels.FATAL),
-
-    P1_INST_BAD_LABEL(202, "Numbers can not be labels.", ErrorLevels.FATAL),
-
-    P1_INST_BAD_REG(203, "Registers cannot be labels.", ErrorLevels.FATAL),
-
-    P1_INST_BAD_ARGS(204, "Incorrect number of arguments.", ErrorLevels.FATAL),
-
-    P1_INST_BAD_LINE_FORMAT(205, "Instruction lines must begin with whitespace",
+    P1_INST_NO_SPACE(200, "Instruction lines must begin with whitespace",
         ErrorLevels.FATAL),
 
-    P1_INST_BAD_OP_CODE(206, "Unknown op-code.", ErrorLevels.FATAL),
+    P1_INVALID_SYMB(210, "Invalid symbol name", ErrorLevels.FATAL),
 
-    P1_INST_BAD_ORIG_ARGS(207, "Too many args for .ORIG", ErrorLevels.FATAL),
+    P2_INST_BAD_SYMBOL(211, "Undefined symbol", ErrorLevels.FATAL),
 
-    P1_INST_BAD_ORIG_LABEL(208, "Invalid segment name for .ORIG", ErrorLevels.FATAL),
+    P1_SYMB_RESET(212, "Symbols can only be defined once", ErrorLevels.FATAL),
 
-    P1_INST_BAD_ORIG_ADDR(209, "Invalid address given.", ErrorLevels.FATAL),
-
-    P1_INST_BAD_ORIG_TYPE(210, "Argument must be an immediate or expression",
+    P1_INST_ARG_NOT_EXP(220, "Argument must be an immediate or expression",
         ErrorLevels.FATAL),
 
-    P1_INST_BAD_SYMBOL(211, "Invalid Symbol.", ErrorLevels.FATAL),
+    P1_INST_BAD_STRZ(221, "Argument must be a string", ErrorLevels.FATAL),
 
-    P1_INST_BAD_EQU_LABEL(220, ".EQU requires a label", ErrorLevels.FATAL),
+    AP_BAD_EXPR(230, "Syntax error in expression", ErrorLevels.FATAL),
 
-    P1_INST_BAD_EQU_IMM(221, "Argument must be an immediate or expression.",
-        ErrorLevels.FATAL),
+    P2_NO_ORIG(300, "No .ORIG record found", ErrorLevels.FATAL),
 
-    P1_INST_BAD_END_IMM(230, "Argument must be an immediate or expression.",
-        ErrorLevels.FATAL),
+    P2_NO_EXEC(301, "No .END record found", ErrorLevels.FATAL),
 
-    P1_INST_BAD_STRZ(240, "Argument must be a string.", ErrorLevels.FATAL),
+    P2_LEN_CMX(310, "Program length too complex to encode", ErrorLevels.FATAL),
 
-    P1_INST_BAD_FILL(245, "Argument must be an immediate or expressing.",
-        ErrorLevels.FATAL),
+    P2_EXEC_CMX(311, "Execution address too complex to encode", ErrorLevels.FATAL),
 
-    P1_INST_BAD_BLKW(250, "Argument must be an immediate or expression",
-        ErrorLevels.FATAL),
+    P2_FILL_CMX(312, "Relation too complex to encode", ErrorLevels.FATAL),
 
-    P2_LEN_CMX(300, "Program length too complex to encode", ErrorLevels.FATAL),
+    P2_BLK_CMX(313, "Block length too complex to encode", ErrorLevels.FATAL),
 
-    P2_EXE_ADDR_CMX(301, "Execution address too complex to encode", ErrorLevels.FATAL),
+    IF_ARG_CMX(314, "Arguments too complex to encode", ErrorLevels.FATAL),
 
-    P2_FILL_CMX(302, "Relation too complex to encode", ErrorLevels.FATAL),
+    P1_INST_BAD_OP_CODE(500, "Unknown op-code", ErrorLevels.FATAL),
 
-    P2_BLK_CMX(303, "Block length too complex to encode", ErrorLevels.FATAL),
+    IF_BAD_ARG_NUM(501, "Incorrect number of arguments", ErrorLevels.FATAL),
 
-    EXEC_END_OF_FILE(402, "End of File reached prematurely.", ErrorLevels.FATAL),
+    IF_SIG_INVALID(502, "Invalid signature for opcode", ErrorLevels.FATAL),
 
-    IF_BAD_OP_CODE(500, "Unknown opcode or signature", ErrorLevels.FATAL),
+    IF_ARG_RANGE(503, "Argument out of range for type", ErrorLevels.FATAL),
 
-    IF_REG_IMM(501, "Immediate used in place of register or vice-versa",
-        ErrorLevels.FATAL),
+    IF_ABS_ADDR(504, "Absolute page address used in relative program", ErrorLevels.FATAL),
 
-    IF_COMPLEX(502, "Arguments too complex to encode", ErrorLevels.FATAL),
-
-    IF_REG_IMM2(503, "Immediate used in place of register or vice-versa",
-        ErrorLevels.FATAL),
-
-    IF_BAD_ABS_ADDR(504, "absolute page address used in relative program",
-        ErrorLevels.FATAL),
-
-    IF_BAD_LABEL_REF(505, "Label dereferences to incorrect page", ErrorLevels.FATAL),
-
-    IF_BAD_REL_PAR(506, "relative parameter used in field which does not support it",
-        ErrorLevels.FATAL);
+    IF_OFF_PAGE(505, "Label dereferences to incorrect page", ErrorLevels.FATAL);
 
     private int         code;
     private String      str;

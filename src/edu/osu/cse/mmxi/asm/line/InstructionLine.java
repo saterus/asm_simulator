@@ -32,8 +32,9 @@ public class InstructionLine {
                     try {
                         args[i] = new ExpressionArg(arg);
                     } catch (final ParseException e) {
-                        throw new ParseException(e.getErrorCode(), "on argument "
-                            + (i + 1) + ": " + e.getMessage());
+                        e.getError().setMessage(
+                            "on argument " + (i + 1) + ": " + e.getMessage());
+                        throw e;
                     }
                 else if (isLiteral)
                     args[i] = new LiteralArg(v);

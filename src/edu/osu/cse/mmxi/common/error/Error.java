@@ -1,9 +1,8 @@
 package edu.osu.cse.mmxi.common.error;
 
-
 public class Error {
-    private final int       line;
-    private final String    message;
+    private int              line;
+    private String           message;
     private final ErrorCodes code;
 
     public Error(final ErrorCodes c) {
@@ -40,8 +39,26 @@ public class Error {
         return message;
     }
 
+    public ErrorCodes getCode() {
+        return code;
+    }
+
     public ErrorLevels getLevel() {
         return code.getLevel();
+    }
+
+    public Error setLine(final int line) {
+        this.line = line;
+        return this;
+    }
+
+    public Error setMessage(final String msg) {
+        message = msg;
+        return this;
+    }
+
+    public Error appendMsg(final String msg) {
+        return setMessage(msg + getMessage());
     }
 
     @Override

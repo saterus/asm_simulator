@@ -1,59 +1,44 @@
 package edu.osu.cse.mmxi.common.error;
 
-
 public class ParseException extends Exception {
+    private Error err;
 
-    private Integer   line = -1;
-    // private String msg = null;
-    private ErrorCodes err  = new ErrorCodes.Unknown();
-
-    public ParseException() {
+    public ParseException(final int line, final ErrorCodes errCode) {
+        err = new Error(line, errCode);
     }
 
-    public ParseException(final Integer lineNumber) {
-        line = lineNumber;
-    }
-
-    public ParseException(final Integer lineNumber, final ErrorCodes errCode) {
-        line = lineNumber;
-        err = errCode;
-    }
-
-    public ParseException(final Integer lineNumber, final ErrorCodes errCode,
-        final String msg) {
+    public ParseException(final int line, final ErrorCodes errCode, final String msg) {
         super(msg);
-        line = lineNumber;
-        err = errCode;
+        err = new Error(line, msg, errCode);
     }
 
     public ParseException(final ErrorCodes errCode, final String msg) {
         super(msg);
-        err = errCode;
+        err = new Error(msg, errCode);
     }
 
     public ParseException(final ErrorCodes errCode) {
-        err = errCode;
+        err = new Error(errCode);
     }
 
-    public ParseException(final String msg, final Integer lineNumber) {
+    public ParseException(final int line, final String msg) {
         super(msg);
-        line = lineNumber;
-        // msg = message;
+        err = new Error(line, msg);
     }
 
     public ParseException(final String msg) {
         super(msg);
     }
 
-    public Integer getLineNumber() {
-        return line;
+    public int getLine() {
+        return err.getLine();
     }
 
-    /*
-     * public String getMsgDetails() { return msg; }
-     */
-
     public ErrorCodes getErrorCode() {
+        return err.getCode();
+    }
+
+    public Error getError() {
         return err;
     }
 }

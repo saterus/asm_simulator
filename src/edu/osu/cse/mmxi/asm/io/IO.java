@@ -2,6 +2,7 @@ package edu.osu.cse.mmxi.asm.io;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -9,7 +10,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-public class InputOutput {
+import edu.osu.cse.mmxi.asm.error.AsmCodes;
+import edu.osu.cse.mmxi.common.error.ParseException;
+
+public class IO {
 
     /**
      * Reads the input file
@@ -54,11 +58,22 @@ public class InputOutput {
      * @throws FileNotFoundException
      * @see closeReader()
      */
-    public void openReader(final String file) throws IOException, FileNotFoundException {
-        if (iReader != null)
-            iReader.close();
-        iReader = new BufferedReader(new InputStreamReader(new FileInputStream(
-            iFile = file)));
+    public void openReader(final String file) throws ParseException {
+        final File f = new File(iFile = file);
+        if (f.exists())
+            throw new ParseException(AsmCodes.IO_BAD_PATH, file + " not found");
+        if (!f.isFile())
+            throw new ParseException(AsmCodes.IO_BAD_PATH, file + " is a directory");
+        if (!f.canRead())
+            throw new ParseException(AsmCodes.IO_BAD_READ,
+                "unable to open file for reading: " + file);
+        try {
+            if (iReader != null)
+                iReader.close();
+            iReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+        } catch (final IOException e) {
+            // failed to close - no big deal.
+        }
     }
 
     /**
@@ -69,7 +84,7 @@ public class InputOutput {
      * @throws IOException
      * @see closeReader()
      */
-    public void resetReader() throws IOException {
+    public void resetReader() throws ParseException {
         openReader(iFile);
     }
 
@@ -83,16 +98,36 @@ public class InputOutput {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public void openWriters(final String oFile, final String lFile) throws IOException,
-        FileNotFoundException {
+    public void openWriters(final String oFile, final String lFile) throws ParseException {
+        final File o = new File(oFile);
+        if (o.exists() && !o.canWrite())
+            throw new ParseException(AsmCodes.IO_BAD_WRITE,
+                "unable to open file for writing: " + oFile);
+        try {
+            if (oWriter != null)
+                oWriter.close();
+            oWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(o)));
+        } catch (final IOException e) {
+            throw new ParseException(AsmCodes.IO_BAD_WRITE,
+                "unable to open file for writing: " + oFile);
+        }
         this.lFile = lFile;
-        if (oWriter != null)
-            oWriter.close();
-        if (lWriter != null)
-            lWriter.close();
-        oWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(oFile)));
-        lWriter = lFile == null ? null : new BufferedWriter(new OutputStreamWriter(
-            new FileOutputStream(lFile)));
+        if (lFile != null) {
+            final File l = new File(lFile);
+            if (l.exists() && !l.canWrite())
+                throw new ParseException(AsmCodes.IO_BAD_WRITE,
+                    "unable to open file for writing: " + lFile);
+            try {
+                if (lWriter != null)
+                    lWriter.close();
+                lWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                    l)));
+            } catch (final IOException e) {
+                throw new ParseException(AsmCodes.IO_BAD_WRITE,
+                    "unable to open file for writing: " + lFile);
+            }
+        } else
+            lWriter = null;
     }
 
     /**
@@ -100,10 +135,14 @@ public class InputOutput {
      * 
      * @throws IOException
      */
-    public String getLine() throws IOException {
-        String line = null;
-        line = iReader.readLine();
-        return line;
+    public String getLine() throws ParseException {
+        try {
+            return iReader.readLine();
+        } catch (final IOException e) {
+            throw new ParseException(AsmCodes.IO_BAD_READ,
+                "unable to read line from file");
+        }
+
     }
 
     /**
@@ -113,22 +152,32 @@ public class InputOutput {
      *            the line of data to write to the file
      * @throws IOException
      */
-    public void writeOLine(final String line) throws IOException {
-        oWriter.write(line + "\n");
+    public void writeOLine(final String line) throws ParseException {
+        try {
+            oWriter.write(line + "\n");
+        } catch (final IOException e) {
+            throw new ParseException(AsmCodes.IO_BAD_WRITE, "unable to write to output: "
+                + line);
+        }
     }
 
     /**
-     * Writes one line of data to the listing file stream.+
+     * Writes one line of data to the listing file stream.
      * 
      * @param line
      *            the line of data to write to the file
      * @throws IOException
      */
-    public void writeLLine(final String line) throws IOException {
+    public void writeLLine(final String line) throws ParseException {
         if (lFile == null)
             System.out.println(line);
         else
-            lWriter.write(line + "\n");
+            try {
+                lWriter.write(line + "\n");
+            } catch (final IOException e) {
+                throw new ParseException(AsmCodes.IO_BAD_WRITE,
+                    "unable to write to listing file: " + line);
+            }
     }
 
     /**

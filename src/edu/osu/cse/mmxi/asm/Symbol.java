@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.common.error.ParseException;
@@ -27,7 +28,8 @@ public class Symbol extends SymbolExpression {
 
     public Symbol set(final SymbolExpression se) throws ParseException {
         if (value != null)
-            throw new ParseException("symbol " + name + " already set to " + value);
+            throw new ParseException(AsmCodes.P1_SYMB_RESET, "symbol " + name
+                + " already set to " + value);
         value = ArithmeticParser.simplify(se, false);
         evaluate();
         return this;

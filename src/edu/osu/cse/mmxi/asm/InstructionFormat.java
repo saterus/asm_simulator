@@ -18,6 +18,7 @@ import edu.osu.cse.mmxi.asm.line.InstructionLine.RegisterArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
+import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
 public class InstructionFormat {
@@ -177,7 +178,7 @@ public class InstructionFormat {
         throws ParseException {
         final String key = name.toUpperCase() + ":" + isReg.length;
         if (!instructions.containsKey(key))
-            throw new ParseException("Unknown opcode or signature");
+            throw new ParseException(AsmCodes.IF_BAD_ARG_NUM);
         final List<IFRecord> candidates = new ArrayList<IFRecord>(instructions.get(key));
         loop: for (Iterator<IFRecord> i = candidates.iterator(); i.hasNext();) {
             final IFRecord r = i.next();
@@ -204,7 +205,8 @@ public class InstructionFormat {
             isReg[i] = inst.args[i].isReg();
         final List<IFRecord> candidates = getInstruction(inst.opcode, isReg);
         if (candidates.size() == 0)
-            throw new ParseException("Immediate used in place of register or vice-versa");
+            throw new ParseException(AsmCodes.IF_SIG_INVALID,
+                "Immediate used in place of register or vice-versa");
         final SymbolExpression len = getSpecialLength(inst, candidates);
         if (len == null)
             return new NumExp((short) candidates.get(0).template.length);
@@ -253,27 +255,28 @@ public class InstructionFormat {
             String s = "";
             for (final Argument arg : inst.args)
                 s += ", " + arg;
-            throw new ParseException(AsmCodes.IF_COMPLEX, "Attempted to encode "
+            throw new ParseException(AsmCodes.IF_ARG_CMX, "Attempted to encode "
                 + inst.opcode + " " + s.substring(2));
         }
         final List<IFRecord> candidates = getInstruction(inst.opcode, isReg);
         final String key = inst.opcode + ":" + isReg.length;
         if (candidates.size() == 0)
-            throw new ParseException("Immediate used in place of register or vice-versa");
+            throw new ParseException(AsmCodes.IF_SIG_INVALID,
+                "Immediate used in place of register or vice-versa");
         IFRecord rec = candidates.get(0);
         if (rec.special)
             rec = getSpecialInstruction(key, isReg, values, candidates);
         for (int i = 0; i < values.length; i++) {
-            if (!isValid(rec.signature.charAt(i), (short) values[i].address))
-                throw new ParseException("parameter " + (i + 1) + " out of range");
+            checkRange(i + 1, rec.signature.charAt(i), (short) values[i].address);
             if (rec.signature.charAt(i) == '9') {
                 if (lc.isRelative ^ values[i].isRelative)
-                    throw new ParseException(
+                    throw new ParseException(AsmCodes.IF_ABS_ADDR,
                         "absolute page address used in relative program");
                 if (((lc.address ^ values[i].address) & 0xFE00) != 0)
-                    throw new ParseException("label dereferences to incorrect page");
+                    throw new ParseException(AsmCodes.IF_OFF_PAGE,
+                        "label dereferences to incorrect page");
             } else if (values[i].isRelative)
-                throw new ParseException(
+                throw new ParseException(AsmCodes.IF_ARG_CMX,
                     "relative parameter used in field which does not support it");
         }
         final short[][] ret = new short[rec.template.length][];
@@ -346,22 +349,35 @@ public class InstructionFormat {
         return null;
     }
 
-    private static boolean isValid(final char sig, final short val) {
+    private static void checkRange(final int index, final char sig, final short val)
+        throws ParseException {
+        final String arg = "at argument " + index + ": ";
         switch (sig) {
         case 'R':
-            return val >= 0 && val < 8;
+            if (val < 0 || val >= 8)
+                throw new ParseException(AsmCodes.IF_ARG_RANGE, arg
+                    + "register parameter R" + val);
         case '4':
-            return val >= 0 && val < 16;
+            if (val < 0 || val >= 16)
+                throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "shift left by "
+                    + val);
         case '5':
-            return val >= -16 && val < 16;
+            if (val < -16 || val >= 16)
+                throw new ParseException(AsmCodes.IF_ARG_RANGE, arg
+                    + "immediate parameter " + val);
         case '6':
-            return val >= 0 && val < 64;
+            if (val < 0 || val >= 64)
+                throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "index6 parameter "
+                    + (val & 0xFFFF));
         case '8':
-            return val >= 0 && val < 256;
+            if (val < 0 || val >= 256)
+                throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "trap vector "
+                    + Utilities.sShortToHex(val));
         case '9':
-            return true;
+            return;
         }
-        return false;
+        // should never happen
+        throw new RuntimeException("bad signature character");
     }
 
     public static class IFRecord {

@@ -95,5 +95,6 @@ public class UI {
             }
         } else if (errors.size() != 0)
             prompt("Messages Detected. Press any key to continue.");
+        errors.clear();
     }
 }

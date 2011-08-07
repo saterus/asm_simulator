@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 import edu.osu.cse.mmxi.asm.Literal;
 import edu.osu.cse.mmxi.asm.Symbol;
+import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.Utilities;
@@ -54,9 +55,11 @@ public class ArithmeticParser {
                 if (s.startsWith(o.value)) {
                     final boolean isUnary = stack.peek() instanceof Operator;
                     if (isUnary && !o.unary)
-                        throw new ParseException("two operators in a row");
+                        throw new ParseException(AsmCodes.AP_BAD_EXPR,
+                            "two operators in a row");
                     if (!isUnary && !o.binary)
-                        throw new ParseException("unary operator used as binary");
+                        throw new ParseException(AsmCodes.AP_BAD_EXPR,
+                            "unary operator used as binary");
                     s = s.substring(o.value.length());
                     if (!isUnary)
                         collapseStack(stack, o);
@@ -66,12 +69,12 @@ public class ArithmeticParser {
             final String leaf = s.substring(0, leafLength(s, args.length));
             s = s.substring(leaf.length());
             if (stack.peek() instanceof SymbolExpression)
-                throw new ParseException("two operands in a row");
+                throw new ParseException(AsmCodes.AP_BAD_EXPR, "two operands in a row");
             stack.push(parseLeaf(leaf, args));
         }
         final SymbolExpression res = (SymbolExpression) stack.poll();
         if (stack.size() != 0)
-            throw new ParseException("unmatched left paren");
+            throw new ParseException(AsmCodes.AP_BAD_EXPR, "unmatched left paren");
         return res;
     }
 
@@ -93,9 +96,9 @@ public class ArithmeticParser {
                     break;
             }
         } catch (final NoSuchElementException e) {
-            throw new ParseException("unmatched right paren");
+            throw new ParseException(AsmCodes.AP_BAD_EXPR, "unmatched right paren");
         } catch (final ClassCastException e) {
-            throw new ParseException("two operators in a row");
+            throw new ParseException(AsmCodes.AP_BAD_EXPR, "two operators in a row");
         }
     }
 
@@ -111,8 +114,8 @@ public class ArithmeticParser {
             else if (op == LIT) {
                 final Short v = last.evaluate();
                 if (v == null)
-                    throw new ParseException(
-                        "literals expressions must evaluate on the spot");
+                    throw new ParseException(AsmCodes.AP_BAD_EXPR,
+                        "literal expressions must evaluate on the spot");
                 se = Literal.getLiteral(v);
             } else if (stack.peek() instanceof Operator)
                 se = new OpExp(op, last);
@@ -140,11 +143,14 @@ public class ArithmeticParser {
         if (token.matches(":\\d+") && Integer.parseInt(token.substring(1)) < argc)
             return token.length();
         else if (token.matches("[rR][0-7]"))
-            throw new ParseException("symbols can not be register names");
+            throw new ParseException(AsmCodes.P1_INVALID_SYMB,
+                "symbols can not be register names");
         else if (token.length() == 0 || token.charAt(0) == ':')
-            throw new ParseException("symbols must begin with an alphabetic character");
+            throw new ParseException(AsmCodes.P1_INVALID_SYMB,
+                "symbols must begin with an alphabetic character");
         else if (Utilities.parseShort(token) == null && Character.isDigit(s.charAt(0)))
-            throw new ParseException("symbols must not begin with digits");
+            throw new ParseException(AsmCodes.P1_INVALID_SYMB,
+                "symbols must not begin with digits");
         return token.length();
     }
 
@@ -153,8 +159,8 @@ public class ArithmeticParser {
         if (leaf.matches("'.*'")) {
             final String c = Utilities.parseString(leaf.substring(1, leaf.length() - 1));
             if (c.length() != 1)
-                throw new ParseException("character literal " + leaf
-                    + " must contain exactly one character");
+                throw new ParseException(AsmCodes.AP_BAD_EXPR, "character literal "
+                    + leaf + " must contain exactly one character");
             return new NumExp((short) c.charAt(0));
         } else if (leaf.matches(":\\d+")) {
             final Object o = args[Integer.parseInt(leaf.substring(1))];

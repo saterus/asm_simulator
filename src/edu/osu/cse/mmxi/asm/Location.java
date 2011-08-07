@@ -18,6 +18,8 @@ public class Location {
 
     public static Location convertToRelative(final SymbolExpression se) {
         // Assumes se has already been simplified (by simplify())
+        if (se == null)
+            return null;
         final Map<SymbolExpression, Integer> terms = ArithmeticParser.getTerms(se, true);
         final Location loc = new Location(false, 0);
         for (final Entry<SymbolExpression, Integer> i : terms.entrySet())

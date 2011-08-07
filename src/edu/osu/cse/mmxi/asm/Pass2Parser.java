@@ -4,7 +4,7 @@ import static edu.osu.cse.mmxi.asm.CommonParser.checkLine;
 import static edu.osu.cse.mmxi.asm.CommonParser.errorOnUndefinedSymbols;
 import static edu.osu.cse.mmxi.asm.CommonParser.parseLine;
 
-import java.io.IOException;
+import java.util.List;
 
 import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.line.InstructionLine;
@@ -13,53 +13,70 @@ import edu.osu.cse.mmxi.asm.line.InstructionLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.common.Utilities;
+import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
 public class Pass2Parser {
-    private final Assembler a;
-    private Location        lc;
-    private int             lineNumber;
-    private String          line;
-    private InstructionLine inst;
+    private final Assembler   a;
+    private Location          lc;
+    private int               lineNumber;
+    private String            line;
+    private InstructionLine   inst;
+    private final List<Error> errors;
 
-    public Pass2Parser(final Assembler a) {
+    public Pass2Parser(final Assembler a, final List<Error> errors) {
         this.a = a;
+        this.errors = errors;
     }
 
-    public void parse() throws IOException {
+    public void parse() {
+        lc = Location.convertToRelative(Symbol.getSymb(":START"));
+        lineNumber = 1;
         try {
-            lc = Location.convertToRelative(Symbol.getSymb(":START"));
             encodeHeader();
-            lineNumber = 1;
-            while ((line = a.io.getLine()) != null) {
-                try {
-                    final String[] parsed = checkLine(parseLine(line));
-                    inst = parsed[1] == null ? null : new InstructionLine(parsed);
-                    if (inst != null)
-                        if (inst.opcode.charAt(0) == '.') {
-                            if (inst.opcode.equals(".STRZ"))
-                                parseSTRZ();
-                            else if (inst.opcode.equals(".FILL"))
-                                parseFILL();
-                            else if (inst.opcode.equals(".BLKW"))
-                                parseBLKW();
-                            else
-                                write(new short[0], new int[0]);
-                        } else
-                            parseInstruction();
-                } catch (final ParseException e) {
-                    System.err.println("At line " + lineNumber + ": " + e.getMessage());
-                }
-                lineNumber++;
+            line = a.io.getLine();
+        } catch (final ParseException e) {
+            errors.add(e.getError());
+        }
+        while (line != null) {
+            try {
+                final String[] parsed = checkLine(parseLine(line));
+                inst = parsed[1] == null ? null : new InstructionLine(parsed);
+                if (inst != null)
+                    if (inst.opcode.charAt(0) == '.') {
+                        if (inst.opcode.equals(".STRZ"))
+                            parseSTRZ();
+                        else if (inst.opcode.equals(".FILL"))
+                            parseFILL();
+                        else if (inst.opcode.equals(".BLKW"))
+                            parseBLKW();
+                        else
+                            write(new short[0], new int[0]);
+                    } else
+                        parseInstruction();
+            } catch (final ParseException e) {
+                System.err.println("At line " + lineNumber + ": " + e.getMessage());
             }
+            lineNumber++;
+            try {
+                line = a.io.getLine();
+            } catch (final ParseException e) {
+                errors.add(e.getError());
+            }
+        }
+        try {
             encodeLiterals();
+        } catch (final ParseException e) {
+            errors.add(e.getError());
+        }
+        try {
             encodeExec();
         } catch (final ParseException e) {
-            System.err.println(e.getMessage());
+            errors.add(e.getError());
         }
     }
 
-    private void encodeHeader() throws IOException, ParseException {
+    private void encodeHeader() throws ParseException {
         final SymbolExpression se = ArithmeticParser.simplify(ArithmeticParser.parseF(
             ":0 + :1 - :2", ":END", Literal.table.size(), ":START"));
         final Short len = se.evaluate();
@@ -68,30 +85,32 @@ public class Pass2Parser {
             throw new ParseException(AsmCodes.P2_LEN_CMX, "length = " + se);
         }
         if (a.segName == null)
-            a.ui.error("No .ORIG line found!");
+            throw new ParseException(AsmCodes.P2_NO_ORIG);
         a.io.writeOLine("H" + padRight(a.segName, 6, ' ')
             + Utilities.uShortToHex((short) lc.address) + Utilities.uShortToHex(len));
     }
 
-    private void encodeLiterals() throws IOException {
+    private void encodeLiterals() throws ParseException {
         lineNumber = 0;
         line = "";
         for (final Literal l : Literal.table.values())
             write(new short[] { l.contents }, new int[] { -1 });
     }
 
-    private void encodeExec() throws IOException, ParseException {
+    private void encodeExec() throws ParseException {
         final Location exec = Location.convertToRelative(Symbol.getSymb(":EXEC"));
         if (exec == null || lc.isRelative ^ exec.isRelative) {
+            if (Symbol.getSymb(":EXEC").value == null)
+                throw new ParseException(AsmCodes.P2_NO_EXEC);
             final SymbolExpression se = ArithmeticParser
                 .simplify(Symbol.getSymb(":EXEC"));
             errorOnUndefinedSymbols(se);
-            throw new ParseException(AsmCodes.P2_EXE_ADDR_CMX, "exec = " + se);
+            throw new ParseException(AsmCodes.P2_EXEC_CMX, "exec = " + se);
         }
         a.io.writeOLine("E" + Utilities.uShortToHex((short) exec.address));
     }
 
-    private void parseSTRZ() throws IOException {
+    private void parseSTRZ() throws ParseException {
         final String str = ((StringArg) inst.args[0]).arg;
         final short[] dat = new short[str.length() + 1];
         final int[] m = new int[str.length() + 1];
@@ -103,7 +122,7 @@ public class Pass2Parser {
         write(dat, m);
     }
 
-    private void parseFILL() throws IOException, ParseException {
+    private void parseFILL() throws ParseException {
         final SymbolExpression arg = ArithmeticParser.simplify(
             ((ExpressionArg) inst.args[0]).val, true);
         final Location l = Location.convertToRelative(arg);
@@ -114,7 +133,7 @@ public class Pass2Parser {
         write(new short[] { (short) l.address }, new int[] { l.isRelative ? 1 : -1 });
     }
 
-    private void parseBLKW() throws IOException, ParseException {
+    private void parseBLKW() throws ParseException {
         final SymbolExpression se = ArithmeticParser
             .simplify(((ExpressionArg) inst.args[0]).val);
         final Short len = se.evaluate();
@@ -126,7 +145,7 @@ public class Pass2Parser {
         lc.address += len;
     }
 
-    private void parseInstruction() throws IOException, ParseException {
+    private void parseInstruction() throws ParseException {
         final short[][] words = InstructionFormat.getInstruction(lc, inst);
         final short[] dat = new short[words.length];
         final int[] m = new int[words.length];
@@ -137,7 +156,7 @@ public class Pass2Parser {
         write(dat, m);
     }
 
-    private void write(final short[] data, final int[] m) throws IOException {
+    private void write(final short[] data, final int[] m) throws ParseException {
         if (data.length == 0)
             a.io.writeLLine((lc == null ? "      " : "("
                 + Utilities.uShortToHex((short) lc.address) + ")")

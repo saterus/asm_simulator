@@ -51,10 +51,6 @@ public class Pass1Parser {
 
                 if (inst != null)
                     if (inst.opcode.charAt(0) == '.') {
-                        if (inst.args.length != 1 && !inst.opcode.equals(".ORIG"))
-                            throw new ParseException(lineNumber,
-                                AsmCodes.P1_INST_WRONG_PARAMS, inst.opcode
-                                    + " takes exactly one argument");
                         if (inst.opcode.equals(".ORIG"))
                             parseORIG();
                         else if (inst.opcode.equals(".EQU"))
@@ -70,18 +66,8 @@ public class Pass1Parser {
                     } else
                         parseInstruction();
             } catch (final ParseException e) {
-                // handle the error
-                String msg = e.getMessage();
-                Error err = null;
-
-                if (msg == null)
-                    err = new Error(lineNumber, line, e.getErrorCode());
-                else {
-                    msg = msg + "\n\tContext: \"" + line + "\"";
-                    err = new Error(lineNumber, msg, e.getErrorCode());
-                }
-
-                errors.add(err);
+                errors.add(e.getError().setLine(lineNumber)
+                    .appendMsg("\n\tContext: \"" + line + "\""));
             }
             lineNumber++;
         }
@@ -90,36 +76,30 @@ public class Pass1Parser {
     }
 
     private void parseORIG() throws ParseException {
-        if (inst.args.length > 1)
-            throw new ParseException(AsmCodes.P1_INST_BAD_ORIG_ARGS);
         if (label == null)
-            throw new ParseException(AsmCodes.P1_INST_BAD_LABEL);
+            throw new ParseException(AsmCodes.IF_BAD_ARG_NUM,
+                ".ORIG missing segment name");
         Symbol.removeSymb(a.segName = label.symb.name);
         if (a.segName.length() > 6)
             a.segName = a.segName.substring(0, 6);
         if (inst.args.length > 0) {
             if (!(inst.args[0] instanceof ExpressionArg))
-                throw new ParseException(AsmCodes.P1_INST_BAD_ORIG_TYPE);
+                throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
             Symbol.getSymb(":START").set(((ExpressionArg) inst.args[0]).val);
-
-            // verify the address is within range
-            final int parsedAddress = ((ExpressionArg) inst.args[0]).val.evaluate();
-            if (parsedAddress < 0 || parsedAddress > 0xFFFF)
-                throw new ParseException(AsmCodes.P1_INST_BAD_ORIG_ADDR);
         }
     }
 
     private void parseEQU() throws ParseException {
         if (label == null)
-            throw new ParseException(AsmCodes.P1_INST_BAD_EQU_LABEL);
+            throw new ParseException(AsmCodes.IF_BAD_ARG_NUM, ".EQU requires a label");
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException(AsmCodes.P1_INST_BAD_EQU_IMM);
+            throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
         label.symb.set(((ExpressionArg) inst.args[0]).val);
     }
 
     private void parseEND() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException(AsmCodes.P1_INST_BAD_END_IMM);
+            throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
         Symbol.getSymb(":EXEC").set(((ExpressionArg) inst.args[0]).val);
     }
 
@@ -131,13 +111,13 @@ public class Pass1Parser {
 
     private void parseFILL() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException(AsmCodes.P1_INST_BAD_FILL);
+            throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
         lc++;
     }
 
     private void parseBLKW() throws ParseException {
         if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException(AsmCodes.P1_INST_BAD_BLKW);
+            throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
         final SymbolExpression len = ((ExpressionArg) inst.args[0]).val;
         final Short val = len.evaluate();
         if (val != null)
@@ -166,7 +146,7 @@ public class Pass1Parser {
             Symbol.getSymb(":END").set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
             Literal.complete = true;
         } catch (final ParseException e) {
-            System.err.println(e.getMessage());
+            a.ui.printErrors(e.getError());
         }
         for (final Symbol s : Symbol.symbs.values())
             s.expand();
