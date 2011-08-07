@@ -16,10 +16,11 @@ public class Assembler {
     public InputOutput io;
     public String      segName = null;
     final List<Error>  errors  = new ArrayList<Error>();
-    final UI           ui      = new UI();
+    final UI           ui;
 
-    public Assembler(final String in, final String out, final String intermediate)
-        throws IOException {
+    public Assembler(final UI ui, final String in, final String out,
+        final String intermediate) throws IOException {
+        this.ui = ui;
         io = new InputOutput();
         try {
             io.openReader(in);
@@ -60,7 +61,24 @@ public class Assembler {
     }
 
     public static void main(final String[] args) throws IOException {
-        new Assembler(args[0], "a.o", null);
+        final UI ui = new UI();
+        String file = null;
+        boolean intermediate = false;
+        final List<Error> errors = new ArrayList<Error>();
+        for (final String s : args)
+            if (s.equals("-i"))
+                intermediate = true;
+            else if (file == null)
+                file = s;
+            else
+                errors.add(new Error(s, ErrorCodes.IO_MANY_INPUT));
+        if (file == null)
+            errors.add(new Error(ErrorCodes.IO_BAD_INPUT));
+        printErrors(ui, errors);
+        String stem = file;
+        if (stem.indexOf('.') != 0)
+            stem = stem.substring(0, stem.lastIndexOf('.'));
+        new Assembler(ui, args[0], stem + ".o", intermediate ? stem + ".i" : null);
     }
 
     /**

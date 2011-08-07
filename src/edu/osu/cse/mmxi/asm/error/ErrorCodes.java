@@ -12,6 +12,8 @@ public enum ErrorCodes {
 
     IO_BAD_INPUT(103, "No assembly file was given.", ErrorLevels.FATAL),
 
+    IO_MANY_INPUT(103, "Multiple assembly files given.", ErrorLevels.WARN),
+
     P1_BAD_LINE(200, "Failed to parse line on Pass 1.", ErrorLevels.FATAL),
 
     P1_INST_WRONG_PARAMS(201, "Invalid parameter count", ErrorLevels.FATAL),
@@ -25,7 +27,7 @@ public enum ErrorCodes {
     P1_INST_BAD_LINE_FORMAT(205, "Instruction lines must begin with whitespace",
         ErrorLevels.FATAL),
 
-    P1_INST_BAD_OP_CODE(206, "Unknow op-code.", ErrorLevels.FATAL),
+    P1_INST_BAD_OP_CODE(206, "Unknown op-code.", ErrorLevels.FATAL),
 
     P1_INST_BAD_ORIG_ARGS(207, "Too many args for .ORIG", ErrorLevels.FATAL),
 

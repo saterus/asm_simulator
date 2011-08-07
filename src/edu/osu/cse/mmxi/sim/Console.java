@@ -9,6 +9,7 @@ import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
 public class Console {
+
     private final Machine             m;
     private int                       maxClock;
     private Short                     memTrack;
@@ -18,6 +19,12 @@ public class Console {
     private final Map<String, Short>  symbols;
     private int                       symbLength = 0;
     private final Map<Short, Integer> lines;
+    private final String              mcmoxel    = ""
+                                                     + "    _/      _/            _/      _/                                _/ \n"
+                                                     + "   _/_/  _/_/    _/_/_/  _/_/  _/_/    _/_/    _/    _/    _/_/    _/  \n"
+                                                     + "  _/  _/  _/  _/        _/  _/  _/  _/    _/    _/_/    _/_/_/_/  _/   \n"
+                                                     + " _/      _/  _/        _/      _/  _/    _/  _/    _/  _/        _/    \n"
+                                                     + "_/      _/    _/_/_/  _/      _/    _/_/    _/    _/    _/_/_/  _/     \n";
 
     public Console(final Machine _m, final String _file) {
         m = _m;
@@ -28,6 +35,7 @@ public class Console {
         watchpoints = new TreeMap<Integer, Short>();
         symbols = new TreeMap<String, Short>();
         lines = new TreeMap<Short, Integer>();
+        m.ui.print(mcmoxel);
         m.ui.print("McMoxel MMXI Emulator\n");
         m.ui.print("Version 2");
         if (file != null)
