@@ -5,4 +5,4 @@ BR1		.ORIG
 Start	BRNZP	NULL
 		.END	Start
 
-;Expected output: Label dereferences to incorrect page
+;Expected output: Undefined Symbol
