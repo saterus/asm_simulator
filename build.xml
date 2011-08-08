@@ -57,7 +57,7 @@
       </exec>
     </target>
 
-    <target name="Help">
+    <target name="help">
         <echo message="Guide to Running MMXI Simulator/Assembler with Aapche Ant."/>
         <echo message="Usage: 'ant targets' to see all available options. (UNIX ONLY)"/>
         <echo message="       'ant clean' will clean out old version."/>
@@ -78,6 +78,23 @@
                nonavbar="true"
                notree="true"
                packagenames="edu.osu.cse.mmxi.sim.machine.memory,edu.osu.cse.mmxi.asm.io,edu.osu.cse.mmxi.sim.machine,edu.osu.cse.mmxi.junit.sim,edu.osu.cse.mmxi.sim.loader,edu.osu.cse.mmxi.sim.machine.interpreter.instructions,edu.osu.cse.mmxi.sim.loader.parser,edu.osu.cse.mmxi.common,edu.osu.cse.mmxi.asm,edu.osu.cse.mmxi.common.error,edu.osu.cse.mmxi.asm.table,edu.osu.cse.mmxi.sim.machine.interpreter,edu.osu.cse.mmxi.asm.error,edu.osu.cse.mmxi.asm.line,edu.osu.cse.mmxi.sim.ui,edu.osu.cse.mmxi.junit.asm,edu.osu.cse.mmxi.asm.ui,edu.osu.cse.mmxi.sim,edu.osu.cse.mmxi.asm.symb,edu.osu.cse.mmxi.sim.error"
+               source="1.6"
+               sourcepath="src"
+               use="true"
+               version="true"/>
+    </target>
+
+    <target depends="build" name="javadoc-asm">
+      <javadoc access="private"
+               author="false"
+               destdir="doc"
+               doctitle="Module Descriptions &amp; Data Element Dictionary"
+               nodeprecated="false"
+               nodeprecatedlist="false"
+               noindex="false"
+               nonavbar="true"
+               notree="true"
+               packagenames="edu.osu.cse.mmxi.asm.io,edu.osu.cse.mmxi.common,edu.osu.cse.mmxi.asm,edu.osu.cse.mmxi.common.error,edu.osu.cse.mmxi.asm.table,edu.osu.cse.mmxi.asm.error,edu.osu.cse.mmxi.asm.line,edu.osu.cse.mmxi.junit.asm,edu.osu.cse.mmxi.asm.ui,edu.osu.cse.mmxi.asm.symb"
                source="1.6"
                sourcepath="src"
                use="true"
@@ -105,8 +122,38 @@
     <target depends="javadoc" name="pdf-javadoc">
       <exec executable="htmldoc">
         <arg value="--batch"/>
+        <arg value="sim.book"/>
+      </exec>
+    </target>
+
+    <target depends="javadoc-asm" name="pdf-javadoc-asm">
+      <exec executable="htmldoc">
+        <arg value="--batch"/>
         <arg value="doc_compiler.book"/>
       </exec>
+    </target>
+
+
+    <target name="jar-asm" depends="build">
+      <jar jarfile="asm.jar">
+    	<manifest>
+    	  <attribute name="Main-Class" value="edu.osu.cse.mmxi.asm.Assembler"/>
+    	  <attribute name="Class-Path" value="${Simulator.classpath}"/>
+    	</manifest>
+    	<fileset dir="bin" includes="**/*.class"/>
+    	<fileset dir="src" includes="**/*.properties"/>
+      </jar>
+    </target>
+
+    <target name="jar-sim" depends="build">
+      <jar jarfile="sim.jar">
+    	<manifest>
+    	  <attribute name="Main-Class" value="edu.osu.cse.mmxi.sim.Simulator"/>
+    	  <attribute name="Class-Path" value="${Simulator.classpath}"/>
+    	</manifest>
+    	<fileset dir="bin" includes="**/*.class"/>
+    	<fileset dir="src" includes="**/*.properties"/>
+      </jar>
     </target>
 
 
