@@ -57,6 +57,22 @@ public class InstructionLine {
     }
 
     /**
+     * Output a string representation of the instruction
+     */
+    @Override
+    public String toString() {
+        String rtn = "";
+        for (final Argument arg : args) {
+            String tmp = arg.toString();
+            tmp = tmp == null ? "null" : tmp;
+            rtn += tmp + ",";
+        }
+        rtn = rtn.substring(0, rtn.length() - 2);
+
+        return opcode + ' ' + rtn.toString();
+    }
+
+    /**
      * Static interface for Argument.
      */
     public static interface Argument {

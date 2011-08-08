@@ -300,7 +300,7 @@ public class InstructionFormat {
         if (rec.special)
             rec = getSpecialInstruction(key, isReg, values, candidates);
         for (int i = 0; i < values.length; i++) {
-            checkRange(i + 1, rec.signature.charAt(i), (short) values[i].address);
+            checkRange(i + 1, rec.signature.charAt(i), (short) values[i].address, inst);
             if (rec.signature.charAt(i) == '9') {
                 if (lc.isRelative ^ values[i].isRelative)
                     throw new ParseException(AsmCodes.IF_ABS_ADDR);
@@ -381,30 +381,30 @@ public class InstructionFormat {
         return null;
     }
 
-    private static void checkRange(final int index, final char sig, final short val)
-        throws ParseException {
+    private static void checkRange(final int index, final char sig, final short val,
+        final InstructionLine inst) throws ParseException {
         final String arg = "at argument " + index + ": ";
         switch (sig) {
         case 'R':
             if (val < 0 || val >= 8)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg
-                    + "register parameter R" + val);
+                    + "register parameter R" + val + "; instruction: " + inst.toString());
         case '4':
             if (val < 0 || val >= 16)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "shift left by "
-                    + val);
+                    + val + "; instruction: " + inst.toString());
         case '5':
             if (val < -16 || val >= 16)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg
-                    + "immediate parameter " + val);
+                    + "immediate parameter " + val + "; instruction: " + inst.toString());
         case '6':
             if (val < 0 || val >= 64)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "index6 parameter "
-                    + (val & 0xFFFF));
+                    + (val & 0xFFFF) + "; instruction: " + inst.toString());
         case '8':
             if (val < 0 || val >= 256)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "trap vector "
-                    + Utilities.sShortToHex(val));
+                    + Utilities.sShortToHex(val) + "; instruction: " + inst.toString());
         case '9':
             return;
         }
