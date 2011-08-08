@@ -27,7 +27,7 @@ public class Pass1Parser {
     private final Assembler   a;
 
     /**
-     * The locaiton counter base, used for determing the offset.
+     * The location counter base, used for determining the offset.
      */
     private Symbol            lcBase;
 
@@ -135,6 +135,8 @@ public class Pass1Parser {
         if (label == null)
             throw new ParseException(AsmCodes.IF_BAD_ARG_NUM,
                 ".ORIG missing segment name");
+        else if (a.segName != null)
+            throw new ParseException(AsmCodes.P2_MANY_ORIG);
         Symbol.removeSymb(a.segName = label.name);
         if (a.segName.length() > 6)
             a.segName = a.segName.substring(0, 6);
@@ -164,6 +166,8 @@ public class Pass1Parser {
      * @throws ParseException
      */
     private void parseEND() throws ParseException {
+        if (Symbol.getSymb(":EXEC").value != null)
+            throw new ParseException(AsmCodes.P2_MANY_EXEC);
         if (inst.args.length > 0) {
             if (!(inst.args[0] instanceof ExpressionArg))
                 throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);

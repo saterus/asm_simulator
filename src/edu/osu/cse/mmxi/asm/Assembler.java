@@ -60,9 +60,6 @@ public class Assembler {
             errors.add(new Error(e.getMessage(), AsmCodes.IO_BAD_READ));
         }
 
-        if (errors.size() > 0)
-            errors.add(0, new Error(AsmCodes.P1_GENERAL_ERROR));
-
         ui.printErrors(errors);
 
         if (intermediate != null)

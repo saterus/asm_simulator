@@ -21,8 +21,6 @@ public enum AsmCodes implements ErrorCodes {
 
     IO_MANY_INPUT(111, "Multiple assembly files given", ErrorLevels.WARN),
 
-    P1_GENERAL_ERROR(201, "An error occurred on pass 1.", ErrorLevels.WARN),
-
     P1_INST_NO_SPACE(200, "Instruction lines must begin with whitespace",
         ErrorLevels.FATAL),
 
@@ -43,7 +41,11 @@ public enum AsmCodes implements ErrorCodes {
 
     P2_NO_ORIG(300, "No .ORIG record found", ErrorLevels.FATAL),
 
-    P2_NO_EXEC(301, "No .END record found", ErrorLevels.FATAL),
+    P2_MANY_ORIG(301, "Multiple .ORIG records found", ErrorLevels.FATAL),
+
+    P2_NO_EXEC(302, "No .END record found", ErrorLevels.FATAL),
+
+    P2_MANY_EXEC(303, "Multiple .END records found", ErrorLevels.FATAL),
 
     P2_LEN_CMX(310, "Program length too complex to encode", ErrorLevels.FATAL),
 
