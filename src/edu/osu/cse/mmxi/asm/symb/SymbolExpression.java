@@ -5,13 +5,30 @@ import java.util.Set;
 
 import edu.osu.cse.mmxi.asm.Symbol;
 
+/**
+ * Symbols are stored in A SortedMap of Symbol objects keyed by their String name. The
+ * constructor of the Symbol type is not public; rather, a static factory method
+ * Symbol.getSymb makes sure that all symbols are registered in the table
+ * 
+ */
 public abstract class SymbolExpression {
     public Short evaluate() {
         return evaluate(new HashSet<Symbol>());
     }
 
+    /**
+     * Get the value of the Symbol.
+     * 
+     * @param used
+     *            The set of symbols.
+     * @return
+     */
     public abstract Short evaluate(Set<Symbol> used);
 
+    /**
+     * Static class for handling an expression with a symbol.
+     * 
+     */
     public static class OpExp extends SymbolExpression {
         public Operator           op;
         public SymbolExpression[] operands;
@@ -21,6 +38,9 @@ public abstract class SymbolExpression {
             operands = exp;
         }
 
+        /**
+         * Get the string representation of the symbol.
+         */
         @Override
         public String toString() {
             String s = "";
@@ -43,6 +63,12 @@ public abstract class SymbolExpression {
             return s;
         }
 
+        /**
+         * check if the object equals the current op value. Return false otherwise.
+         * 
+         * @return check if the object equals the current op value. Return false
+         *         otherwise.
+         */
         @Override
         public boolean equals(final Object o) {
             if (o == null || !(o instanceof OpExp))
@@ -53,6 +79,9 @@ public abstract class SymbolExpression {
                 && operands[1].equals(((OpExp) o).operands[1]);
         }
 
+        /**
+         * Evaluate the expression based on its operand.
+         */
         @Override
         public Short evaluate(final Set<Symbol> used) {
             final SymbolExpression sea = operands[0];
@@ -105,19 +134,37 @@ public abstract class SymbolExpression {
         }
     }
 
+    /**
+     * Static class used for storing immediate numeric values.
+     * 
+     */
     public static class NumExp extends SymbolExpression {
         public short value;
 
+        /**
+         * Constructor. Just initialize the value.
+         * 
+         * @param v
+         *            The numeric value.
+         */
         public NumExp(final short v) {
             value = v;
         }
 
+        /**
+         * Convert numberic value to string showing sign. Return hex value.
+         */
         @Override
         public String toString() {
             return (value < 0 ? "-x" : "x")
                 + Integer.toHexString(value < 0 ? -value : value).toUpperCase();
         }
 
+        /**
+         * Check if the value is equal to a symbolExpression value.
+         * 
+         * @return Return true if they are equal, false otherwise.
+         */
         @Override
         public boolean equals(final Object o) {
             if (o == null || !(o instanceof SymbolExpression))
@@ -125,6 +172,11 @@ public abstract class SymbolExpression {
             return value == ((SymbolExpression) o).evaluate();
         }
 
+        /**
+         * Return the numeric value.
+         * 
+         * @return Return the numeric value.
+         */
         @Override
         public Short evaluate(final Set<Symbol> used) {
             return value;

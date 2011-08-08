@@ -29,13 +29,35 @@ import edu.osu.cse.mmxi.asm.symb.SymbolExpression.OpExp;
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
+/**
+ * This is used to parse expressions.
+ */
 public class ArithmeticParser {
     public static final boolean collapseIfEvaluable = true;
 
+    /**
+     * 
+     * @param s
+     *            The expression string to parse. Essentially a wrapper for parseF().
+     * @return SymbolExpression
+     * @see parseF
+     * @throws ParseException
+     */
     public static SymbolExpression parse(final String s) throws ParseException {
         return parseF(s, new Object[0]);
     }
 
+    /**
+     * Parses a string representation of an expression into its arguments args and create
+     * the corresponding symbolExpression representation.
+     * 
+     * @param s
+     *            The string representation of the expression.
+     * @param args
+     *            The pre-parsed peices of an expression.
+     * @return The parsed Expression in SymbolExpression type.
+     * @throws ParseException
+     */
     public static SymbolExpression parseF(String s, final Object... args)
         throws ParseException {
         // Holds Operator and SymbolExpression objects
@@ -82,6 +104,15 @@ public class ArithmeticParser {
         return res;
     }
 
+    /**
+     * Used to collapse the stack of pares group expressions.
+     * 
+     * @param stack
+     *            The stack of SymbolExpressions to be collapsed.
+     * @param trigger
+     *            The type of math operation to be performed.
+     * @throws ParseException
+     */
     private static void collapseStack(final Deque<Object> stack, final Operator trigger)
         throws ParseException {
         try {
@@ -106,6 +137,14 @@ public class ArithmeticParser {
         }
     }
 
+    /**
+     * Used to collapse the stack of pares group expressions.
+     * 
+     * @param stack
+     *            The stack of SymbolExpressions to be collapsed.
+     * 
+     * @throws ParseException
+     */
     private static void collapseStack(final Deque<Object> stack) throws ParseException {
         final SymbolExpression last = (SymbolExpression) stack.pop();
         final Operator op = (Operator) stack.pop();
@@ -136,6 +175,19 @@ public class ArithmeticParser {
         }
     }
 
+    /**
+     * Performs the pattern matching for registers, symbols, immediate, etc... in the
+     * string expression and returns the length of that type of expression. So R0 would
+     * return 2, where #100 would return 4.
+     * 
+     * @param s
+     *            The string containing registers, symbols, immediate in an expression
+     *            format.
+     * @param argc
+     *            The total length of the argument
+     * @return
+     * @throws ParseException
+     */
     private static int leafLength(final String s, final int argc) throws ParseException {
         Matcher m = Pattern.compile("^'.*?(?<!\\\\)'").matcher(s);
         if (m.find())
@@ -158,6 +210,14 @@ public class ArithmeticParser {
         return token.length();
     }
 
+    /**
+     * Parse leaf.
+     * 
+     * @param leaf
+     * @param args
+     * @return
+     * @throws ParseException
+     */
     private static SymbolExpression parseLeaf(final String leaf, final Object[] args)
         throws ParseException {
         if (leaf.matches("'.*'")) {
@@ -188,10 +248,28 @@ public class ArithmeticParser {
             return s;
     }
 
+    /**
+     * Wrapper for simplify(x,true).
+     * 
+     * @param se
+     *            The symbol expression to simplify.
+     * @see simplify
+     * @return
+     */
     public static SymbolExpression simplify(final SymbolExpression se) {
         return simplify(se, true);
     }
 
+    /**
+     * This will simplify the SymbolExpression by performing the actual math of the
+     * expression.
+     * 
+     * @param se
+     *            The symbol expression to be simplified.
+     * @param eval
+     *            Where or not to evaluate the explression arguments when possible.
+     * @return
+     */
     public static SymbolExpression simplify(final SymbolExpression se, final boolean eval) {
         if (se == null)
             return null;
@@ -228,6 +306,15 @@ public class ArithmeticParser {
         return ret;
     }
 
+    /**
+     * Get the terms of the expression and return them in a sorted map.
+     * 
+     * @param se
+     *            The symbol expression to be sorted.
+     * @param eval
+     *            Whether or not evaluate the expression when possible.
+     * @return
+     */
     public static SortedMap<SymbolExpression, Integer> getTerms(SymbolExpression se,
         final boolean eval) {
         final SortedMap<SymbolExpression, Integer> terms = new TreeMap<SymbolExpression, Integer>(
@@ -243,6 +330,17 @@ public class ArithmeticParser {
         return terms;
     }
 
+    /**
+     * Add terms to a symbolExpression.
+     * 
+     * @param se
+     *            The symbolExpression reference to alter.
+     * @param terms
+     *            The terms to add
+     * @param mult
+     * @param eval
+     *            Whether or not to evaluate the expression where possible.
+     */
     private static void addTerms(final SymbolExpression se,
         final Map<SymbolExpression, Integer> terms, final int mult, final boolean eval) {
         if (se instanceof OpExp && (((OpExp) se).op == PLUS || ((OpExp) se).op == MINUS)) {
@@ -272,6 +370,15 @@ public class ArithmeticParser {
         terms.put(se, (terms.containsKey(se) ? terms.get(se) : 0) + mult);
     }
 
+    /**
+     * Expand a symbol expression given its parent node.
+     * 
+     * @param node
+     *            The symbol expression to be expanded.
+     * @param parent
+     *            The parent node to locate and expand on.
+     * @return
+     */
     public static SymbolExpression expand(final SymbolExpression node, final Symbol parent) {
         if (node == null)
             return null;

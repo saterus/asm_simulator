@@ -13,12 +13,22 @@ import java.io.OutputStreamWriter;
 import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
+/**
+ * Handles all the I/O functions for the assebler including: reading input assembly file,
+ * writing output file, writing intermediate file.
+ * 
+ */
 public class IO {
 
     /**
      * Reads the input file
      */
     private BufferedReader iReader;
+
+    /**
+     * The file names for intermediate file (iFile), output file (oFile), listing file
+     * (lFile)
+     */
     private String         iFile, oFile, lFile;
 
     /**

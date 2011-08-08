@@ -3,6 +3,12 @@ package edu.osu.cse.mmxi.asm.error;
 import edu.osu.cse.mmxi.common.error.ErrorCodes;
 import edu.osu.cse.mmxi.common.error.ErrorLevels;
 
+/**
+ * This is an enumeration of all error codes thrown during the assembly process.
+ * Additional information is pass to the error handler at run-time regarding details to
+ * the error.
+ * 
+ */
 public enum AsmCodes implements ErrorCodes {
     // simpleLoaderErrors IO
     IO_BAD_PATH(100, "File path does not refer to a file", ErrorLevels.FATAL),

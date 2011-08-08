@@ -1,5 +1,9 @@
 package edu.osu.cse.mmxi.asm.symb;
 
+/**
+ * This is an enumeration for handling the expression operators.
+ * 
+ */
 public enum Operator {
     GROUP(0, "(", 5),
 
@@ -28,6 +32,16 @@ public enum Operator {
     public String value;
     public boolean unary, binary, lAssoc;
 
+    /**
+     * Constructor.
+     * 
+     * @param p
+     *            The preceding value
+     * @param v
+     *            The value of the expression.
+     * @param ubl
+     *            Determines what type of value this is.
+     */
     Operator(final int p, final String v, final int ubl) {
         prec = p;
         value = v;
@@ -36,6 +50,13 @@ public enum Operator {
         lAssoc = (ubl & 1) != 0;
     }
 
+    /**
+     * Get the operator value.
+     * 
+     * @param v
+     *            The string rep of the operator
+     * @return
+     */
     public static Operator get(final String v) {
         for (final Operator o : values())
             if (v.equals(o.value))
