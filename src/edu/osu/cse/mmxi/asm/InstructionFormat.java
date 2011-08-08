@@ -305,9 +305,8 @@ public class InstructionFormat {
             if (rec.signature.charAt(i) == '9') {
                 if (lc.isRelative ^ values[i].isRelative)
                     throw new ParseException(AsmCodes.IF_ABS_ADDR);
-                if (((lc.address ^ values[i].address) & 0xFE00) != 0)
-                    throw new ParseException(AsmCodes.IF_OFF_PAGE,
-                        "label dereferences to incorrect page");
+                if (((lc.address + 1 ^ values[i].address) & 0xFE00) != 0)
+                    throw new ParseException(AsmCodes.IF_OFF_PAGE);
             } else if (values[i].isRelative)
                 throw new ParseException(AsmCodes.IF_ARG_CMX,
                     "relative parameter used in field which does not support it");
