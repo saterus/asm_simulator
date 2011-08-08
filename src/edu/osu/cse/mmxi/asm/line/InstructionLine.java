@@ -1,6 +1,7 @@
 package edu.osu.cse.mmxi.asm.line;
 
 import edu.osu.cse.mmxi.asm.Literal;
+import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
@@ -28,6 +29,8 @@ public class InstructionLine {
         args = new Argument[line.length - 2];
         for (int i = 0; i < args.length; i++) {
             final String arg = line[i + 2];
+            if (arg.length() == 0)
+                throw new ParseException(AsmCodes.AP_BAD_EXPR, "empty argument");
             if (arg.matches("[rR][0-7]"))
                 args[i] = new RegisterArg((short) (arg.charAt(1) - '0'));
             else if (arg.matches("\".*\""))
