@@ -389,22 +389,27 @@ public class InstructionFormat {
             if (val < 0 || val >= 8)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg
                     + "register parameter R" + val + "; instruction: " + inst.toString());
+            return;
         case '4':
             if (val < 0 || val >= 16)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "shift left by "
                     + val + "; instruction: " + inst.toString());
+            return;
         case '5':
             if (val < -16 || val >= 16)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg
                     + "immediate parameter " + val + "; instruction: " + inst.toString());
+            return;
         case '6':
             if (val < 0 || val >= 64)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "index6 parameter "
                     + (val & 0xFFFF) + "; instruction: " + inst.toString());
+            return;
         case '8':
             if (val < 0 || val >= 256)
                 throw new ParseException(AsmCodes.IF_ARG_RANGE, arg + "trap vector "
                     + Utilities.sShortToHex(val) + "; instruction: " + inst.toString());
+            return;
         case '9':
             return;
         }

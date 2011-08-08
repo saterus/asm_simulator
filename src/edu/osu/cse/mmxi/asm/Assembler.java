@@ -15,7 +15,7 @@ import edu.osu.cse.mmxi.common.error.ParseException;
 /**
  * This is the file contains the executing main. In addition the user interface,
  * input/output, and errors are instantiated here. This file runs the both passes and
- * prints console error ouputs and warnings.
+ * prints console error outputs and warnings.
  * 
  */
 public class Assembler {
@@ -59,6 +59,10 @@ public class Assembler {
         } catch (final IOException e) {
             errors.add(new Error(e.getMessage(), AsmCodes.IO_BAD_READ));
         }
+
+        if (errors.size() > 0)
+            errors.add(0, new Error(AsmCodes.P1_GENERAL_ERROR));
+
         ui.printErrors(errors);
 
         if (intermediate != null)
@@ -72,6 +76,10 @@ public class Assembler {
             } catch (final ParseException e) {
                 errors.add(e.getError());
             }
+
+            if (errors.size() > 0)
+                errors.add(0, new Error(AsmCodes.P2_GENERAL_ERROR));
+
             printErrorsAndCleanup(ui, intermediate, errors);
             new Pass2Parser(this, errors).parse();
             printErrorsAndCleanup(ui, intermediate, errors);
@@ -85,7 +93,7 @@ public class Assembler {
      * the command line.
      * 
      * @param args
-     *            The user command line arguments for assebler. args[0] The assembly file
+     *            The user command line arguments for assembler. args[0] The assembly file
      *            to parse. args[1] (optional) The -i flag for wring an intermediate file.
      *            The filename will be parsed for trailing extension name and will replace
      *            with ".o" for the machine code object file and ".i" for the intermediate

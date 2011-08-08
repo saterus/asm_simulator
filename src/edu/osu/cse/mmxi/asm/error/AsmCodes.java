@@ -21,6 +21,8 @@ public enum AsmCodes implements ErrorCodes {
 
     IO_MANY_INPUT(111, "Multiple assembly files given", ErrorLevels.WARN),
 
+    P1_GENERAL_ERROR(201, "An error occurred on pass 1.", ErrorLevels.WARN),
+
     P1_INST_NO_SPACE(200, "Instruction lines must begin with whitespace",
         ErrorLevels.FATAL),
 
@@ -36,6 +38,8 @@ public enum AsmCodes implements ErrorCodes {
     P1_INST_BAD_STRZ(221, "Argument must be a string", ErrorLevels.FATAL),
 
     AP_BAD_EXPR(230, "Syntax error in expression", ErrorLevels.FATAL),
+
+    P2_GENERAL_ERROR(303, "An error occurred on pass 2.", ErrorLevels.WARN),
 
     P2_NO_ORIG(300, "No .ORIG record found", ErrorLevels.FATAL),
 
