@@ -1,1 +1,10 @@
 bin/*
+*.tex
+*.log
+*.aux
+*.dvi
+*.pdf
+*.html
+*.MF
+*.jar
+doc/
