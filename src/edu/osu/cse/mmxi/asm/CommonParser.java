@@ -107,7 +107,8 @@ public class CommonParser {
                     + (line.length - 2)))
                     throw new ParseException(AsmCodes.IF_BAD_ARG_NUM);
             } else if (line[1].matches(PSEUDO_OPS)) {
-                if (line.length != 3 && (line.length != 2 || !line[1].equals(".ORIG")))
+                if (line.length != 3
+                    && (line.length != 2 || !line[1].matches("[.]ORIG|[.]END")))
                     throw new ParseException(AsmCodes.IF_BAD_ARG_NUM);
             } else if (line[0] != null
                 && (line[0].matches(OPS) || line[0].matches(PSEUDO_OPS)))

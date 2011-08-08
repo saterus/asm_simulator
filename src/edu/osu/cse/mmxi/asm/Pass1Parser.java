@@ -164,9 +164,12 @@ public class Pass1Parser {
      * @throws ParseException
      */
     private void parseEND() throws ParseException {
-        if (!(inst.args[0] instanceof ExpressionArg))
-            throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
-        Symbol.getSymb(":EXEC").set(((ExpressionArg) inst.args[0]).val);
+        if (inst.args.length > 0) {
+            if (!(inst.args[0] instanceof ExpressionArg))
+                throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
+            Symbol.getSymb(":EXEC").set(((ExpressionArg) inst.args[0]).val);
+        } else
+            Symbol.getSymb(":EXEC").set(Symbol.getSymb(":START"));
     }
 
     /**
