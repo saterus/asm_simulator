@@ -3,6 +3,6 @@
 Too	.ORIG
 
 Shishkebab .FILL #4
-	.END
+	.END Shishkebab
 
 ;expected output: Fatal Error: Label too long

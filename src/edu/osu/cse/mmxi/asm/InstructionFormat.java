@@ -303,8 +303,7 @@ public class InstructionFormat {
             checkRange(i + 1, rec.signature.charAt(i), (short) values[i].address);
             if (rec.signature.charAt(i) == '9') {
                 if (lc.isRelative ^ values[i].isRelative)
-                    throw new ParseException(AsmCodes.IF_ABS_ADDR,
-                        "absolute page address used in relative program");
+                    throw new ParseException(AsmCodes.IF_ABS_ADDR);
                 if (((lc.address ^ values[i].address) & 0xFE00) != 0)
                     throw new ParseException(AsmCodes.IF_OFF_PAGE,
                         "label dereferences to incorrect page");

@@ -2,7 +2,7 @@ package edu.osu.cse.mmxi.common.error;
 
 public class Error {
     private int              line;
-    private String           message;
+    private String           message, context;
     private final ErrorCodes code;
 
     public Error(final ErrorCodes c) {
@@ -57,8 +57,13 @@ public class Error {
         return this;
     }
 
+    public Error setContext(final String ct) {
+        context = ct;
+        return this;
+    }
+
     public Error appendMsg(final String msg) {
-        return setMessage(msg + getMessage());
+        return setMessage(getMessage() + msg);
     }
 
     @Override
@@ -70,6 +75,6 @@ public class Error {
         else
             s += ": " + code.getMsg()
                 + (message == null ? "" : "\n\tdetails: " + message);
-        return s + "\n";
+        return s + (context == null ? "\n" : "\n\tContext: " + context + "\n");
     }
 }

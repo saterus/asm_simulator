@@ -119,8 +119,7 @@ public class Pass1Parser {
                     } else
                         parseInstruction();
             } catch (final ParseException e) {
-                errors.add(e.getError().setLine(lineNumber)
-                    .appendMsg("\n\tContext: \"" + line + "\""));
+                errors.add(e.getError().setLine(lineNumber).setContext(line));
             }
             lineNumber++;
         }

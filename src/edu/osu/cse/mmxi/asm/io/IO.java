@@ -19,7 +19,7 @@ public class IO {
      * Reads the input file
      */
     private BufferedReader iReader;
-    private String         iFile, lFile;
+    private String         iFile, oFile, lFile;
 
     /**
      * Writes the output file
@@ -60,7 +60,7 @@ public class IO {
      */
     public void openReader(final String file) throws ParseException {
         final File f = new File(iFile = file);
-        if (f.exists())
+        if (!f.exists())
             throw new ParseException(AsmCodes.IO_BAD_PATH, file + " not found");
         if (!f.isFile())
             throw new ParseException(AsmCodes.IO_BAD_PATH, file + " is a directory");
@@ -99,7 +99,7 @@ public class IO {
      * @throws FileNotFoundException
      */
     public void openWriters(final String oFile, final String lFile) throws ParseException {
-        final File o = new File(oFile);
+        final File o = new File(this.oFile = oFile);
         if (o.exists() && !o.canWrite())
             throw new ParseException(AsmCodes.IO_BAD_WRITE,
                 "unable to open file for writing: " + oFile);
@@ -196,13 +196,18 @@ public class IO {
      * Closes the writers for both the output and listing files.
      * 
      */
-    public void closeWriters() {
+    public void closeWriters(final boolean delete) {
         try {
             if (oWriter != null)
                 oWriter.close();
-            if (lWriter != null && lFile != null) // Don't close System.out!
+            if (lWriter != null && lFile != null)
                 lWriter.close();
             oWriter = lWriter = null;
+            if (delete) {
+                new File(oFile).delete();
+                if (lFile != null)
+                    new File(lFile).delete();
+            }
         } catch (final IOException e) {
         }
     }
