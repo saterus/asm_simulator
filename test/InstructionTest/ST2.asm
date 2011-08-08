@@ -5,3 +5,4 @@ Start	ST	R1,X
 	.END	Start
 
 ;Expected output: Fatal Error: Label dereference to incorrect page
+; (Correction: Um, X isn't defined?)

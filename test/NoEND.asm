@@ -7,3 +7,4 @@ ACC		.EQU	#1
 	 	begin
 
 ;Expected output: Fatal Error: No .END record found
+; (Correction: begin is not an opcode, so it errors on that first)

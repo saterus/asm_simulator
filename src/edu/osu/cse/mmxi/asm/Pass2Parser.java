@@ -92,7 +92,7 @@ public class Pass2Parser {
                     } else
                         parseInstruction();
             } catch (final ParseException e) {
-                System.err.println("At line " + lineNumber + ": " + e.getMessage());
+                errors.add(e.getError());
             }
             lineNumber++;
             try {

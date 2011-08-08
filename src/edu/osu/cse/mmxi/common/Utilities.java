@@ -53,7 +53,7 @@ public class Utilities {
     }
 
     /**
-     * Attempts to parse the given short value, accepting hex values (preceded by
+     * Attempts to parse the given positive short value, accepting hex values (preceded by
      * {@code 0x} or {@code x}), binary values (preceded by {@code 0b}), octal values
      * (with a leading zero), or decimal values, and returning -1 if the parse failed.
      * 
@@ -75,10 +75,12 @@ public class Utilities {
         } else if (s.length() > 1 && s.startsWith("0"))
             radix = 8;
         try {
-            return (short) Integer.parseInt(s, radix);
+            final int i = Integer.parseInt(s, radix);
+            if (i <= 0xFFFF)
+                return (short) i;
         } catch (final NumberFormatException e) {
-            return null;
         }
+        return null;
     }
 
     public static int parseInt(String s) {

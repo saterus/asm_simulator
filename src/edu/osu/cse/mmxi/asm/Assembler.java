@@ -1,5 +1,6 @@
 package edu.osu.cse.mmxi.asm;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,7 @@ import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.io.IO;
 import edu.osu.cse.mmxi.common.UI;
 import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.common.error.ErrorLevels;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
 /**
@@ -70,10 +72,10 @@ public class Assembler {
             } catch (final ParseException e) {
                 errors.add(e.getError());
             }
-            ui.printErrors(errors);
+            printErrorsAndCleanup(ui, intermediate, errors);
             new Pass2Parser(this, errors).parse();
-            ui.printErrors(errors);
-            io.closeWriters();
+            printErrorsAndCleanup(ui, intermediate, errors);
+            io.closeWriters(false);
         }
         io.closeReader();
     }
@@ -109,5 +111,17 @@ public class Assembler {
         if (stem.indexOf('.') != 0)
             stem = stem.substring(0, stem.lastIndexOf('.'));
         new Assembler(ui, args[0], stem + ".o", intermediate ? stem + ".i" : null);
+    }
+
+    private void printErrorsAndCleanup(final UI ui, final String iFile,
+        final List<Error> errors) {
+        for (final Error e : errors)
+            if (e.getLevel() == ErrorLevels.FATAL) {
+                io.closeWriters(true);
+                if (iFile != null)
+                    new File(iFile).delete();
+                break;
+            }
+        ui.printErrors(errors);
     }
 }

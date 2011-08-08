@@ -5,4 +5,5 @@ LDR1	.ORIG
 Start	LDR	R1,R2,R9
 	.END	Start 
 
-;Expected ouput: Fatal Error: Invalid signature for opcode,Immediate used in place of register or vise-versa
+;Expected output: Fatal Error: Invalid signature for opcode,Immediate used in place of register or vise-versa
+; (Note: R9 is a valid symbol, but is not defined in this case.)

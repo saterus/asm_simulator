@@ -55,8 +55,12 @@ public class ArithmeticParser {
                 if (s.startsWith(o.value)) {
                     final boolean isUnary = stack.peek() instanceof Operator;
                     if (isUnary && !o.unary)
-                        throw new ParseException(AsmCodes.AP_BAD_EXPR,
-                            "two operators in a row");
+                        if (stack.size() == 1)
+                            throw new ParseException(AsmCodes.AP_BAD_EXPR,
+                                "expression begins with binary operator");
+                        else
+                            throw new ParseException(AsmCodes.AP_BAD_EXPR,
+                                "two binary operators in a row");
                     if (!isUnary && !o.binary)
                         throw new ParseException(AsmCodes.AP_BAD_EXPR,
                             "unary operator used as binary");
