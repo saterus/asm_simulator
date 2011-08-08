@@ -1,6 +1,7 @@
 package edu.osu.cse.mmxi.sim;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import edu.osu.cse.mmxi.common.Utilities;
@@ -266,7 +267,8 @@ public final class Simulator {
             new Console(machine, file);
         else {
             if (file != null)
-                machine.ui.printErrors(SimpleLoader.load(file, machine, null, null));
+                machine.ui.printErrors(SimpleLoader.load(file, machine,
+                    new HashMap<Short, Integer>(), new HashMap<String, Short>()));
             startClockLoop(machine);
         }
     }
