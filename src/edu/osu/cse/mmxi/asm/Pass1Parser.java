@@ -10,7 +10,6 @@ import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.line.InstructionLine;
 import edu.osu.cse.mmxi.asm.line.InstructionLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.InstructionLine.StringArg;
-import edu.osu.cse.mmxi.asm.line.Label;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.common.error.Error;
@@ -52,7 +51,7 @@ public class Pass1Parser {
     /**
      * The label portion of the line
      */
-    private Label             label;
+    private Symbol            label;
 
     /**
      * The instruction portion of the line
@@ -94,13 +93,13 @@ public class Pass1Parser {
             try {
                 final String[] parsed = checkLine(parseLine(line));
 
-                label = parsed[0] == null ? null : new Label(parsed[0]);
+                label = parsed[0] == null ? null : Symbol.getSymb(parsed[0]);
 
                 inst = parsed[1] == null ? null : new InstructionLine(parsed);
 
                 if ((inst == null || !inst.opcode.matches("[.]ORIG|[.]EQU"))
                     && label != null)
-                    label.symb.set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
+                    label.set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
 
                 if (inst != null)
                     if (inst.opcode.charAt(0) == '.') {
@@ -136,7 +135,7 @@ public class Pass1Parser {
         if (label == null)
             throw new ParseException(AsmCodes.IF_BAD_ARG_NUM,
                 ".ORIG missing segment name");
-        Symbol.removeSymb(a.segName = label.symb.name);
+        Symbol.removeSymb(a.segName = label.name);
         if (a.segName.length() > 6)
             a.segName = a.segName.substring(0, 6);
         if (inst.args.length > 0) {
@@ -156,7 +155,7 @@ public class Pass1Parser {
             throw new ParseException(AsmCodes.IF_BAD_ARG_NUM, ".EQU requires a label");
         if (!(inst.args[0] instanceof ExpressionArg))
             throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
-        label.symb.set(((ExpressionArg) inst.args[0]).val);
+        label.set(((ExpressionArg) inst.args[0]).val);
     }
 
     /**
