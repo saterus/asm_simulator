@@ -39,6 +39,7 @@ public class InstructionFormat {
         {"ADD",   "RR5",  "0001A--B--1C----"}, // ADD  Rd, Rs, #imm
         {"AND",   "RRR",  "0101A--B--0xxC--"}, // AND  Rd, Rs1, Rs2
         {"AND",   "RR5",  "0101A--B--1C----"}, // AND  Rd, Rs, #imm
+        {"BR",    "9",    "0000000A--------"}, // BR   off
         {"BRn",   "9",    "0000100A--------"}, // BRn  off
         {"BRz",   "9",    "0000010A--------"}, // BRz  off
         {"BRp",   "9",    "0000001A--------"}, // BRp  off
