@@ -128,6 +128,7 @@ public class Pass2Parser {
         }
         if (a.segName == null)
             throw new ParseException(AsmCodes.P2_NO_ORIG);
+        errorOnUndefinedSymbols(Symbol.getSymb(":START"));
         a.io.writeOLine("H" + padRight(a.segName, 6, ' ')
             + Utilities.uShortToHex((short) lc.address) + Utilities.uShortToHex(len));
     }
