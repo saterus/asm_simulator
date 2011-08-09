@@ -3,6 +3,9 @@ package edu.osu.cse.mmxi.asm;
 import static edu.osu.cse.mmxi.asm.CommonParser.checkLine;
 import static edu.osu.cse.mmxi.asm.CommonParser.errorOnUndefinedSymbols;
 import static edu.osu.cse.mmxi.asm.CommonParser.parseLine;
+import static edu.osu.cse.mmxi.common.Utilities.padLeft;
+import static edu.osu.cse.mmxi.common.Utilities.padRight;
+import static edu.osu.cse.mmxi.common.Utilities.uShortToHex;
 
 import java.util.List;
 
@@ -12,7 +15,6 @@ import edu.osu.cse.mmxi.asm.line.InstructionLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.InstructionLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
-import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
@@ -130,7 +132,7 @@ public class Pass2Parser {
             throw new ParseException(AsmCodes.P2_NO_ORIG);
         errorOnUndefinedSymbols(Symbol.getSymb(":START"));
         a.io.writeOLine("H" + padRight(a.segName, 6, ' ')
-            + Utilities.uShortToHex((short) lc.address) + Utilities.uShortToHex(len));
+            + uShortToHex((short) lc.address) + uShortToHex(len));
     }
 
     /**
@@ -160,7 +162,7 @@ public class Pass2Parser {
             errorOnUndefinedSymbols(se);
             throw new ParseException(AsmCodes.P2_EXEC_CMX, "exec = " + se);
         }
-        a.io.writeOLine("E" + Utilities.uShortToHex((short) exec.address));
+        a.io.writeOLine("E" + uShortToHex((short) exec.address));
     }
 
     /**
@@ -242,7 +244,7 @@ public class Pass2Parser {
     private void write(final short[] data, final int[] m) throws ParseException {
         if (data.length == 0)
             a.io.writeLLine((lc == null ? "      " : "("
-                + Utilities.uShortToHex((short) lc.address) + ")")
+                + uShortToHex((short) lc.address) + ")")
                 + padLeft("", 26, ' ')
                 + "("
                 + padLeft("" + lineNumber, 4, ' ')
@@ -250,50 +252,14 @@ public class Pass2Parser {
                 + line);
         else
             for (int i = 0; i < data.length; i++) {
-                a.io.writeOLine("T" + Utilities.uShortToHex((short) lc.address)
-                    + Utilities.uShortToHex(data[i]) + (m[i] < 0 ? "" : "M" + m[i]));
-                a.io.writeLLine("(" + Utilities.uShortToHex((short) lc.address) + ") "
-                    + Utilities.uShortToHex(data[i]) + (m[i] < 0 ? "   " : " M" + m[i])
-                    + " " + padLeft(Integer.toBinaryString(data[i] & 0xFFFF), 16, '0')
-                    + " (" + padLeft(lineNumber == 0 ? "lit" : "" + lineNumber, 4, ' ')
-                    + ")\t" + (i == 0 ? line : ""));
+                a.io.writeOLine("T" + uShortToHex((short) lc.address)
+                    + uShortToHex(data[i]) + (m[i] < 0 ? "" : "M" + m[i]));
+                a.io.writeLLine("(" + uShortToHex((short) lc.address) + ") "
+                    + uShortToHex(data[i]) + (m[i] < 0 ? "   " : " M" + m[i]) + " "
+                    + padLeft(Integer.toBinaryString(data[i] & 0xFFFF), 16, '0') + " ("
+                    + padLeft(lineNumber == 0 ? "lit" : "" + lineNumber, 4, ' ') + ")\t"
+                    + (i == 0 ? line : ""));
                 lc.address++;
             }
-    }
-
-    /**
-     * Static method to pad a string left with a character
-     * 
-     * @param s
-     *            The string to be padded
-     * @param len
-     *            The length to pad to
-     * @param pad
-     *            The character used for the padding
-     * @return
-     */
-    private static String padLeft(final String s, int len, final char pad) {
-        len -= s.length();
-        if (len < 0)
-            len = 0;
-        return new String(new char[len]).replace('\0', pad) + s;
-    }
-
-    /**
-     * Static method to pad a string right with a character
-     * 
-     * @param s
-     *            The string to be padded
-     * @param len
-     *            The length to pad string to
-     * @param pad
-     *            The character to use for padding
-     * @return
-     */
-    private static String padRight(final String s, int len, final char pad) {
-        len -= s.length();
-        if (len < 0)
-            len = 0;
-        return s + new String(new char[len]).replace('\0', pad);
     }
 }

@@ -8,3 +8,6 @@ bin/*
 *.MF
 *.jar
 doc/
+/inheritance.vsd
+/inheritance.png
+/.gitignore

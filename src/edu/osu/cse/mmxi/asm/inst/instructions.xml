@@ -1,0 +1,246 @@
+<?xml version="1.0"?>
+<!--
+  Static representation of all instructions and their formats including custom
+  instructions. This can be altered to include your own custom instructions. See the
+  developers guide for more information.
+ -->
+<instructions>
+    <inst name="ADD" args="RRR" desc="ADD Rd, Rs1, Rs2">
+        <word data="0001A--B--0xxC--" />
+    </inst>
+    <inst name="ADD" args="RR5" desc="ADD Rd, Rs, #imm">
+        <word data="0001A--B--1C----" />
+    </inst>
+    <inst name="AND" args="RRR" desc="AND Rd, Rs1, Rs2">
+        <word data="0101A--B--0xxC--" />
+    </inst>
+    <inst name="AND" args="RR5" desc="AND Rd, Rs, #imm">
+        <word data="0101A--B--1C----" />
+    </inst>
+    <inst name="BR" args="9" desc="BR off">
+        <word data="0000000A--------" />
+    </inst>
+    <inst name="BRn" args="9" desc="BRn off">
+        <word data="0000100A--------" />
+    </inst>
+    <inst name="BRz" args="9" desc="BRz off">
+        <word data="0000010A--------" />
+    </inst>
+    <inst name="BRp" args="9" desc="BRp off">
+        <word data="0000001A--------" />
+    </inst>
+    <inst name="BRnz" args="9" desc="BRnz off">
+        <word data="0000110A--------" />
+    </inst>
+    <inst name="BRnp" args="9" desc="BRnp off">
+        <word data="0000101A--------" />
+    </inst>
+    <inst name="BRzp" args="9" desc="BRzp off">
+        <word data="0000011A--------" />
+    </inst>
+    <inst name="BRnzp" args="9" desc="BRnzp off">
+        <word data="0000111A--------" />
+    </inst>
+    <inst name="DBUG" args="" desc="DBUG">
+        <word data="1000xxxxxxxxxxxx" />
+    </inst>
+    <inst name="JMP" args="9" desc="JMP off">
+        <word data="01000xxA--------" />
+    </inst>
+    <inst name="JSR" args="9" desc="JSR off">
+        <word data="01001xxA--------" />
+    </inst>
+    <inst name="JMPR" args="R6" desc="JMPR off">
+        <word data="11000xxA--B-----" />
+    </inst>
+    <inst name="JSRR" args="R6" desc="JSRR off">
+        <word data="11001xxA--B-----" />
+    </inst>
+    <inst name="LD" args="R9" desc="LD Rd, off">
+        <word data="0010A--B--------" />
+    </inst>
+    <inst name="LDI" args="R9" desc="LDI Rd, off">
+        <word data="1010A--B--------" />
+    </inst>
+    <inst name="LDR" args="RR6" desc="LDR Rd, Rb, ind">
+        <word data="0110A--B--C-----" />
+    </inst>
+    <inst name="LEA" args="R9" desc="LEA Rd, off">
+        <word data="1110A--B--------" />
+    </inst>
+    <inst name="NOT" args="RR" desc="NOT Rd, Rs">
+        <word data="1001A--B--xxxxxx" />
+    </inst>
+    <inst name="RET" args="" desc="RET">
+        <word data="1101xxxxxxxxxxxx" />
+    </inst>
+    <inst name="ST" args="R9" desc="ST Rs, off">
+        <word data="0011A--B--------" />
+    </inst>
+    <inst name="STI" args="R9" desc="STI Rs, off">
+        <word data="1011A--B--------" />
+    </inst>
+    <inst name="STR" args="RR6" desc="STR Rs, Rb, ind">
+        <word data="0111A--B--C-----" />
+    </inst>
+    <inst name="TRAP" args="8" desc="TRAP vect">
+        <word data="1111xxxxA-------" />
+    </inst>
+
+    <inst name="AND" args="RR" desc="AND Rd, Rs">
+        <word data="0101A--A--0xxB--" desc="AND Rd, Rd, Rs" />
+    </inst>
+    <inst name="AND" args="R5" desc="AND Rd, #imm">
+        <word data="0101A--A--1B----" desc="AND Rd, Rd, #imm" />
+    </inst>
+    <inst name="CLR" args="R" desc="CLR Rd">
+        <word data="0101A--A--100000" desc="AND Rd, #0" />
+    </inst>
+    <inst name="CLR" args="9R" desc="CLR off, Rj*">
+        <word data="0101B--B--100000" desc="CLR Rj" />
+        <word data="0101B--B--100000" desc="ST Rj, off" />
+    </inst>
+    <inst name="DBL" args="RR" desc="DBL Rd, Rs">
+        <word data="0001A--B--0xxB--" desc="ADD Rd, Rs, Rs" />
+    </inst>
+    <inst name="DBL" args="R" desc="DBL Rd">
+        <word data="0001A--A--0xxA--" desc="DBL Rd, Rd" />
+    </inst>
+    <inst name="DEC*" args="RR" desc="DEC Rd, Rs">
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+        <word data="0001A--A--0xxB--" desc="INC Rd, Rs" />
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+    </inst>
+    <inst name="DEC*" args="RR" desc="DEC Rd, Rs [s">
+        <word data="0101A--A--100000" desc="CLR Rd" />
+    </inst>
+    <inst name="DEC*" args="R5" desc="DEC Rd, #imm">
+        <word data="0001A--A--1B----" desc="ADD Rd, Rd, #-imm" />
+    </inst>
+    <inst name="DEC" args="R" desc="DEC Rd">
+        <word data="0001A--A--111111" desc="DEC Rd, #1" />
+    </inst>
+    <inst name="INC" args="RR" desc="INC Rd, Rs">
+        <word data="0001A--A--0xxB--" desc="ADD Rd, Rd, Rs" />
+    </inst>
+    <inst name="INC" args="R5" desc="INC Rd, #imm">
+        <word data="0001A--A--1B----" desc="ADD Rd, Rd, #imm" />
+    </inst>
+    <inst name="INC" args="R" desc="INC Rd">
+        <word data="0001A--A--100001" desc="INC Rd, #1" />
+    </inst>
+    <inst name="LDR" args="RR" desc="LDR Rd, Rb">
+        <word data="0110A--B--000000" desc="LDR Rd, Rb, #0" />
+    </inst>
+    <inst name="MOV" args="RR" desc="MOV Rd, Rs">
+        <word data="0101A--B--111111" desc="AND Rd, Rs, #-1" />
+    </inst>
+    <inst name="NEG" args="RR" desc="NEG Rd, Rs">
+        <word data="1001A--B--xxxxxx" desc="NOT Rd, Rs" />
+        <word data="0001A--A--100001" desc="INC Rd" />
+    </inst>
+    <inst name="NEG" args="R" desc="NEG Rd">
+        <word data="1001A--A--xxxxxx" desc="NOT Rd, Rd" />
+        <word data="0001A--A--100001" desc="INC Rd" />
+    </inst>
+    <inst name="NOT" args="R" desc="NOT Rd">
+        <word data="1001A--A--xxxxxx" desc="NOT Rd, Rd" />
+    </inst>
+    <inst name="NOP" args="" desc="NOP">
+        <word data="0000000xxxxxxxxx" desc="BR x0" />
+    </inst>
+    <inst name="OR" args="RRR" desc="OR Rd, Ra, Rb*">
+        <word data="1001C--C--xxxxxx" desc="NOT Rb" />
+        <word data="1001A--B--xxxxxx" desc="NOT Rd, Ra" />
+        <word data="0101A--A--0xxC--" desc="AND Rd, Rb" />
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+    </inst>
+    <inst name="POP" args="RR" desc="POP Rd, Rstk">
+        <word data="0001B--B--111111" desc="DEC Rstk" />
+        <word data="0110A--B--000000" desc="LDR Rd, Rstk" />
+    </inst>
+    <inst name="PRNT" args="9" desc="PRNT off">
+        <word data="0010000A--------" desc="LD R0, off" />
+        <word data="1111xxxx00100001" desc="TRAP OUT" />
+    </inst>
+    <inst name="PRNT" args="R" desc="PRNT Rs">
+        <word data="0110000A--000000" desc="MOV R0, Rs" />
+        <word data="1111xxxx00100001" desc="TRAP OUT" />
+    </inst>
+    <inst name="PRNTR" args="R" desc="PRNTR Rs">
+        <word data="0101000A--111111" desc="LDR R0, Rs" />
+        <word data="1111xxxx00100001" desc="TRAP OUT" />
+    </inst>
+    <inst name="PRNTR" args="R6" desc="PRNTR Rs, index">
+        <word data="0110000A--B-----" desc="LDR R0, Rs, index" />
+        <word data="1111xxxx00100001" desc="TRAP OUT" />
+    </inst>
+    <inst name="PRNTS" args="9" desc="PRNTS off">
+        <word data="1110000A--------" desc="LEA R0, off" />
+        <word data="1111xxxx00100010" desc="TRAP PUTS" />
+    </inst>
+    <inst name="PUSH" args="RR" desc="PUSH Rs, Rstk">
+        <word data="0111A--B--000000" desc="STR Rs, Rstk" />
+        <word data="0001B--B--100001" desc="INC Rstk" />
+    </inst>
+    <inst name="SHL*" args="R4" desc="SHL Rd, 0&lt;=imm&lt;16">
+        <word data="0001A--A--0xxA--" desc="(DBL Rd) [imm times]" />
+    </inst>
+    <inst name="STR" args="RR" desc="">
+        <word data="0111A--B--000000" />
+    </inst>
+    <inst name="SUB*" args="RRR" desc="SUB Rd,Rs1,Rs2">
+        <word data="1001A--C--xxxxxx" desc="NOT Rd, Rs2" />
+        <word data="0001A--A--100001" desc="INC Rd" />
+        <word data="0001A--A--0xxB--" desc="INC Rd, Rs1" />
+    </inst>
+    <inst name="SUB*" args="RRR" desc="SUB Rd,Rs1,Rs2">
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+        <word data="0001A--A--0xxC--" desc="INC Rd, Rs2" />
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+    </inst>
+    <inst name="TST" args="R" desc="TST Rd">
+        <word data="0101A--A--111111" desc="MOV Rd, Rd" />
+    </inst>
+    <inst name="XCHG" args="RRR" desc="XCHG Ra, Rb, Rj*">
+        <word data="0101C--A--111111" desc="MOV Rj, Ra" />
+        <word data="0101A--B--111111" desc="MOV Ra, Rb" />
+        <word data="0101B--C--111111" desc="MOV Rb, Rj" />
+    </inst>
+    <inst name="XNOR" args="RRR" desc="XNOR Rd,Ra*,Rb*">
+        <word data="1001A--B--xxxxxx" desc="NOT Rd, Ra" />
+        <word data="0101A--A--0xxC--" desc="AND Rd, Rb" />
+        <word data="1001C--C--xxxxxx" desc="NOT Rb" />
+        <word data="0101C--C--0xxB--" desc="AND Rb, Ra" />
+        <word data="1001C--C--xxxxxx" desc="NOT Rb" />
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+        <word data="0101A--A--0xxC--" desc="AND Rd, Rb" />
+    </inst>
+    <inst name="XNOR" args="RRRR" desc="XNOR Rd,Ra,Rb,Rj*">
+        <word data="1001A--B--xxxxxx" desc="NOT Rd, Ra" />
+        <word data="1001D--C--xxxxxx" desc="NOT Rj, Rb" />
+        <word data="0101D--D--0xxB--" desc="AND Rj, Ra" />
+        <word data="0101A--A--0xxC--" desc="AND Rd, Rb" />
+        <word data="1001D--D--xxxxxx" desc="NOT Rj" />
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+        <word data="0101A--A--0xxD--" desc="AND Rd, Rj" />
+    </inst>
+    <inst name="XOR" args="RRR" desc="XOR Rd,Ra*,Rb*">
+        <word data="0101A--B--0xxC--" desc="AND Rd, Ra, Rb" />
+        <word data="1001B--B--xxxxxx" desc="NOT Ra" />
+        <word data="1001C--C--xxxxxx" desc="NOT Rb" />
+        <word data="0101C--C--0xxB--" desc="AND Rb, Ra" />
+        <word data="1001C--C--xxxxxx" desc="NOT Rb" />
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+        <word data="0101A--A--0xxC--" desc="AND Rd, Rb" />
+    </inst>
+    <inst name="XOR" args="RRRR" desc="XOR Rd,Ra,Rb,Rj*">
+        <word data="1001A--B--xxxxxx" desc="NOT Rd, Ra" />
+        <word data="1001D--C--xxxxxx" desc="NOT Rj, Rb" />
+        <word data="0101D--D--0xxA--" desc="AND Rj, Rd" />
+        <word data="0101A--B--0xxC--" desc="AND Rd, Ra, Rb" />
+        <word data="1001D--D--xxxxxx" desc="NOT Rj" />
+        <word data="1001A--A--xxxxxx" desc="NOT Rd" />
+        <word data="0101A--A--0xxD--" desc="AND Rd, Rj" />
+    </inst>
+</instructions>

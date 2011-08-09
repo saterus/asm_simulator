@@ -143,7 +143,7 @@ public class CommonParser {
     }
 
     /**
-     * Create a set for undefined symbol with the given symbol in hte set.
+     * Create a set for undefined symbol with the given symbol in the set.
      * 
      * @param se
      *            The symbol

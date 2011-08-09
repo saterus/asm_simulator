@@ -141,4 +141,40 @@ public class Utilities {
             }
         return ret;
     }
+
+    /**
+     * Static method to pad a string left with a character
+     * 
+     * @param s
+     *            The string to be padded
+     * @param len
+     *            The length to pad to
+     * @param pad
+     *            The character used for the padding
+     * @return
+     */
+    public static String padLeft(final String s, int len, final char pad) {
+        len -= s.length();
+        if (len < 0)
+            len = 0;
+        return new String(new char[len]).replace('\0', pad) + s;
+    }
+
+    /**
+     * Static method to pad a string right with a character
+     * 
+     * @param s
+     *            The string to be padded
+     * @param len
+     *            The length to pad string to
+     * @param pad
+     *            The character to use for padding
+     * @return
+     */
+    public static String padRight(final String s, int len, final char pad) {
+        len -= s.length();
+        if (len < 0)
+            len = 0;
+        return s + new String(new char[len]).replace('\0', pad);
+    }
 }
