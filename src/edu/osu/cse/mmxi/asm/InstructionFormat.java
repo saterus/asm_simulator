@@ -35,7 +35,6 @@ public class InstructionFormat {
     public static final Map<String, List<IFRecord>> instructions = new HashMap<String, List<IFRecord>>();
     static {
         InstructionListLoader.load();
-        System.out.println(instructions);
     }
 
     public static void addIFRecord(final String[] inst) {
@@ -150,7 +149,7 @@ public class InstructionFormat {
      *            the value of each parameter
      * @return the list of words that encode the instruction
      */
-    public static short[][] getInstruction(final Location lc, final InstructionLine inst)
+    public static Object[] getInstruction(final Location lc, final InstructionLine inst)
         throws ParseException {
         final int[] isReg = new int[inst.args.length];
         final Location[] values = new Location[inst.args.length];
@@ -163,9 +162,11 @@ public class InstructionFormat {
             else {
                 final SymbolExpression se = ArithmeticParser
                     .simplify(((ExpressionArg) inst.args[i]).val);
+                ((ExpressionArg) inst.args[i]).val = se;
                 values[i] = Location.convertToRelative(se);
-                if (values[i] == null) {
-                    CommonParser.undefinedSymbols(undef, se);
+                if (values[i] == null
+                    && !(se instanceof Symbol && ((Symbol) se).global == Symbol.EXT)) {
+                    CommonParser.undefinedSymbols(undef, se, false);
                     hasNull = true;
                 }
             }
@@ -186,26 +187,32 @@ public class InstructionFormat {
         IFRecord rec = candidates.get(0);
         if (rec.special)
             rec = getSpecialInstruction(key, isReg, values, candidates);
-        for (int i = 0; i < values.length; i++) {
-            checkRange(i + 1, rec.signature.charAt(i), (short) values[i].address, inst);
-            if (rec.signature.charAt(i) == '9') {
-                if (lc.isRelative ^ values[i].isRelative)
-                    throw new ParseException(AsmCodes.IF_ABS_ADDR);
-                if (((lc.address + 1 ^ values[i].address) & 0xFE00) != 0)
-                    throw new ParseException(AsmCodes.IF_OFF_PAGE);
-            } else if (values[i].isRelative)
-                throw new ParseException(AsmCodes.IF_ARG_CMX,
-                    "relative parameter used in field which does not support it");
-        }
-        final short[][] ret = new short[rec.template.length][];
-        for (int i = 0; i < ret.length; i++)
-            ret[i] = new short[] { rec.template[i], -1 };
+        for (int i = 0; i < values.length; i++)
+            if (values[i] != null) {
+                checkRange(i + 1, rec.signature.charAt(i), (short) values[i].address,
+                    inst);
+                if (rec.signature.charAt(i) == '9') {
+                    if (lc.isRelative ^ values[i].isRelative)
+                        throw new ParseException(AsmCodes.IF_ABS_ADDR);
+                    if (((lc.address + 1 ^ values[i].address) & 0xFE00) != 0)
+                        throw new ParseException(AsmCodes.IF_OFF_PAGE);
+                } else if (values[i].isRelative)
+                    throw new ParseException(AsmCodes.IF_ARG_CMX,
+                        "relative parameter used in field which does not support it");
+            }
+        final short[] data = Arrays.copyOf(rec.template, rec.template.length);
+        final int[] m = new int[data.length];
+        final String[] ext = new String[data.length];
+        Arrays.fill(m, -1);
         for (final int[] rep : rec.replacements) {
-            ret[rep[1]][0] |= (values[rep[0]].address & (1 << rep[3]) - 1) << rep[2];
+            if (values[rep[0]] == null)
+                ext[rep[1]] = ((Symbol) ((ExpressionArg) inst.args[rep[1]]).val).name;
+            else
+                data[rep[1]] |= (values[rep[0]].address & (1 << rep[3]) - 1) << rep[2];
             if (rep[3] == 9 && rep[2] == 0)
-                ret[rep[1]][1] = 0;
+                m[rep[1]] = 0;
         }
-        return ret;
+        return new Object[] { data, m, ext };
     }
 
     private static IFRecord getSpecialInstruction(final String key, final int[] isReg,

@@ -8,6 +8,7 @@ import java.util.List;
 
 import edu.osu.cse.mmxi.asm.error.AsmCodes;
 import edu.osu.cse.mmxi.asm.line.InstructionLine;
+import edu.osu.cse.mmxi.asm.line.InstructionLine.Argument;
 import edu.osu.cse.mmxi.asm.line.InstructionLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.InstructionLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
@@ -105,6 +106,10 @@ public class Pass1Parser {
                     if (inst.opcode.charAt(0) == '.') {
                         if (inst.opcode.equals(".ORIG"))
                             parseORIG();
+                        else if (inst.opcode.equals(".ENT"))
+                            parseENT();
+                        else if (inst.opcode.equals(".EXT"))
+                            parseEXT();
                         else if (inst.opcode.equals(".EQU"))
                             parseEQU();
                         else if (inst.opcode.equals(".END"))
@@ -158,6 +163,49 @@ public class Pass1Parser {
         if (!(inst.args[0] instanceof ExpressionArg))
             throw new ParseException(AsmCodes.P1_INST_ARG_NOT_EXP);
         label.set(((ExpressionArg) inst.args[0]).val);
+    }
+
+    /**
+     * Parse an .ENT line for all of its parts
+     * 
+     * @throws ParseException
+     */
+    private void parseENT() throws ParseException {
+        for (final Argument a : inst.args) {
+            if (!(a instanceof ExpressionArg)
+                || !(((ExpressionArg) a).val instanceof Symbol))
+                throw new ParseException(AsmCodes.P1_INST_ARG_NOT_SYMB);
+            final Symbol s = (Symbol) ((ExpressionArg) a).val;
+            if (s.global == Symbol.EXT)
+                throw new ParseException(AsmCodes.P1_ENT_EXT, "on symbol " + s.name);
+            else if (s.global == Symbol.ENT)
+                throw new ParseException(AsmCodes.P1_SYMB_RESET, "defining " + s.name
+                    + " as global twice");
+            s.global = Symbol.ENT;
+        }
+    }
+
+    /**
+     * Parse an .EXT line for all of its parts
+     * 
+     * @throws ParseException
+     */
+    private void parseEXT() throws ParseException {
+        for (final Argument a : inst.args) {
+            if (!(a instanceof ExpressionArg)
+                || !(((ExpressionArg) a).val instanceof Symbol))
+                throw new ParseException(AsmCodes.P1_INST_ARG_NOT_SYMB);
+            final Symbol s = (Symbol) ((ExpressionArg) a).val;
+            if (s.global == Symbol.ENT)
+                throw new ParseException(AsmCodes.P1_ENT_EXT, "on symbol " + s.name);
+            else if (s.global == Symbol.EXT)
+                throw new ParseException(AsmCodes.P1_SYMB_RESET, "defining " + s.name
+                    + " as external twice");
+            if (s.value != null)
+                throw new ParseException(AsmCodes.P1_DEF_EXT,
+                    "attempting to make symbol " + s.name + " = " + s.value + " external");
+            s.global = Symbol.EXT;
+        }
     }
 
     /**

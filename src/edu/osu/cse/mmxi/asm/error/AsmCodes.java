@@ -30,10 +30,18 @@ public enum AsmCodes implements ErrorCodes {
 
     P1_SYMB_RESET(212, "Symbols can only be defined once", ErrorLevels.FATAL),
 
+    P1_DEF_EXT(213, "External symbols may not be defined", ErrorLevels.FATAL), // <--
+
+    P2_UNDEF_ENT(214, "Global symbols must be defined", ErrorLevels.FATAL), // <--
+
+    P1_ENT_EXT(215, "External symbols may not also be global", ErrorLevels.FATAL), // <--
+
     P1_INST_ARG_NOT_EXP(220, "Argument must be an immediate or expression",
         ErrorLevels.FATAL),
 
     P1_INST_BAD_STRZ(221, "Argument must be a string", ErrorLevels.FATAL),
+
+    P1_INST_ARG_NOT_SYMB(222, "All arguments must be symbols", ErrorLevels.FATAL), // <--
 
     AP_BAD_EXPR(230, "Syntax error in expression", ErrorLevels.FATAL),
 

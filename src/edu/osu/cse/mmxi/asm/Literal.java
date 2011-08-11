@@ -41,7 +41,7 @@ public class Literal extends Symbol {
     }
 
     /**
-     * Fill the lteral value.
+     * Fill the literal value.
      */
     public void fill() {
         if (Literal.complete && value == null)

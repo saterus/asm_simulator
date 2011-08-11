@@ -21,7 +21,8 @@ public class CommonParser {
     /**
      * THis handles the psuedo op parsing.
      */
-    private static final String OPS, PSEUDO_OPS = "[.](ORIG|END|EQU|FILL|STRZ|BLKW)";
+    private static final String OPS,
+        PSEUDO_OPS = "[.](ORIG|ENT|EXT|END|EQU|FILL|STRZ|BLKW)";
     static {
         final SortedSet<String> ao = new TreeSet<String>();
         for (final List<IFRecord> i : InstructionFormat.instructions.values())
@@ -107,8 +108,8 @@ public class CommonParser {
                     + (line.length - 2)))
                     throw new ParseException(AsmCodes.IF_BAD_ARG_NUM);
             } else if (line[1].matches(PSEUDO_OPS)) {
-                if (line.length != 3
-                    && (line.length != 2 || !line[1].matches("[.]ORIG|[.]END")))
+                if (!(line[1].matches("[.]ENT|[.]EXT") || line.length == 3 || line.length == 2
+                    && line[1].matches("[.]ORIG|[.]END")))
                     throw new ParseException(AsmCodes.IF_BAD_ARG_NUM);
             } else if (line[0] != null
                 && (line[0].matches(OPS) || line[0].matches(PSEUDO_OPS)))
@@ -123,11 +124,13 @@ public class CommonParser {
      * 
      * @param se
      *            The symbol that could not be resolved
+     * @param allowExt
+     *            whether to allow external symbols
      * @throws ParseException
      */
-    public static void errorOnUndefinedSymbols(final SymbolExpression se)
-        throws ParseException {
-        errorOnUndefinedSymbols(undefinedSymbols(se));
+    public static void errorOnUndefinedSymbols(final SymbolExpression se,
+        final boolean allowExt) throws ParseException {
+        errorOnUndefinedSymbols(undefinedSymbols(se, allowExt));
     }
 
     public static void errorOnUndefinedSymbols(final Set<Symbol> undef)
@@ -147,11 +150,14 @@ public class CommonParser {
      * 
      * @param se
      *            The symbol
+     * @param allowExt
+     *            whether to allow external symbols
      * @return A set containing the given symbol
      */
-    private static Set<Symbol> undefinedSymbols(final SymbolExpression se) {
+    private static Set<Symbol> undefinedSymbols(final SymbolExpression se,
+        final boolean allowExt) {
         final Set<Symbol> undef = new HashSet<Symbol>();
-        undefinedSymbols(undef, se);
+        undefinedSymbols(undef, se, allowExt);
         return undef;
     }
 
@@ -162,17 +168,21 @@ public class CommonParser {
      *            The undefined symbol set
      * @param se
      *            The symbol to be added.
+     * @param allowExt
+     *            whether to allow external symbols
      */
-    public static void undefinedSymbols(final Set<Symbol> undef, final SymbolExpression se) {
+    public static void undefinedSymbols(final Set<Symbol> undef,
+        final SymbolExpression se, final boolean allowExt) {
         if (se == null)
             return;
         if (se instanceof OpExp)
             for (final SymbolExpression operand : ((OpExp) se).operands)
-                undefinedSymbols(undef, operand);
+                undefinedSymbols(undef, operand, allowExt);
         else if (se instanceof Symbol)
             if (((Symbol) se).value != null)
-                undefinedSymbols(undef, ((Symbol) se).value);
-            else if (se != Symbol.getSymb(":START"))
+                undefinedSymbols(undef, ((Symbol) se).value, allowExt);
+            else if (!(se == Symbol.getSymb(":START") || allowExt
+                && ((Symbol) se).global == Symbol.EXT))
                 undef.add((Symbol) se);
     }
 }

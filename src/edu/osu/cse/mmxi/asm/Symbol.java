@@ -33,6 +33,12 @@ public class Symbol extends SymbolExpression {
     public SymbolExpression                 value;
 
     /**
+     * The global type: one of LOCAL, EXT, ENT
+     */
+    public int                              global;
+    public static final int                 LOCAL = 0, EXT = 1, ENT = 2;
+
+    /**
      * Retrieve a symbol from the SortedMap
      * 
      * @param name
@@ -69,6 +75,9 @@ public class Symbol extends SymbolExpression {
         if (value != null)
             throw new ParseException(AsmCodes.P1_SYMB_RESET, "symbol " + name
                 + " already set to " + value);
+        else if (global == EXT)
+            throw new ParseException(AsmCodes.P1_DEF_EXT, "external symbol " + name
+                + " being defined to " + value);
         value = ArithmeticParser.simplify(se, false);
         evaluate();
         return this;
@@ -91,6 +100,7 @@ public class Symbol extends SymbolExpression {
     protected Symbol(final String n) {
         name = n;
         value = null;
+        global = LOCAL;
     }
 
     /**
