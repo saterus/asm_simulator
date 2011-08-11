@@ -5,6 +5,7 @@ import static edu.osu.cse.mmxi.asm.CommonParser.errorOnUndefinedSymbols;
 import static edu.osu.cse.mmxi.asm.CommonParser.parseLine;
 import static edu.osu.cse.mmxi.common.Utilities.padLeft;
 import static edu.osu.cse.mmxi.common.Utilities.padRight;
+import static edu.osu.cse.mmxi.common.Utilities.sShortToHex;
 import static edu.osu.cse.mmxi.common.Utilities.uShortToHex;
 
 import java.util.List;
@@ -74,6 +75,7 @@ public class Pass2Parser {
         lineNumber = 1;
         try {
             encodeHeader();
+            encodeGlobals();
             line = a.io.getLine();
         } catch (final ParseException e) {
             errors.add(e.getError());
@@ -136,6 +138,27 @@ public class Pass2Parser {
         errorOnUndefinedSymbols(Symbol.getSymb(":START"), false);
         a.io.writeOLine("H" + padRight(a.segName, 6, ' ')
             + uShortToHex((short) lc.address) + uShortToHex(len));
+    }
+
+    /**
+     * Encode the .ENT globals as ESymbol=xHEX style entries at the beginning of the
+     * program
+     * 
+     * @throws ParseException
+     */
+    private void encodeGlobals() throws ParseException {
+        for (final Symbol s : Symbol.symbs.values())
+            if (s.global == Symbol.ENT // fail silently on undefined ENT
+                && s.value != null) {
+                final SymbolExpression se = ArithmeticParser.simplify(ArithmeticParser
+                    .parseF(":0 - :1", s.value, ":START"));
+                final Short loc = se.evaluate();
+                if (loc == null) {
+                    errorOnUndefinedSymbols(s.value, false);
+                    throw new ParseException(AsmCodes.P2_EXT_CMX, s + " = " + s.value);
+                }
+                a.io.writeOLine("E" + s.name + "=x" + sShortToHex(loc));
+            }
     }
 
     /**

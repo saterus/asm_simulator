@@ -65,6 +65,8 @@ public enum AsmCodes implements ErrorCodes {
 
     IF_ARG_CMX(314, "Arguments too complex to encode", ErrorLevels.FATAL),
 
+    P2_EXT_CMX(315, "Global value too complex to encode", ErrorLevels.FATAL), // <--
+
     P1_INST_BAD_OP_CODE(500, "Unknown op-code", ErrorLevels.FATAL),
 
     IF_BAD_ARG_NUM(501, "Incorrect number of arguments", ErrorLevels.FATAL),
