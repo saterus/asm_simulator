@@ -65,27 +65,28 @@ import edu.osu.cse.mmxi.sim.error.SimCodes;
  * </p>
  */
 public class ObjectFileParser {
-    private static final Pattern     ppRegex    = Pattern.compile("#![FLS][^!]*!");
+    private static final Pattern       ppRegex     = Pattern.compile("#![LS][^!]*!");
 
-    private final BufferedReader     reader;
+    private final BufferedReader       reader;
+    private final String               name;
 
-    private int                      lineNumber = 1;
-    private final List<Error>        errors     = new ArrayList<Error>();
+    private int                        lineNumber  = 1;
+    private final List<Error>          errors      = new ArrayList<Error>();
 
     /** [Bits in Hex Rep.] | 7: page | 9: address | */
-    private final List<Text>         text       = new ArrayList<Text>();
+    private final List<Text>           text        = new ArrayList<Text>();
 
     /** [Bits in Hex Rep.] | 4: initial exec address | */
-    private Exec                     exec       = null;
+    private Exec                       exec        = null;
 
     /** [Bits in Hex Rep.] | 6: name | 4: begin address | 4: segment length | */
-    private Header                   header     = null;
+    private Header                     header      = null;
 
-    private final Map<String, Short> symbols    = new TreeMap<String, Short>();
+    private final Map<String, Short>   symbols     = new TreeMap<String, Short>();
 
-    private int                      sourceLine = -1;
+    private final Map<String, Boolean> symbolTypes = new TreeMap<String, Boolean>();
 
-    private String                   sourceFile = null;
+    private int                        sourceLine  = 0;
 
     /**
      * The ObjectFileParser is built around processing an InputStream
@@ -93,8 +94,12 @@ public class ObjectFileParser {
      * @param reader
      *            BufferedReader wrapper over an InputStream containing an ObjectFile.
      */
-    public ObjectFileParser(final BufferedReader reader) {
+    public ObjectFileParser(final String name, final BufferedReader reader) {
         this.reader = reader;
+        if (name.lastIndexOf('.') != -1)
+            this.name = name;
+        else
+            this.name = name.substring(0, name.lastIndexOf('.'));
     }
 
     /**
@@ -156,11 +161,13 @@ public class ObjectFileParser {
         while (m.find())
             parsePreprocessorCommand(m.group());
         if (token.length() > 0)
-            if (token.matches("(H|h).{6}[0-9A-Fa-f]{8}"))
+            if (token.matches("[hH].{6}[0-9A-Fa-f]{8}"))
                 header = parseHeader(token);
-            else if (token.matches("(T|t)[0-9A-Fa-f]{8}(M[01])?"))
+            else if (token.matches("[tT][0-9A-Fa-f]{8}(M[01]|X[01][0-9A-Za-z_]+)?"))
                 text.add(parseTextLine(token));
-            else if (token.matches("(E|e)[0-9A-Fa-f]{4}"))
+            else if (token.matches("[lagLAG][0-9A-Za-z_]+=[0-9A-Fa-f]{4}?"))
+                parseSymbolLine(token);
+            else if (token.matches("[eE][0-9A-Fa-f]{4}"))
                 exec = parseExec(token);
             else
                 errors.add(new Error(lineNumber, token, SimCodes.PARSE_BAD_TEXT));
@@ -168,9 +175,6 @@ public class ObjectFileParser {
 
     private void parsePreprocessorCommand(final String token) {
         switch (token.charAt(2)) {
-        case 'F':
-            sourceFile = token.substring(3, token.length() - 1);
-            break;
         case 'L':
             try {
                 sourceLine = Integer.parseInt(token.substring(3, token.length() - 1));
@@ -182,7 +186,7 @@ public class ObjectFileParser {
             }
             break;
         case 'S':
-            final int colon = token.lastIndexOf(":");
+            final int colon = token.lastIndexOf("=");
             if (colon == -1)
                 errors
                     .add(new Error(lineNumber,
@@ -190,8 +194,9 @@ public class ObjectFileParser {
                         SimCodes.PARSE_EXECPTION));
             else {
                 final String symb = token.substring(3, colon);
-                final boolean bad = symb.contains("+") || symb.contains("-")
-                    || symb.contains(":") || symb.toLowerCase().matches("pc|r[0-7]");
+                final boolean bad = !symb.matches("[A-Za-z0-9_]+")
+                    || Character.isDigit(symb.charAt(0))
+                    || symb.toLowerCase().matches("pc|r[0-7]");
                 if (bad)
                     errors.add(new Error(lineNumber,
                         "invalid symbol name '" + symb + "'", SimCodes.PARSE_EXECPTION));
@@ -201,8 +206,10 @@ public class ObjectFileParser {
                     errors.add(new Error(lineNumber, "'"
                         + token.substring(colon + 1, token.length() - 1)
                         + "' is not a number", SimCodes.PARSE_EXECPTION));
-                if (!bad && v != null)
-                    symbols.put(symb, v);
+                if (!bad && v != null) {
+                    symbols.put(name + "." + symb, v);
+                    symbolTypes.put(name + "." + symb, false);
+                }
             }
             break;
         }
@@ -217,10 +224,33 @@ public class ObjectFileParser {
      *             if the line does not conform to the format.
      */
     private Text parseTextLine(final String line) {
-        // It's not necessary to check for a good string here, because we
-        // already have, with the pattern matching earlier.
-        return new Text(lineNumber, sourceLine, sourceFile, (short) Integer.parseInt(
-            line.substring(1, 5), 16), (short) Integer.parseInt(line.substring(5, 9), 16));
+        final short addr = (short) Integer.parseInt(line.substring(1, 5), 16), val = (short) Integer
+            .parseInt(line.substring(5, 9), 16);
+        if (line.length() <= 9)
+            return new Text(lineNumber, sourceLine, addr, val, -1, null);
+        else if (line.charAt(9) == 'M')
+            return new Text(lineNumber, sourceLine, addr, val, line.charAt(10) - '0',
+                null);
+        else
+            return new Text(lineNumber, sourceLine, addr, val, line.charAt(10) - '0',
+                line.substring(11));
+    }
+
+    /**
+     * Parses a Symbol Record from a line based on the Symbol Record Format.
+     * 
+     * @param line
+     * @return the token parsed from the line
+     * @throws ParseException
+     *             if the line does not conform to the format.
+     */
+    private void parseSymbolLine(final String line) {
+        final int eq = line.indexOf('=');
+        String symb = line.substring(1, eq);
+        if (line.charAt(0) != 'G')
+            symb = name + "." + symb;
+        symbols.put(symb, (short) Integer.parseInt(line.substring(eq + 1, eq + 5), 16));
+        symbolTypes.put(symb, line.charAt(0) != 'A');
     }
 
     /**
@@ -233,11 +263,6 @@ public class ObjectFileParser {
      */
     private Header parseHeader(final String line) {
         final String name = line.substring(1, 7);
-        // TODO: Is there any checking we need to do on the segment name?
-        // if (false) {
-        // throw new ParseException(lineNumber +
-        // ": Malformed header! Segment name has incorrect format.");
-        // }
 
         final int beginAddress = Integer.parseInt(line.substring(7, 11), 16);
         final int lengthOffset = Integer.parseInt(line.substring(11), 16);

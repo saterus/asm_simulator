@@ -5,7 +5,6 @@ import static edu.osu.cse.mmxi.asm.CommonParser.errorOnUndefinedSymbols;
 import static edu.osu.cse.mmxi.asm.CommonParser.parseLine;
 import static edu.osu.cse.mmxi.common.Utilities.padLeft;
 import static edu.osu.cse.mmxi.common.Utilities.padRight;
-import static edu.osu.cse.mmxi.common.Utilities.sShortToHex;
 import static edu.osu.cse.mmxi.common.Utilities.uShortToHex;
 
 import java.util.List;
@@ -148,7 +147,12 @@ public class Pass2Parser {
      */
     private void encodeGlobals() throws ParseException {
         for (final Symbol s : Symbol.symbs.values())
-            if (s.global == Symbol.ENT // fail silently on undefined ENT
+            if (s.global == Symbol.LOCAL) {
+                final Location l = Location.convertToRelative(s.value);
+                if (l != null)
+                    a.io.writeOLine((l.isRelative ? "L" : "A") + s.name + "="
+                        + uShortToHex((short) l.address));
+            } else if (s.global == Symbol.ENT // fail silently on undefined ENT
                 && s.value != null) {
                 final SymbolExpression se = ArithmeticParser.simplify(ArithmeticParser
                     .parseF(":0 - :1", s.value, ":START"));
@@ -157,7 +161,7 @@ public class Pass2Parser {
                     errorOnUndefinedSymbols(s.value, false);
                     throw new ParseException(AsmCodes.P2_EXT_CMX, s + " = " + s.value);
                 }
-                a.io.writeOLine("E" + s.name + "=x" + sShortToHex(loc));
+                a.io.writeOLine("G" + s.name + "=" + uShortToHex(loc));
             }
     }
 
@@ -290,7 +294,8 @@ public class Pass2Parser {
                 final char mx = s == null ? 'M' : 'X';
                 a.io.writeOLine("T" + uShortToHex((short) lc.address)
                     + uShortToHex(data[i])
-                    + (m[i] < 0 ? "" : "" + mx + m[i] + (s == null ? "" : s)));
+                    + (m[i] < 0 ? "" : "" + mx + m[i] + (s == null ? "" : s))
+                    + (lineNumber == 0 ? "" : " #!L" + lineNumber + "!"));
                 a.io.writeLLine("(" + uShortToHex((short) lc.address) + ") "
                     + uShortToHex(data[i]) + (m[i] < 0 ? "   " : " " + mx + m[i]) + " "
                     + padLeft(Integer.toBinaryString(data[i] & 0xFFFF), 16, '0') + " ("

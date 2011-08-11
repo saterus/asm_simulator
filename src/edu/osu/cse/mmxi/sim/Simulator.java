@@ -8,6 +8,7 @@ import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.sim.error.SimCodes;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
+import edu.osu.cse.mmxi.sim.loader.SimpleLoader.SourceLine;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 import edu.osu.cse.mmxi.sim.ui.SimUI;
 import edu.osu.cse.mmxi.sim.ui.SimUI.UIMode;
@@ -268,7 +269,7 @@ public final class Simulator {
         else {
             if (file != null)
                 machine.ui.printErrors(SimpleLoader.load(file, machine,
-                    new HashMap<Short, Integer>(), new HashMap<String, Short>()));
+                    new HashMap<Short, SourceLine>(), new HashMap<String, Short>()));
             startClockLoop(machine);
         }
     }

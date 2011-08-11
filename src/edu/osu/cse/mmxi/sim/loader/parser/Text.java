@@ -4,20 +4,18 @@ import edu.osu.cse.mmxi.common.Utilities;
 
 public class Text extends Token {
 
-    private final short address;
-    private final short value;
+    private final short  address;
+    private final short  value;
+    private final byte   m;
+    private final String ext;
 
-    public Text(final int line, final short address, final short value) {
-        super(line);
+    public Text(final int line, final int sline, final short address, final short value,
+        final int m, final String ext) {
+        super(line, sline);
         this.address = address;
         this.value = value;
-    }
-
-    public Text(final int line, final int sline, final String file, final short address,
-        final short value) {
-        super(line, sline, file);
-        this.address = address;
-        this.value = value;
+        this.m = (byte) m;
+        this.ext = ext;
     }
 
     public short getAddress() {
@@ -26,6 +24,14 @@ public class Text extends Token {
 
     public short getValue() {
         return value;
+    }
+
+    public int getModType() {
+        return m;
+    }
+
+    public String getExternal() {
+        return ext;
     }
 
     @Override

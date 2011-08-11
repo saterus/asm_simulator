@@ -20,10 +20,10 @@ import edu.osu.cse.mmxi.sim.machine.Machine;
 
 public class SimpleLoader {
     public static List<Error> load(final String path, final Machine machine,
-        final Map<Short, Integer> lines, final Map<String, Short> symbols) {
+        final Map<Short, SourceLine> lines, final Map<String, Short> symbols) {
         List<Error> errors = new ArrayList<Error>();
 
-        final File file = new File(".", path);
+        final File file = new File(path);
 
         if (!file.isFile())
             errors.add(new Error(path, SimCodes.IO_BAD_PATH));
@@ -43,7 +43,8 @@ public class SimpleLoader {
         }
 
         if (errors.size() == 0) {
-            final ObjectFileParser parser = new ObjectFileParser(fileReader);
+            final ObjectFileParser parser = new ObjectFileParser(file.getName(),
+                fileReader);
 
             errors = parser.parse();
             final Header header = parser.getParsedHeader();
@@ -59,7 +60,7 @@ public class SimpleLoader {
                     else {
                         machine.setMemory(t.getAddress(), t.getValue());
                         if (lines != null)
-                            lines.put(t.getAddress(), t.getLine());
+                            lines.put(t.getAddress(), new SourceLine(file, t.getLine()));
                     }
 
                 if (!header.isWithinBounds(exec.getAddress()))
@@ -76,5 +77,15 @@ public class SimpleLoader {
         } catch (final IOException e) {
         }
         return errors;
+    }
+
+    public static class SourceLine {
+        public File file;
+        public int  line;
+
+        public SourceLine(final File file, final int line) {
+            this.file = file;
+            this.line = line;
+        }
     }
 }

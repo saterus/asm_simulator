@@ -1,19 +1,16 @@
 package edu.osu.cse.mmxi.sim.loader.parser;
 
 public class Token {
-    protected final int    lineNumber, sourceLineNumber;
-    protected final String sourceFile;
+    protected final int lineNumber, sourceLineNumber;
 
     public Token(final int line) {
         lineNumber = line;
-        sourceLineNumber = -1;
-        sourceFile = null;
+        sourceLineNumber = 0;
     }
 
-    public Token(final int line, final int source, final String file) {
+    public Token(final int line, final int source) {
         lineNumber = line;
         sourceLineNumber = source;
-        sourceFile = file;
     }
 
     public int getLine() {
@@ -30,9 +27,9 @@ public class Token {
 
     @Override
     public String toString() {
-        if (sourceFile == null)
+        if (sourceLineNumber == 0)
             return "line " + lineNumber;
         else
-            return sourceFile + "[" + sourceLineNumber + "]";
+            return "[" + sourceLineNumber + "]";
     }
 }
