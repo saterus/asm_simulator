@@ -1,7 +1,7 @@
 package edu.osu.cse.mmxi.asm.symb;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import edu.osu.cse.mmxi.asm.Symbol;
 
@@ -13,7 +13,7 @@ import edu.osu.cse.mmxi.asm.Symbol;
  */
 public abstract class SymbolExpression {
     public Short evaluate() {
-        return evaluate(new HashSet<Symbol>());
+        return evaluate(new ArrayDeque<Symbol>());
     }
 
     /**
@@ -23,7 +23,7 @@ public abstract class SymbolExpression {
      *            The set of symbols.
      * @return
      */
-    public abstract Short evaluate(Set<Symbol> used);
+    public abstract Short evaluate(Deque<Symbol> used);
 
     /**
      * Static class for handling an expression with a symbol.
@@ -83,7 +83,7 @@ public abstract class SymbolExpression {
          * Evaluate the expression based on its operand.
          */
         @Override
-        public Short evaluate(final Set<Symbol> used) {
+        public Short evaluate(final Deque<Symbol> used) {
             final SymbolExpression sea = operands[0];
             SymbolExpression seb = null;
             final Short va = sea.evaluate(used);
@@ -178,7 +178,7 @@ public abstract class SymbolExpression {
          * @return Return the numeric value.
          */
         @Override
-        public Short evaluate(final Set<Symbol> used) {
+        public Short evaluate(final Deque<Symbol> used) {
             return value;
         }
     }

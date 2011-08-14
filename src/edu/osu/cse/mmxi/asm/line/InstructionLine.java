@@ -68,7 +68,7 @@ public class InstructionLine {
         for (final Argument arg : args) {
             String tmp = arg.toString();
             tmp = tmp == null ? "null" : tmp;
-            rtn += tmp + ",";
+            rtn += tmp + ", ";
         }
         rtn = rtn.substring(0, rtn.length() - 2);
 

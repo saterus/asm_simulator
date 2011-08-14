@@ -11,7 +11,6 @@ import static edu.osu.cse.mmxi.asm.symb.Operator.TIMES;
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -165,7 +164,7 @@ public class ArithmeticParser {
             else
                 se = new OpExp(op, (SymbolExpression) stack.pop(), last);
             if (collapseIfEvaluable) {
-                final Short v = se.evaluate();
+                final Short v = se.evaluate(null);
                 if (v == null)
                     stack.push(se);
                 else
@@ -242,10 +241,7 @@ public class ArithmeticParser {
         if (v != null)
             return new NumExp(v);
         final Symbol s = Symbol.getSymb(leaf);
-        if (collapseIfEvaluable && s.value != null)
-            return s.value;
-        else
-            return s;
+        return s;
     }
 
     /**
@@ -278,7 +274,7 @@ public class ArithmeticParser {
         for (final Iterator<Entry<SymbolExpression, Integer>> i = terms.entrySet()
             .iterator(); i.hasNext();) {
             final Entry<SymbolExpression, Integer> e = i.next();
-            final Short v = e.getKey().evaluate(eval ? new HashSet<Symbol>() : null);
+            final Short v = e.getKey().evaluate(eval ? new ArrayDeque<Symbol>() : null);
             if (v != null) {
                 sum += e.getValue() * v;
                 i.remove();
@@ -356,9 +352,9 @@ public class ArithmeticParser {
             return;
         } else if (se instanceof OpExp && ((OpExp) se).op == TIMES) {
             final Short v0 = ((OpExp) se).operands[0]
-                .evaluate(eval ? new HashSet<Symbol>() : null);
+                .evaluate(eval ? new ArrayDeque<Symbol>() : null);
             final Short v1 = ((OpExp) se).operands[1]
-                .evaluate(eval ? new HashSet<Symbol>() : null);
+                .evaluate(eval ? new ArrayDeque<Symbol>() : null);
             if (v0 != null || v1 != null) {
                 if (v0 != null)
                     addTerms(((OpExp) se).operands[1], terms, mult * v0, eval);
@@ -380,6 +376,8 @@ public class ArithmeticParser {
      * @return
      */
     public static SymbolExpression expand(final SymbolExpression node, final Symbol parent) {
+        if (true)
+            return node;
         if (node == null)
             return null;
         if (node instanceof OpExp)

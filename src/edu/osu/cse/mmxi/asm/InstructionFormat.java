@@ -243,9 +243,9 @@ public class InstructionFormat {
             if (values[0].address == values[1].address)
                 inst = candidates.get(1);
         } else
-            throw new RuntimeException("special instruction " + key
+            assert false : "special instruction " + key
                 + " marked, but no special code exists in "
-                + "InstructionFormat.getSpecialInstruction().");
+                + "InstructionFormat.getSpecialInstruction().";
         return inst;
     }
 
@@ -266,8 +266,7 @@ public class InstructionFormat {
                         return ArithmeticParser.parseF("(:0 - :1 ? 2) + 1",
                             ((ExpressionArg) inst.args[0]).val, reg1);
                     } catch (final ParseException e) {
-                        // won't happen
-                        throw new RuntimeException("wtf");
+                        assert false;
                     }
             }
         } else if (key.equals("SHL:2")) {
@@ -277,9 +276,9 @@ public class InstructionFormat {
             else
                 return ((ExpressionArg) inst.args[1]).val;
         } else if (candidates.get(0).special && !key.equals("SUB:3"))
-            throw new RuntimeException("special instruction " + key
+            assert false : "special instruction " + key
                 + " marked, but no special code exists in "
-                + "InstructionFormat.getSpecialLength().");
+                + "InstructionFormat.getSpecialLength().";
 
         return null;
     }
@@ -316,8 +315,7 @@ public class InstructionFormat {
         case '9':
             return;
         }
-        // should never happen
-        throw new RuntimeException("bad signature character");
+        assert false : "bad signature character";
     }
 
     public static class IFRecord {

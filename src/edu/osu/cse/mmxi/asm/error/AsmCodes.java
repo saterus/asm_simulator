@@ -45,6 +45,8 @@ public enum AsmCodes implements ErrorCodes {
 
     AP_BAD_EXPR(230, "Syntax error in expression", ErrorLevels.FATAL),
 
+    AP_RECURSION(231, "Recursion detected", ErrorLevels.FATAL),
+
     P2_GENERAL_ERROR(303, "An error occurred on pass 2.", ErrorLevels.WARN),
 
     P2_NO_ORIG(300, "No .ORIG record found", ErrorLevels.FATAL),

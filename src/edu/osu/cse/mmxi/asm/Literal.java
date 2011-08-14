@@ -1,6 +1,6 @@
 package edu.osu.cse.mmxi.asm;
 
-import java.util.Set;
+import java.util.Deque;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -48,8 +48,7 @@ public class Literal extends Symbol {
             try {
                 value = ArithmeticParser.parseF(":0 + :1", ":END", getIndex());
             } catch (final ParseException e) {
-                // won't happen
-                throw new RuntimeException("wtf");
+                assert false;
             }
     }
 
@@ -57,7 +56,7 @@ public class Literal extends Symbol {
      * Wrapper for the fill() and calls the Symbol evaluate for the given symbol.
      */
     @Override
-    public Short evaluate(final Set<Symbol> used) {
+    public Short evaluate(final Deque<Symbol> used) {
         fill();
         return super.evaluate(used);
     }

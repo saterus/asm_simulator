@@ -281,7 +281,7 @@ public class Pass1Parser {
      * Tell the literal table and sumbol table they are complete and print any errors
      * which occurred during the pass 1 parsing process.
      */
-    private void cleanupSymbols() {
+    private void cleanupSymbols() throws ParseException {
         try {
             Symbol.getSymb(":END").set(ArithmeticParser.parseF(":0 + :1", lcBase, lc));
             Literal.complete = true;

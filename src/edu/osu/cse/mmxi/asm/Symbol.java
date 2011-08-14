@@ -1,10 +1,11 @@
 package edu.osu.cse.mmxi.asm;
 
-import java.util.Set;
+import java.util.Deque;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import edu.osu.cse.mmxi.asm.error.AsmCodes;
+import edu.osu.cse.mmxi.asm.error.RecursionException;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.common.error.ParseException;
@@ -79,7 +80,7 @@ public class Symbol extends SymbolExpression {
             throw new ParseException(AsmCodes.P1_DEF_EXT, "external symbol " + name
                 + " being defined to " + value);
         value = ArithmeticParser.simplify(se, false);
-        evaluate();
+        expand();
         return this;
     }
 
@@ -87,8 +88,12 @@ public class Symbol extends SymbolExpression {
      * Wrapper for the evaluate method and update the value of the symbol based on the
      * Sorted map symbol list.
      */
-    public void expand() {
-        evaluate(); // will catch any recursion
+    public void expand() throws ParseException {
+        try {
+            evaluate();
+        } catch (final RecursionException e) {
+            throw e.toParseException();
+        }
         value = ArithmeticParser.simplify(ArithmeticParser.expand(value, this));
     }
 
@@ -115,22 +120,24 @@ public class Symbol extends SymbolExpression {
      * Evaluate the SortedMap of symbols and looks for recursion. If the symbol is already
      * in the map, then it is detected if another matching symbol value exists.
      * 
+     * @throws RecursionException
+     *             if there is recursion
      * @return Will return the value of the symbol or null.
      */
     @Override
-    public Short evaluate(final Set<Symbol> used) {
+    public Short evaluate(final Deque<Symbol> used) {
         if (value == null || used == null)
             return null;
         if (used.contains(this)) {
-            String msg = "recursion detected: \n";
+            String msg = "";
             for (final Symbol s : used)
-                msg += s.name + " = "
-                    + ArithmeticParser.simplify(s.value, false).toString() + "\n";
-            throw new RuntimeException(msg);
+                msg = "\n" + s.name + " := "
+                    + ArithmeticParser.simplify(s.value, false).toString() + msg;
+            throw new RecursionException(msg);
         }
-        used.add(this);
+        used.push(this);
         final Short eval = value.evaluate(used);
-        used.remove(this);
+        used.pop();
         if (ArithmeticParser.collapseIfEvaluable && eval != null
             && !(value instanceof NumExp))
             value = new NumExp(eval);
