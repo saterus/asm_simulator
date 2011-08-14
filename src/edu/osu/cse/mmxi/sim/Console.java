@@ -2,7 +2,9 @@ package edu.osu.cse.mmxi.sim;
 
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
@@ -14,7 +16,7 @@ public class Console {
     private int                       maxClock;
     private Short                     memTrack;
     private String                    file;
-    private final Map<Short, Object>  breakpoints;
+    private final SortedSet<Short>    breakpoints;
     private final Map<Integer, Short> watchpoints;
     private final Map<String, Short>  symbols;
     private int                       symbLength = 0;
@@ -31,7 +33,7 @@ public class Console {
         maxClock = Simulator.MAX_CLOCK_COUNT;
         memTrack = null;
         file = null;
-        breakpoints = new TreeMap<Short, Object>();
+        breakpoints = new TreeSet<Short>();
         watchpoints = new TreeMap<Integer, Short>();
         symbols = new TreeMap<String, Short>();
         lines = new TreeMap<Short, Integer>();
@@ -100,8 +102,8 @@ public class Console {
                 m.ui.print("No breakpoints are set. Use 'break [addr]' to set a breakpoint.");
             else {
                 m.ui.print("Breakpoints are set at:\n");
-                for (final Map.Entry<Short, Object> e : breakpoints.entrySet()) {
-                    final short b = e.getKey(), inst = m.getMemory(b);
+                for (final short b : breakpoints) {
+                    final short inst = m.getMemory(b);
                     m.ui.print("\n    " + Utilities.uShortToHex(b) + ":   ["
                         + Utilities.uShortToHex(inst) + "] "
                         + m.alu.readInstruction(inst));
@@ -115,7 +117,7 @@ public class Console {
             help("help", "break");
             return;
         }
-        if (breakpoints.containsKey(addr)) {
+        if (breakpoints.contains(addr)) {
             if (del)
                 breakpoints.remove(addr);
             else
@@ -124,7 +126,7 @@ public class Console {
         } else if (del)
             m.ui.print("No breakpoints set at " + Utilities.uShortToHex(addr) + "\n");
         else
-            breakpoints.put(addr, null);
+            breakpoints.add(addr);
     }
 
     private void clock(final String... words) {
@@ -714,11 +716,10 @@ public class Console {
                 return 2;
             }
             final short pc = m.getPCRegister().getValue();
-            for (final Map.Entry<Short, Object> e : breakpoints.entrySet())
-                if (pc == e.getKey()) {
-                    m.ui.print("Breakpoint encountered at " + Utilities.uShortToHex(pc));
-                    return 3;
-                }
+            if (breakpoints.contains(pc)) {
+                m.ui.print("Breakpoint encountered at " + Utilities.uShortToHex(pc));
+                return 3;
+            }
             for (final Map.Entry<Integer, Short> e : watchpoints.entrySet()) {
                 final int k = e.getKey();
                 final short v = k < 0 ? m.getRegister(k + 8).getValue() : m

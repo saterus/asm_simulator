@@ -138,8 +138,7 @@ public class Symbol extends SymbolExpression {
         used.push(this);
         final Short eval = value.evaluate(used);
         used.pop();
-        if (ArithmeticParser.collapseIfEvaluable && eval != null
-            && !(value instanceof NumExp))
+        if (eval != null && !(value instanceof NumExp))
             value = new NumExp(eval);
         return eval;
     }

@@ -32,8 +32,6 @@ import edu.osu.cse.mmxi.common.error.ParseException;
  * This is used to parse expressions.
  */
 public class ArithmeticParser {
-    public static final boolean collapseIfEvaluable = true;
-
     /**
      * 
      * @param s
@@ -59,6 +57,7 @@ public class ArithmeticParser {
      */
     public static SymbolExpression parseF(String s, final Object... args)
         throws ParseException {
+        assert args != null;
         // Holds Operator and SymbolExpression objects
         final Deque<Object> stack = new ArrayDeque<Object>();
         s += ")";
@@ -163,14 +162,11 @@ public class ArithmeticParser {
                 se = new OpExp(op, last);
             else
                 se = new OpExp(op, (SymbolExpression) stack.pop(), last);
-            if (collapseIfEvaluable) {
-                final Short v = se.evaluate(null);
-                if (v == null)
-                    stack.push(se);
-                else
-                    stack.push(new NumExp(v));
-            } else
+            final Short v = se.evaluate(null);
+            if (v == null)
                 stack.push(se);
+            else
+                stack.push(new NumExp(v));
         }
     }
 
