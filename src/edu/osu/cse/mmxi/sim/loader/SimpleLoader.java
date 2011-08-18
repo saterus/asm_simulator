@@ -14,7 +14,7 @@ import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.sim.error.SimCodes;
 import edu.osu.cse.mmxi.sim.loader.parser.Exec;
 import edu.osu.cse.mmxi.sim.loader.parser.Header;
-import edu.osu.cse.mmxi.sim.loader.parser.ObjectFileParser;
+import edu.osu.cse.mmxi.sim.loader.parser.ObjectFile;
 import edu.osu.cse.mmxi.sim.loader.parser.Text;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
@@ -43,7 +43,7 @@ public class SimpleLoader {
         }
 
         if (errors.size() == 0) {
-            final ObjectFileParser parser = new ObjectFileParser(file.getName(),
+            final ObjectFile parser = new ObjectFile(file.getName(),
                 fileReader);
 
             errors = parser.parse();

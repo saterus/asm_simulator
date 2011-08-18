@@ -28,6 +28,8 @@ public enum SimCodes implements ErrorCodes {
 
     PARSE_NO_EXEC(304, "Object File did not contain an Exec record", ErrorLevels.FATAL),
 
+    PARSE_HEADER_FIRST(302, "The first record must be a Header record", ErrorLevels.FATAL),
+
     PARSE_BAD_TEXT(399, "Malformed record", ErrorLevels.FATAL),
 
     // execution errors
@@ -50,6 +52,11 @@ public enum SimCodes implements ErrorCodes {
 
     UI_UNKN_CMD(599, "Unknown command", ErrorLevels.WARN),
 
+    // Linker messages
+    LINK_IPLA_OFF_PAGE(600, "page offset of IPLA too large", ErrorLevels.FATAL),
+
+    LINK_PROG_TOO_LONG(600, "linked program more than one page long", ErrorLevels.FATAL),
+
     // messages
     MSG_SYNTAX(800, null, ErrorLevels.MSG),
 
@@ -66,14 +73,17 @@ public enum SimCodes implements ErrorCodes {
         this.level = level;
     }
 
+    @Override
     public String getMsg() {
         return str;
     }
 
+    @Override
     public int getCode() {
         return code;
     }
 
+    @Override
     public ErrorLevels getLevel() {
         return level;
     }

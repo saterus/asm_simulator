@@ -22,12 +22,16 @@ public class Text extends Token {
         return address;
     }
 
+    public short getAddress(final short pla, Map<String, Location>) {
+        return address;
+    }
+
     public short getValue() {
         return value;
     }
 
-    public int getModType() {
-        return m;
+    public short getMask() {
+        return (short)(m == 1 ? -1 : m == 0 ? 0x1FF : 0);
     }
 
     public String getExternal() {

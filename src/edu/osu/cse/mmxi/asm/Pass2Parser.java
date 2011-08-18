@@ -16,6 +16,7 @@ import edu.osu.cse.mmxi.asm.line.InstructionLine.ExpressionArg;
 import edu.osu.cse.mmxi.asm.line.InstructionLine.StringArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
+import edu.osu.cse.mmxi.common.Location;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.common.error.ParseException;
 
@@ -192,7 +193,8 @@ public class Pass2Parser {
             errorOnUndefinedSymbols(se, false);
             throw new ParseException(AsmCodes.P2_EXEC_CMX, "exec = " + se);
         }
-        a.io.writeOLine("E" + uShortToHex((short) exec.address));
+        a.io.writeOLine("E" + uShortToHex((short) exec.address)
+            + (exec.isRelative ? "M1" : ""));
     }
 
     private void checkENT() throws ParseException {

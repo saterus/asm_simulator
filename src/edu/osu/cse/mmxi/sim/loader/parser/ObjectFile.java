@@ -5,12 +5,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.osu.cse.mmxi.common.Location;
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.common.error.ParseException;
 import edu.osu.cse.mmxi.sim.error.SimCodes;
 
 /**
@@ -64,29 +68,30 @@ import edu.osu.cse.mmxi.sim.error.SimCodes;
  * the file.
  * </p>
  */
-public class ObjectFileParser {
-    private static final Pattern       ppRegex     = Pattern.compile("#![LS][^!]*!");
+public class ObjectFile {
+    private static final Pattern        ppRegex      = Pattern.compile("#![LS][^!]*!");
 
-    private final BufferedReader       reader;
-    private final String               name;
+    private final BufferedReader        reader;
+    private final String                name;
 
-    private int                        lineNumber  = 1;
-    private final List<Error>          errors      = new ArrayList<Error>();
+    private int                         lineNumber   = 1;
+    private final List<Error>           errors       = new ArrayList<Error>();
 
     /** [Bits in Hex Rep.] | 7: page | 9: address | */
-    private final List<Text>           text        = new ArrayList<Text>();
+    private final List<Text>            text         = new ArrayList<Text>();
 
     /** [Bits in Hex Rep.] | 4: initial exec address | */
-    private Exec                       exec        = null;
 
     /** [Bits in Hex Rep.] | 6: name | 4: begin address | 4: segment length | */
-    private Header                     header      = null;
+    private String                      segName      = null;
+    private Short                       beginAddress = null;
+    private Short                       lengthOffset = null;
 
-    private final Map<String, Short>   symbols     = new TreeMap<String, Short>();
+    private final Map<String, Location> symbols      = new TreeMap<String, Location>();
 
-    private final Map<String, Boolean> symbolTypes = new TreeMap<String, Boolean>();
+    private final Set<String>           externals    = new TreeSet<String>();
 
-    private int                        sourceLine  = 0;
+    private int                         sourceLine   = 0;
 
     /**
      * The ObjectFileParser is built around processing an InputStream
@@ -94,7 +99,7 @@ public class ObjectFileParser {
      * @param reader
      *            BufferedReader wrapper over an InputStream containing an ObjectFile.
      */
-    public ObjectFileParser(final String name, final BufferedReader reader) {
+    public ObjectFile(final String name, final BufferedReader reader) {
         this.reader = reader;
         if (name.lastIndexOf('.') != -1)
             this.name = name;
@@ -131,16 +136,8 @@ public class ObjectFileParser {
             }
         }
 
-        if (header == null && exec == null && text.size() == 0)
-            errors.add(new Error(SimCodes.PARSE_EMPTY));
-        else {
-            if (header == null)
-                errors.add(new Error(SimCodes.PARSE_NO_HEADER));
-            if (text.size() == 0)
-                errors.add(new Error(SimCodes.PARSE_NO_RECORDS));
-            if (exec == null)
-                errors.add(new Error(SimCodes.PARSE_NO_EXEC));
-        }
+        if (segName == null)
+            errors.add(new Error(SimCodes.PARSE_NO_HEADER));
         return errors;
     }
 
@@ -161,16 +158,21 @@ public class ObjectFileParser {
         while (m.find())
             parsePreprocessorCommand(m.group());
         if (token.length() > 0)
-            if (token.matches("[hH].{6}[0-9A-Fa-f]{8}"))
-                header = parseHeader(token);
-            else if (token.matches("[tT][0-9A-Fa-f]{8}(M[01]|X[01][0-9A-Za-z_]+)?"))
-                text.add(parseTextLine(token));
-            else if (token.matches("[lagLAG][0-9A-Za-z_]+=[0-9A-Fa-f]{4}?"))
-                parseSymbolLine(token);
-            else if (token.matches("[eE][0-9A-Fa-f]{4}"))
-                exec = parseExec(token);
-            else
-                errors.add(new Error(lineNumber, token, SimCodes.PARSE_BAD_TEXT));
+            try {
+                if (token.matches("[hH].{6}[0-9A-Fa-f]{8}")
+                    && token.substring(1, 7).matches("[A-Za-z_][A-Za-z_0-9]* *"))
+                    parseHeader(token);
+                else if (token.matches("[tT][0-9A-Fa-f]{8}(M[01]|X[01][0-9A-Za-z_]+)?"))
+                    text.add(parseTextLine(token));
+                else if (token.matches("[lagLAG][0-9A-Za-z_]+=[0-9A-Fa-f]{4}?"))
+                    parseSymbolLine(token);
+                else if (token.matches("[eE][0-9A-Fa-f]{4}(M1)?"))
+                    parseExec(token);
+                else
+                    errors.add(new Error(lineNumber, token, SimCodes.PARSE_BAD_TEXT));
+            } catch (final ParseException e) {
+                errors.add(e.getError());
+            }
     }
 
     private void parsePreprocessorCommand(final String token) {
@@ -206,10 +208,8 @@ public class ObjectFileParser {
                     errors.add(new Error(lineNumber, "'"
                         + token.substring(colon + 1, token.length() - 1)
                         + "' is not a number", SimCodes.PARSE_EXECPTION));
-                if (!bad && v != null) {
-                    symbols.put(name + "." + symb, v);
-                    symbolTypes.put(name + "." + symb, false);
-                }
+                if (!bad && v != null)
+                    symbols.put(name + "." + symb, new Location(false, v));
             }
             break;
         }
@@ -223,17 +223,24 @@ public class ObjectFileParser {
      * @throws ParseException
      *             if the line does not conform to the format.
      */
-    private Text parseTextLine(final String line) {
+    private Text parseTextLine(final String line) throws ParseException {
         final short addr = (short) Integer.parseInt(line.substring(1, 5), 16), val = (short) Integer
             .parseInt(line.substring(5, 9), 16);
+        Text t;
         if (line.length() <= 9)
-            return new Text(lineNumber, sourceLine, addr, val, -1, null);
+            t = new Text(lineNumber, sourceLine, addr, val, -1, null);
         else if (line.charAt(9) == 'M')
-            return new Text(lineNumber, sourceLine, addr, val, line.charAt(10) - '0',
-                null);
-        else
-            return new Text(lineNumber, sourceLine, addr, val, line.charAt(10) - '0',
+            t = new Text(lineNumber, sourceLine, addr, val, line.charAt(10) - '0', null);
+        else {
+            externals.add(line.substring(11));
+            t = new Text(lineNumber, sourceLine, addr, val, line.charAt(10) - '0',
                 line.substring(11));
+        }
+        if (segName == null)
+            throw new ParseException(lineNumber, SimCodes.PARSE_HEADER_FIRST);
+        if (!isWithinBounds(addr))
+            throw new ParseException(lineNumber, SimCodes.ADDR_OUT_BOUNDS);
+        return t;
     }
 
     /**
@@ -249,8 +256,10 @@ public class ObjectFileParser {
         String symb = line.substring(1, eq);
         if (line.charAt(0) != 'G')
             symb = name + "." + symb;
-        symbols.put(symb, (short) Integer.parseInt(line.substring(eq + 1, eq + 5), 16));
-        symbolTypes.put(symb, line.charAt(0) != 'A');
+        symbols.put(
+            symb,
+            new Location(line.charAt(0) != 'A', (short) Integer.parseInt(
+                line.substring(eq + 1, eq + 5), 16)));
     }
 
     /**
@@ -262,11 +271,11 @@ public class ObjectFileParser {
      *             if the line does not conform to the format.
      */
     private Header parseHeader(final String line) {
-        final String name = line.substring(1, 7);
+        segName = line.substring(1, 7).trim();
 
-        final int beginAddress = Integer.parseInt(line.substring(7, 11), 16);
-        final int lengthOffset = Integer.parseInt(line.substring(11), 16);
-        return new Header(lineNumber, name, (short) beginAddress, (short) lengthOffset);
+        beginAddress = (short) Integer.parseInt(line.substring(7, 11), 16);
+        lengthOffset = (short) Integer.parseInt(line.substring(11), 16);
+        return new Header(lineNumber, name, beginAddress, lengthOffset);
     }
 
     /**
@@ -277,28 +286,15 @@ public class ObjectFileParser {
      * @throws ParseException
      *             if the line does not conform to the format.
      */
-    private Exec parseExec(final String line) {
+    private void parseExec(final String line) throws ParseException {
         // It's not necessary to check for a good string here, because we
         // already have, with the pattern matching earlier.
-        return new Exec(lineNumber, (short) Integer.parseInt(line.substring(1), 16));
-    }
-
-    /**
-     * After parsing, returns the parsed header.
-     * 
-     * @return the Header of the file
-     */
-    public Header getParsedHeader() {
-        return header;
-    }
-
-    /**
-     * After parsing, returns the parsed execution record.
-     * 
-     * @return the Exec of the file
-     */
-    public Exec getParsedExec() {
-        return exec;
+        final short addr = (short) Integer.parseInt(line.substring(1, 5), 16);
+        if (segName == null)
+            throw new ParseException(lineNumber, SimCodes.PARSE_HEADER_FIRST);
+        if (!isWithinBounds(addr))
+            throw new ParseException(lineNumber, SimCodes.ADDR_EXEC_OUT_BOUNDS);
+        symbols.put(segName, new Location(line.length() > 5, addr));
     }
 
     /**
@@ -310,12 +306,27 @@ public class ObjectFileParser {
         return text;
     }
 
-    /**
-     * After parsing, returns the list of parsed text records.
-     * 
-     * @return a List of Text records
-     */
-    public Map<String, Short> getParsedSymbols() {
+    public Map<String, Location> getParsedGlobals() {
         return symbols;
+    }
+
+    public Set<String> getParsedExternals() {
+        return externals;
+    }
+
+    public String getSegName() {
+        return segName;
+    }
+
+    public String getFileName() {
+        return name;
+    }
+
+    public short getSize() {
+        return lengthOffset;
+    }
+
+    public boolean isWithinBounds(final short address) {
+        return (address - beginAddress & 0xffff) < lengthOffset;
     }
 }

@@ -20,6 +20,7 @@ import edu.osu.cse.mmxi.asm.line.InstructionLine.RegisterArg;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
+import edu.osu.cse.mmxi.common.Location;
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.ParseException;
 

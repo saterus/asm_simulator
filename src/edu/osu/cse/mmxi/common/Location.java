@@ -1,8 +1,9 @@
-package edu.osu.cse.mmxi.asm;
+package edu.osu.cse.mmxi.common;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.osu.cse.mmxi.asm.Symbol;
 import edu.osu.cse.mmxi.asm.symb.ArithmeticParser;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression;
 import edu.osu.cse.mmxi.asm.symb.SymbolExpression.NumExp;
