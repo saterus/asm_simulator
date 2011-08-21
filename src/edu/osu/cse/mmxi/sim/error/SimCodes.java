@@ -19,7 +19,7 @@ public enum SimCodes implements ErrorCodes {
     // parser errors
     PARSE_EXECPTION(300, "Parsing exception", ErrorLevels.WARN),
 
-    PARSE_EMPTY(301, "Parsing complete, no tokens found.", ErrorLevels.FATAL),
+    PARSE_EMPTY(301, "Parsing complete, no tokens found", ErrorLevels.FATAL),
 
     PARSE_NO_HEADER(302, "Object File did not contain a Header record", ErrorLevels.FATAL),
 
@@ -54,7 +54,7 @@ public enum SimCodes implements ErrorCodes {
 
     UI_MULTI_IPLA(506, "Duplicate --ipla argument", ErrorLevels.WARN), // <--
 
-    UI_UNKN_CMD(599, "Unknown command", ErrorLevels.WARN),
+    UI_UNKN_CMD(599, "Unknown command", ErrorLevels.FATAL),
 
     // Linker messages
     LINK_IPLA_OFF_PAGE(600, "Page offset of IPLA too large", ErrorLevels.FATAL), // <--
