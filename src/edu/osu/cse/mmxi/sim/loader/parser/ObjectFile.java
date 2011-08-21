@@ -306,7 +306,7 @@ public class ObjectFile {
         return text;
     }
 
-    public Map<String, Location> getParsedGlobals() {
+    public Map<String, Location> getParsedSymbols() {
         return symbols;
     }
 

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import edu.osu.cse.mmxi.common.error.Error;
@@ -38,7 +39,11 @@ public class UI {
 
     public String prompt(final String msg) {
         print(msg);
-        return new Scanner(in).nextLine();
+        try {
+            return new Scanner(in).nextLine();
+        } catch (final NoSuchElementException e) {
+            return "";
+        }
     }
 
     /**

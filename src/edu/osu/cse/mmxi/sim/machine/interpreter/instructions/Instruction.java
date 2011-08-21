@@ -6,6 +6,7 @@ import java.util.Map;
 
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.sim.Console;
 import edu.osu.cse.mmxi.sim.error.SimCodes;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
@@ -26,6 +27,17 @@ public abstract class Instruction {
     }
 
     public abstract String toString(Machine context, Map<String, Short> symb);
+
+    private static String pgOffToString(final short pgoff, final Machine context,
+        final Map<String, Short> symb) {
+        if (symb == null)
+            return "x" + Utilities.uShortToHex(pgoff);
+        else
+            return Console
+                .toSymb(
+                    (short) ((context.getPCRegister().getValue() + 1 & 0xFE00) + pgoff),
+                    symb);
+    }
 
     /**
      * Adds two registers and writes to a third.
@@ -239,9 +251,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            String addr;
-            if (true)
-                addr = "x" + Utilities.uShortToHex(pgoff);
+            final String addr = Instruction.pgOffToString(pgoff, context, symb);
             if (nzp == 0)
                 return pgoff == 0 ? "NOP" : "DATA " + addr;
             else if (nzp == 7)
@@ -317,7 +327,8 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return (l ? "JSR" : "JMP") + " x" + Utilities.sShortToHex(pgoff);
+            return (l ? "JSR " : "JMP ")
+                + Instruction.pgOffToString(pgoff, context, symb);
         }
     }
 
@@ -379,7 +390,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "LD R" + dr + ", x" + Utilities.sShortToHex(pgoff);
+            return "LD R" + dr + ", " + Instruction.pgOffToString(pgoff, context, symb);
         }
     }
 
@@ -409,7 +420,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "LDI R" + dr + ", x" + Utilities.sShortToHex(pgoff);
+            return "LDI R" + dr + ", " + Instruction.pgOffToString(pgoff, context, symb);
         }
     }
 
@@ -471,7 +482,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "LEA R" + dr + ", x" + Utilities.sShortToHex(pgoff);
+            return "LEA R" + dr + ", " + Instruction.pgOffToString(pgoff, context, symb);
         }
     }
 
@@ -548,7 +559,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "ST R" + sr + ", x" + Utilities.sShortToHex(pgoff);
+            return "ST R" + sr + ", " + Instruction.pgOffToString(pgoff, context, symb);
         }
     }
 
@@ -577,7 +588,7 @@ public abstract class Instruction {
 
         @Override
         public String toString(final Machine context, final Map<String, Short> symb) {
-            return "STI R" + sr + ", x" + Utilities.sShortToHex(pgoff);
+            return "STI R" + sr + ", " + Instruction.pgOffToString(pgoff, context, symb);
         }
     }
 

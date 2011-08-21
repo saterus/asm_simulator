@@ -47,7 +47,7 @@ public class SimpleLoader {
 
             errors = ofile.parse();
             final List<Text> text = ofile.getParsedTexts();
-            for (final Entry<String, Location> e : ofile.getParsedGlobals().entrySet()) {
+            for (final Entry<String, Location> e : ofile.getParsedSymbols().entrySet()) {
                 assert !e.getValue().isRelative;
                 symbols.put(e.getKey(), (short) e.getValue().address);
             }

@@ -71,6 +71,10 @@ public class LinkingLoader {
             final String fName = file.getName();
             final ObjectFile ofile = new ObjectFile(path, fName, fileReader);
 
+            for (final ObjectFile f : files)
+                if (ofile.getFileName().equals(f.getFileName()))
+                    myerrors.add(new Error(path, SimCodes.UI_DUP_FILE));
+
             myerrors = ofile.parse();
 
             if (myerrors.size() != 0)
@@ -80,9 +84,10 @@ public class LinkingLoader {
             final Set<String> newExt = new HashSet<String>(ofile.getParsedExternals());
             newExt.removeAll(defined.keySet());
             undefined.addAll(newExt);
-            undefined.removeAll(ofile.getParsedGlobals().keySet());
-            for (final Entry<String, Location> e : ofile.getParsedGlobals().entrySet())
-                defined.put(e.getKey(), FileLocation.make(fName, e.getValue()));
+            undefined.removeAll(ofile.getParsedSymbols().keySet());
+            for (final Entry<String, Location> e : ofile.getParsedSymbols().entrySet())
+                defined.put(e.getKey(),
+                    FileLocation.make(ofile.getFileName(), e.getValue()));
         } while (false);
 
         try {

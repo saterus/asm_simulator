@@ -1,7 +1,6 @@
 package edu.osu.cse.mmxi.sim;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +34,7 @@ public class Console {
                                                      + " _/      _/  _/        _/      _/  _/    _/  _/    _/  _/        _/    \n"
                                                      + "_/      _/    _/_/_/  _/      _/    _/_/    _/    _/    _/_/_/  _/     \n";
 
-    public Console(final Machine _m, final String _file) {
+    public Console(final Machine _m, final List<String> _files) {
         m = _m;
         maxClock = Simulator.MAX_CLOCK_COUNT;
         memTrack = null;
@@ -48,8 +47,10 @@ public class Console {
         m.ui.print(mcmoxel);
         m.ui.print("McMoxel MMXI Emulator\n");
         m.ui.print("Version 2");
-        if (_file != null)
-            load("load", _file);
+        if (_files.size() != 0) {
+            _files.add(0, "load");
+            load(_files.toArray(new String[0]));
+        }
         while (true)
             promptForCommand();
     }
@@ -57,7 +58,7 @@ public class Console {
     private void promptForCommand() {
         final String cmd = m.ui.prompt("\n\nMcMoxel> ");
         final String[] words = cmd.split(" ");
-        if (words.length == 0)
+        if (words.length == 0 || words[0].length() == 0)
             return;
         if ("break".startsWith(words[0]))
             _break(words);
@@ -198,7 +199,7 @@ public class Console {
             else
                 m.ui.print("    ");
             m.ui.print(" [" + Utilities.uShortToHex(inst) + "] "
-                + m.alu.readInstruction(inst));
+                + m.alu.readInstruction(inst, m, symbols));
             if (len == -1 && inst == (short) 0xF025 || len == -2
                 && (inst & 0xF000) == 0xD000 || len >= 0 && i + 2 > len)
                 break;
@@ -379,10 +380,10 @@ public class Console {
                 + " will be displayed on-screen, with the machine in an indeterminate\n"
                 + " state afterwards (another load command will reset the machine).");
         else if ("run".startsWith(words[1]))
-            m.ui.print(" Syntax: run\n"
+            m.ui.print(" Syntax: run [<dest>]\n"
                 + " Mnemonics: r ru run\n\n"
                 + " The run command executes the program starting from the current location\n"
-                + " of the PC. Program execution stops if:\n\n"
+                + " of the PC, or <dest> if given. Program execution stops if:\n\n"
                 + "   1: The program hits a TRAP HALT command and exits normally.\n"
                 + "   2: The program reaches its clock maximum after a certain number of\n"
                 + "      instructions. If this happens, the clock maximum is automatically\n"
@@ -391,9 +392,10 @@ public class Console {
                 + "   3: A breakpoint (see 'help break') is reached.\n"
                 + "   4: A watched portion of memory (see 'help watch') is modified.\n\n"
                 + " Under all conditions, another run command will pick up execution where\n"
-                + " the previous one stopped. If the program exited normally, this means\n"
-                + " execution will continue after a TRAP HALT command, which is usually\n"
-                + " invalid memory, so undesired operation will occur.");
+                + " the previous one stopped (unless another destination is explicitly"
+                + " given). If the program exited normally, this means execution will\n"
+                + " continue after a TRAP HALT command, which is usually invalid memory, so\n"
+                + " undesired operation will occur.");
         else if ("reg".startsWith(words[1]))
             m.ui.print(" Syntax: reg [pc|flags|r<num> [<value>]]\n"
                 + " Mnemonics: re reg\n\n"
@@ -428,7 +430,7 @@ public class Console {
                 + " TRAP HALT command comes first (see 'help run').");
         else if ("symb".startsWith(words[1]))
             m.ui.print(" Syntax: symb <address> <value>\n"
-                + "         symb -d <address>\n        symb [<prefix>]\n"
+                + "         symb -d <address>\n         symb [-g] [<prefix>]\n"
                 + " Mnemonics: sy sym symb\n\n"
                 + " Symbols are artifacts used during the assembly process for the benefit\n"
                 + " of the user: mappings from words to addresses in memory or other word\n"
@@ -436,6 +438,7 @@ public class Console {
                 + " symbols.\n\n"
                 + "   > symb              Lists the currently defined symbols\n"
                 + "   > symb s            Lists all symbols that start with 's'\n"
+                + "   > symb -g s         Lists all global symbols that start with 's'\n"
                 + "   > symb start x3021  Defines or redefines 'start' to be x3021\n"
                 + "   > symb -d start     Undefines symbol 'start'\n\n"
                 + " A message will be displayed to notify you if you try to undefine a symbol\n"
@@ -480,22 +483,24 @@ public class Console {
     }
 
     private void load(final String... words) {
-        if (words.length < 2) {
+        Short ipla = null;
+        final List<String> args = new LinkedList<String>();
+        for (int i = 1; i < words.length; i++)
+            if (words[i].matches("-i[0-9A-Fa-f]{4}"))
+                ipla = (short) Integer.parseInt(words[i].substring(2), 16);
+            else
+                args.add(words[i]);
+        if (args.size() == 0) {
             if (files == null) {
                 m.ui.print("No files loaded yet!\n");
                 help("help", "load");
                 return;
             }
-        } else {
-            files = new LinkedList<String>(Arrays.asList(words));
-            files.remove(0);
-        }
+        } else
+            files = args;
         final List<Error> errors = new ArrayList<Error>();
-        Short ipla = null;
         for (final String f : files)
-            if (f.matches("-i[0-9A-Fa-f]{4}"))
-                ipla = (short) Integer.parseInt(f.substring(2), 16);
-            else if (loader == null) {
+            if (loader == null) {
                 m.ui.print("Loading main: " + f + "\n");
                 loader = new LinkingLoader(f, m, errors);
             } else {
@@ -597,6 +602,15 @@ public class Console {
     }
 
     private void run(final String... words) {
+        Short loc = null;
+        if (words.length > 1) {
+            if ((loc = readSymbAddr(words[1])) == null) {
+                m.ui.print("Malformed destination '" + words[2] + "'\n");
+                help("help", "run");
+                return;
+            }
+            m.getPCRegister().setValue(loc);
+        }
         runMachine(Integer.MAX_VALUE);
     }
 
@@ -622,16 +636,18 @@ public class Console {
     }
 
     private void symb(final String... words) {
-        if (words.length <= 2) {
-            if (symbols.size() == 0) {
-                m.ui.print("No symbols are defined.");
-                return;
-            }
-            final String start = words.length > 1 ? words[1] : "";
+        final int g = words.length >= 2 && words[1].equals("-g") ? 2 : 1;
+        if (g == 2 || words.length <= 2) {
+            final String start = words.length > g ? words[g - 1] : "";
+            boolean foundOne = false;
             for (final String k : symbols.keySet())
-                if (k.startsWith(start))
+                if (k.startsWith(start) && (g == 1 || !k.contains("."))) {
+                    foundOne = true;
                     m.ui.print(padLeft(k, symbLength + 3, ' ') + " = 0x"
                         + Utilities.uShortToHex(symbols.get(k)) + "\n");
+                }
+            if (!foundOne)
+                m.ui.print("No symbols found matching the given criteria.");
         } else if (words[1].equalsIgnoreCase("-d"))
             if (symbols.containsKey(words[2])) {
                 symbols.remove(words[2]);
@@ -656,7 +672,6 @@ public class Console {
                     symbLength = words[1].length();
             }
         }
-
     }
 
     private void track(final String... words) {

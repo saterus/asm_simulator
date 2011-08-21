@@ -1,7 +1,8 @@
-pHex	.ORIG	; hex in R6
+QL2	.ORIG	; hex in R6
+	.ENT	pHex
 	.EXT	bitmsk
 OUT	.EQU	x21
-	LEA	R1, bitmsk	; b = *m[15]
+pHex	LEA	R1, bitmsk	; b = *m[15]
 	INC	R1, 15		; do {
 loop3	CLR	R0		;   a = 0
 	ADD	R2, R0, 3	;   c = 3; do {

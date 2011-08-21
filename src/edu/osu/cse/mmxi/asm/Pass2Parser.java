@@ -204,7 +204,7 @@ public class Pass2Parser {
             if (s.value == null)
                 throw new ParseException(AsmCodes.P2_UNDEF_ENT, "on symbol " + s.name);
         }
-
+        write(new short[0], new int[0], null);
     }
 
     /**

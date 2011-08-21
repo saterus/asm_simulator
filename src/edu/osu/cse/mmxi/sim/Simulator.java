@@ -2,13 +2,13 @@ package edu.osu.cse.mmxi.sim;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.sim.error.SimCodes;
-import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
-import edu.osu.cse.mmxi.sim.loader.SimpleLoader.SourceLine;
+import edu.osu.cse.mmxi.sim.loader.LinkingLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 import edu.osu.cse.mmxi.sim.ui.SimUI;
 import edu.osu.cse.mmxi.sim.ui.SimUI.UIMode;
@@ -16,6 +16,7 @@ import edu.osu.cse.mmxi.sim.ui.SimUI.UIMode;
 public final class Simulator {
     public static int          MAX_CLOCK_COUNT = 10000;
     private static final short FILL            = (short) 0xED6E;
+    private static short       IPLA            = 0;
 
     /**
      * <p>
@@ -137,16 +138,17 @@ public final class Simulator {
      * @param args
      *            the arguments in the command line
      */
-    public static String processArgs(final String[] args, final Machine m) {
-        boolean clockMode = false, clockSet = false, fillSet = false;
-        String file = null;
+    public static List<String> processArgs(final String[] args, final Machine m) {
+        char mode = 0;
+        boolean clockSet = false, iplaSet = false, fillSet = false;
+        final List<String> files = new LinkedList<String>();
 
         final List<Error> errors = new ArrayList<Error>();
 
         words: for (int i = 0; i < args.length; i++) {
             String word = args[i];
-            if (clockMode) {
-                clockMode = false;
+            if (mode == 'c') {
+                mode = 0;
                 if (clockSet)
                     errors.add(new Error("clock setting '" + word
                         + "' found; ignoring...", SimCodes.UI_MULTI_CLOCK));
@@ -159,14 +161,30 @@ public final class Simulator {
                             MAX_CLOCK_COUNT = Integer.parseInt(word);
                         clockSet = true;
                     } catch (final NumberFormatException e) {
-                        errors.add(new Error("in invalid format; ignoring...",
-                            SimCodes.UI_MAX_CLOCK));
+                        errors.add(new Error(word + " in invalid format; ignoring...",
+                            SimCodes.UI_BAD_CLOCK));
+                    }
+            } else if (mode == 'i') {
+                mode = 0;
+                if (iplaSet)
+                    errors.add(new Error(
+                        "IPLA setting '" + word + "' found; ignoring...",
+                        SimCodes.UI_MULTI_IPLA));
+                else
+                    try {
+                        IPLA = Utilities.parseShort(word);
+                        iplaSet = true;
+                    } catch (final NullPointerException e) {
+                        errors.add(new Error(word + " in invalid format; ignoring...",
+                            SimCodes.UI_BAD_IPLA));
                     }
             } else if (word.length() > 1 && word.charAt(0) == '-') {
                 if (word.length() > 2 && word.charAt(1) == '-') {
                     word = word.substring(2);
                     if (word.equals("max-clock-count"))
-                        clockMode = true;
+                        mode = 'c';
+                    else if (word.equals("ipla"))
+                        mode = 'i';
                     else if (word.equals("quiet"))
                         setMode(m.ui, UIMode.QUIET, errors);
                     else if (word.equals("trace"))
@@ -186,7 +204,8 @@ public final class Simulator {
                     for (int j = 1; j < word.length(); j++)
                         switch (word.charAt(j)) {
                         case 'c':
-                            clockMode = true;
+                        case 'i':
+                            mode = word.charAt(j);
                             if (j == word.length() - 1)
                                 break;
                             else {
@@ -215,30 +234,29 @@ public final class Simulator {
                             errors.add(new Error("command is -" + word.charAt(j)
                                 + " from " + word, SimCodes.UI_UNKN_CMD));
                         }
-            } else if (file == null)
-                file = word;
-            else
-                errors.add(new Error("ignoring " + word + ".", SimCodes.UI_MULTI_FILE));
+            } else
+                files.add(word);
         }
         if (m.ui.getMode() == null)
-            m.ui.setMode(file == null ? UIMode.STEP : UIMode.QUIET);
-        if (file == null && m.ui.getMode() != UIMode.STEP)
+            m.ui.setMode(files.size() == 0 ? UIMode.STEP : UIMode.QUIET);
+        if (files.size() == 0 && m.ui.getMode() != UIMode.STEP)
             errors.add(new Error(SimCodes.UI_NO_FILE));
         if (errors.size() != 0) {
             errors.add(new Error("Proper syntax:\n"
                 + "java Simulator [-c num|--max-clock-ticks num]\n"
+                + "               [-i num|--ipla num]\n"
                 + "               [-s|-t|-q|--step|--trace|--quiet]\n"
                 + "               [-z|-f|-r|--zero|--fill|--rand]\n"
-                + "               file.txt", SimCodes.MSG_SYNTAX));
+                + "               file.o [file2.o ...]", SimCodes.MSG_SYNTAX));
 
             m.ui.printErrors(errors);
         }
-        if (file == null && m.ui.getMode() != UIMode.STEP)
+        if (files.size() == 0 && m.ui.getMode() != UIMode.STEP)
             System.exit(1);
         if (MAX_CLOCK_COUNT < 0) // /// // // // // Using this value means that the
             MAX_CLOCK_COUNT = Integer.MAX_VALUE; // clockCount() <= MAX comparison above
                                                  // will always be true due to overflow
-        return file;
+        return files;
     }
 
     private static void setMode(final SimUI ui, final UIMode mode,
@@ -262,14 +280,27 @@ public final class Simulator {
     public static void main(final String[] args) {
 
         final Machine machine = new Machine();
-        final String file = processArgs(args, machine);
+        final List<String> files = processArgs(args, machine);
 
         if (machine.ui.getMode() == UIMode.STEP)
-            new Console(machine, file);
+            new Console(machine, files);
         else {
-            if (file != null)
-                machine.ui.printErrors(SimpleLoader.load(file, machine,
-                    new HashMap<Short, SourceLine>(), new HashMap<String, Short>()));
+            final List<Error> errors = new ArrayList<Error>();
+            final LinkingLoader loader = new LinkingLoader(files.remove(0), machine,
+                errors);
+            for (final String f : files)
+                loader.addFile(f, errors);
+            loader.setIPLA(IPLA);
+            if (loader.getMissingSymbols().size() != 0) {
+                String s = "Undefined symbols: ";
+                for (final String symb : loader.getMissingSymbols())
+                    s += symb + ", ";
+                errors.add(new Error(s.substring(0, s.length() - 2),
+                    SimCodes.LINK_UNDEF_EXT));
+            }
+            machine.ui.printErrors(errors);
+            loader.link(errors, new HashMap<String, Short>());
+            machine.ui.printErrors(errors);
             startClockLoop(machine);
         }
     }

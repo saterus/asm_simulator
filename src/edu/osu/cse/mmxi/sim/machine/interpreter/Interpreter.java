@@ -29,6 +29,7 @@ public class Interpreter implements ALU {
         return readInstruction(m.getMemory(mem));
     }
 
+    @Override
     public String readInstruction(final short inst, final Machine context,
         final Map<String, Short> symb) {
         final Instruction i = InstructionParser.parseInstruction(inst);

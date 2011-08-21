@@ -28,7 +28,7 @@ public enum SimCodes implements ErrorCodes {
 
     PARSE_NO_EXEC(304, "Object File did not contain an Exec record", ErrorLevels.FATAL),
 
-    PARSE_HEADER_FIRST(302, "The first record must be a Header record", ErrorLevels.FATAL),
+    PARSE_HEADER_FIRST(305, "The first record must be a Header record", ErrorLevels.FATAL), // <--
 
     PARSE_BAD_TEXT(399, "Malformed record", ErrorLevels.FATAL),
 
@@ -40,22 +40,28 @@ public enum SimCodes implements ErrorCodes {
     EXEC_END_OF_FILE(402, "End of File reached prematurely", ErrorLevels.FATAL),
 
     // UI errors
-    UI_MAX_CLOCK(500, "--max-clock-ticks argument in invalid format", ErrorLevels.WARN),
+    UI_BAD_CLOCK(500, "--max-clock-ticks argument in invalid format", ErrorLevels.WARN),
 
-    UI_MULTI_CLOCK(501, "duplicate --max-clock-ticks argument", ErrorLevels.WARN),
+    UI_MULTI_CLOCK(501, "Duplicate --max-clock-ticks argument", ErrorLevels.WARN),
 
-    UI_MULTI_FILE(502, "Multiple files given", ErrorLevels.WARN),
+    UI_DUP_FILE(502, "Duplicate file given", ErrorLevels.WARN),
 
     UI_NO_FILE(503, "No files given", ErrorLevels.FATAL),
 
     UI_MULTI_SETTINGS(504, "Multiple settings given", ErrorLevels.WARN),
 
+    UI_BAD_IPLA(505, "--ipla argument in invalid format", ErrorLevels.WARN), // <--
+
+    UI_MULTI_IPLA(506, "Duplicate --ipla argument", ErrorLevels.WARN), // <--
+
     UI_UNKN_CMD(599, "Unknown command", ErrorLevels.WARN),
 
     // Linker messages
-    LINK_IPLA_OFF_PAGE(600, "page offset of IPLA too large", ErrorLevels.FATAL),
+    LINK_IPLA_OFF_PAGE(600, "Page offset of IPLA too large", ErrorLevels.FATAL), // <--
 
-    LINK_PROG_TOO_LONG(600, "linked program more than one page long", ErrorLevels.FATAL),
+    LINK_PROG_TOO_LONG(601, "Linked program more than one page long", ErrorLevels.FATAL), // <--
+
+    LINK_UNDEF_EXT(601, "Unlinked externals", ErrorLevels.FATAL), // <--
 
     // messages
     MSG_SYNTAX(800, null, ErrorLevels.MSG),
