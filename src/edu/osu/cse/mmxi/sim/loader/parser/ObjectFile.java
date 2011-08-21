@@ -72,7 +72,7 @@ public class ObjectFile {
     private static final Pattern        ppRegex      = Pattern.compile("#![LS][^!]*!");
 
     private final BufferedReader        reader;
-    private final String                name;
+    private final String                path, name;
 
     private int                         lineNumber   = 1;
     private final List<Error>           errors       = new ArrayList<Error>();
@@ -99,12 +99,12 @@ public class ObjectFile {
      * @param reader
      *            BufferedReader wrapper over an InputStream containing an ObjectFile.
      */
-    public ObjectFile(final String name, final BufferedReader reader) {
+    public ObjectFile(final String path, String name, final BufferedReader reader) {
         this.reader = reader;
+        this.path = path;
         if (name.lastIndexOf('.') != -1)
-            this.name = name;
-        else
-            this.name = name.substring(0, name.lastIndexOf('.'));
+            name = name.substring(0, name.lastIndexOf('.'));
+        this.name = name.replaceAll("[^0-9A-Za-z_]", "");
     }
 
     /**
@@ -320,6 +320,10 @@ public class ObjectFile {
 
     public String getFileName() {
         return name;
+    }
+
+    public String getFilePath() {
+        return path;
     }
 
     public short getSize() {

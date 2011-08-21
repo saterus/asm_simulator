@@ -1,10 +1,11 @@
 package edu.osu.cse.mmxi.sim;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -12,7 +13,7 @@ import java.util.TreeSet;
 import edu.osu.cse.mmxi.common.Utilities;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.sim.loader.LinkingLoader;
-import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
+import edu.osu.cse.mmxi.sim.loader.parser.ObjectFile;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
 public class Console {
@@ -20,7 +21,7 @@ public class Console {
     private final Machine             m;
     private int                       maxClock;
     private Short                     memTrack;
-    private final Set<String>         file;
+    private List<String>              files;
     private LinkingLoader             loader;
     private final SortedSet<Short>    breakpoints;
     private final Map<Integer, Short> watchpoints;
@@ -38,7 +39,7 @@ public class Console {
         m = _m;
         maxClock = Simulator.MAX_CLOCK_COUNT;
         memTrack = null;
-        file = null;
+        files = null;
         loader = null;
         breakpoints = new TreeSet<Short>();
         watchpoints = new TreeMap<Integer, Short>();
@@ -47,8 +48,8 @@ public class Console {
         m.ui.print(mcmoxel);
         m.ui.print("McMoxel MMXI Emulator\n");
         m.ui.print("Version 2");
-        if (file != null)
-            load("load", file);
+        if (_file != null)
+            load("load", _file);
         while (true)
             promptForCommand();
     }
@@ -479,24 +480,47 @@ public class Console {
     }
 
     private void load(final String... words) {
-        if (words.length < 2)
-            if (file == null) {
-                m.ui.print("No file loaded yet!\n");
+        if (words.length < 2) {
+            if (files == null) {
+                m.ui.print("No files loaded yet!\n");
                 help("help", "load");
                 return;
             }
+        } else {
+            files = new LinkedList<String>(Arrays.asList(words));
+            files.remove(0);
+        }
         final List<Error> errors = new ArrayList<Error>();
-        for (int i = 1; i < words.length; i++)
-            if (loader == null) {
-                m.ui.print("Loading main: " + words[i] + "\n");
-                loader = new LinkingLoader(words[i], m, errors);
+        Short ipla = null;
+        for (final String f : files)
+            if (f.matches("-i[0-9A-Fa-f]{4}"))
+                ipla = (short) Integer.parseInt(f.substring(2), 16);
+            else if (loader == null) {
+                m.ui.print("Loading main: " + f + "\n");
+                loader = new LinkingLoader(f, m, errors);
             } else {
-                m.ui.print("Loading file: " + file + "\n");
-                loader.addFile(words[i], errors);
-            } // TODO
+                m.ui.print("Loading file: " + f + "\n");
+                loader.addFile(f, errors);
+            }
+        if (ipla != null && loader != null)
+            loader.setIPLA(ipla);
+        m.ui.printErrors(errors);
+        if (loader.getMissingSymbols().size() != 0) {
+            String s = "File(s) successfully loaded, but unlinked symbols remain:\n    ";
+            for (final String symb : loader.getMissingSymbols())
+                s += symb + ", ";
+            m.ui.print(s.substring(0, s.length() - 2)
+                + "\nCall 'load' again with more files to complete linking.");
+            files = null;
+            return;
+        }
         lines.clear();
-        symbols.clear();
-        m.ui.printErrors(SimpleLoader.load(file, m, null, symbols)); // TODO
+        loader.link(errors, symbols);
+        files = new ArrayList<String>();
+        for (final ObjectFile ofile : loader.getOFiles())
+            files.add(ofile.getFilePath());
+        loader = null;
+        m.ui.printErrors(errors);
         symbLength = 0;
         for (final String k : symbols.keySet())
             if (k.length() > symbLength)
@@ -565,7 +589,7 @@ public class Console {
             }
         m.reset(fill);
         if (load != 0)
-            load("load", file);
+            load("load");
         else {
             lines.clear();
             symbols.clear();

@@ -148,7 +148,7 @@ public class Pass2Parser {
      */
     private void encodeGlobals() throws ParseException {
         for (final Symbol s : Symbol.symbs.values())
-            if (s.global == Symbol.LOCAL) {
+            if (s.global == Symbol.LOCAL && !s.name.startsWith(":")) {
                 final Location l = Location.convertToRelative(s.value);
                 if (l != null)
                     a.io.writeOLine((l.isRelative ? "L" : "A") + s.name + "="
@@ -187,7 +187,8 @@ public class Pass2Parser {
         final Location exec = Location.convertToRelative(Symbol.getSymb(":EXEC"));
         if (exec == null || lc.isRelative ^ exec.isRelative) {
             if (Symbol.getSymb(":EXEC").value == null)
-                throw new ParseException(AsmCodes.P2_NO_EXEC);
+                // throw new ParseException(AsmCodes.P2_NO_EXEC);
+                return;
             final SymbolExpression se = ArithmeticParser
                 .simplify(Symbol.getSymb(":EXEC"));
             errorOnUndefinedSymbols(se, false);

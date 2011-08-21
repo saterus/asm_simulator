@@ -372,8 +372,6 @@ public class ArithmeticParser {
      * @return
      */
     public static SymbolExpression expand(final SymbolExpression node, final Symbol parent) {
-        if (true)
-            return node;
         if (node == null)
             return null;
         if (node instanceof OpExp)

@@ -43,7 +43,7 @@ public class SimpleLoader {
         }
 
         if (errors.size() == 0) {
-            final ObjectFile ofile = new ObjectFile(file.getName(), fileReader);
+            final ObjectFile ofile = new ObjectFile(path, file.getName(), fileReader);
 
             errors = ofile.parse();
             final List<Text> text = ofile.getParsedTexts();

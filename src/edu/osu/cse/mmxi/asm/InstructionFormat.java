@@ -207,7 +207,7 @@ public class InstructionFormat {
         Arrays.fill(m, -1);
         for (final int[] rep : rec.replacements) {
             if (values[rep[0]] == null)
-                ext[rep[1]] = ((Symbol) ((ExpressionArg) inst.args[rep[1]]).val).name;
+                ext[rep[1]] = ((Symbol) ((ExpressionArg) inst.args[rep[0]]).val).name;
             else
                 data[rep[1]] |= (values[rep[0]].address & (1 << rep[3]) - 1) << rep[2];
             if (rep[3] == 9 && rep[2] == 0)

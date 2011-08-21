@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,18 +26,21 @@ import edu.osu.cse.mmxi.sim.machine.Machine;
 
 public class LinkingLoader {
     final Machine                           m;
-    private List<ObjectFile>                files;
+    private final List<ObjectFile>          files;
     private final Map<String, FileLocation> defined;
     private final Set<String>               undefined;
     private final String                    main;
+    private short                           ipla;
 
     public LinkingLoader(final String path, final Machine machine,
         final List<Error> errors) {
         m = machine;
+        ipla = 0;
         defined = new TreeMap<String, FileLocation>();
         undefined = new TreeSet<String>();
+        files = new LinkedList<ObjectFile>();
         addFile(path, errors);
-        main = files.get(0).getSegName();
+        main = files.size() == 0 ? null : files.get(0).getSegName();
     }
 
     public void addFile(final String path, final List<Error> errors) {
@@ -45,26 +50,26 @@ public class LinkingLoader {
 
         if (!file.isFile())
             myerrors.add(new Error(path, SimCodes.IO_BAD_PATH));
-
-        if (!file.canRead())
+        else if (!file.canRead())
             myerrors.add(new Error(path, SimCodes.IO_BAD_READ));
-
-        if (file.length() <= 0)
+        else if (file.length() <= 0)
             myerrors.add(new Error(path, SimCodes.IO_BAD_FILE));
 
         BufferedReader fileReader = null;
-        try {
-            fileReader = new BufferedReader(new InputStreamReader(new FileInputStream(
-                file)));
-        } catch (final FileNotFoundException e) {
-            myerrors.add(new Error("file not found: " + path, SimCodes.IO_BAD_PATH));
-        }
-
         do {
             if (myerrors.size() != 0)
                 break;
+            try {
+                fileReader = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(file)));
+            } catch (final FileNotFoundException e) {
+                myerrors.add(new Error("file not found: " + path, SimCodes.IO_BAD_PATH));
+            }
+
+            if (myerrors.size() != 0)
+                break;
             final String fName = file.getName();
-            final ObjectFile ofile = new ObjectFile(fName, fileReader);
+            final ObjectFile ofile = new ObjectFile(path, fName, fileReader);
 
             myerrors = ofile.parse();
 
@@ -72,8 +77,9 @@ public class LinkingLoader {
                 break;
 
             files.add(ofile);
-
-            undefined.addAll(ofile.getParsedExternals());
+            final Set<String> newExt = new HashSet<String>(ofile.getParsedExternals());
+            newExt.removeAll(defined.keySet());
+            undefined.addAll(newExt);
             undefined.removeAll(ofile.getParsedGlobals().keySet());
             for (final Entry<String, Location> e : ofile.getParsedGlobals().entrySet())
                 defined.put(e.getKey(), FileLocation.make(fName, e.getValue()));
@@ -88,13 +94,23 @@ public class LinkingLoader {
         errors.addAll(myerrors);
     }
 
-    public void link(final short ipla, final List<Error> errors) {
+    public void setIPLA(final short ipla) {
+        this.ipla = ipla;
+    }
+
+    public void link(final List<Error> errors, final Map<String, Short> symbols) {
         assert undefined.size() == 0;
+        symbols.clear();
         final Map<String, Short> plaMap = new TreeMap<String, Short>();
         short pla = ipla;
         for (final ObjectFile ofile : files) {
             plaMap.put(ofile.getFileName(), pla);
             pla += ofile.getSize();
+        }
+        for (final Entry<String, FileLocation> e : defined.entrySet()) {
+            final FileLocation fl = e.getValue();
+            symbols.put(e.getKey(),
+                (short) ((fl.file == null ? 0 : plaMap.get(fl.file)) + fl.address));
         }
         if ((pla & 0xFE00) != (ipla & 0xFE00)) {
             if ((pla - ipla & 0xFFFF) > 0x1FF)
@@ -111,22 +127,18 @@ public class LinkingLoader {
             pla = plaMap.get(ofile.getFileName());
             for (final Text t : ofile.getParsedTexts()) {
                 final short mask = t.getMask();
-                short sum = pla;
-                if (t.getExternal() != null) {
-                    final FileLocation fl = defined.get(t.getExternal());
-                    sum = (short) (fl.file == null ? 0 : fl.address);
-                }
-                sum += t.getValue() & mask;
-                if (mask > 0 && (sum & ~mask) != 0)
+                final short newAddr = (short) (pla + t.getAddress());
+                final short newVal = (short) ((t.getExternal() == null ? pla : symbols
+                    .get(t.getExternal())) + (t.getValue() & mask));
+                if (mask > 0 && (newVal & ~mask) != (newAddr + 1 & ~mask))
                     errors.add(new Error(t.getLine(), "try IPLA page offset < "
-                        + (ipla - sum + 0x200), SimCodes.LINK_IPLA_OFF_PAGE));
-
-                m.setMemory((short) (pla + t.getAddress()),
-                    (short) (t.getValue() & ~mask | sum & mask));
+                        + (ipla - newVal + 0x200), SimCodes.LINK_IPLA_OFF_PAGE));
+                m.setMemory(newAddr, (short) (t.getValue() & ~mask | newVal & mask));
             }
         }
         final FileLocation fl = defined.get(main);
-        m.getPCRegister().setValue((short) (fl.file == null ? 0 : fl.address));
+        m.getPCRegister().setValue(
+            (short) (fl.file == null ? 0 : plaMap.get(fl.file) + fl.address));
     }
 
     public Map<String, FileLocation> getSymbols() {
@@ -135,6 +147,10 @@ public class LinkingLoader {
 
     public Set<String> getMissingSymbols() {
         return undefined;
+    }
+
+    public List<ObjectFile> getOFiles() {
+        return files;
     }
 
     public static class FileLocation extends Location {
@@ -147,6 +163,11 @@ public class LinkingLoader {
 
         public static FileLocation make(final String file, final Location loc) {
             return new FileLocation(loc.isRelative ? file : null, loc.address);
+        }
+
+        @Override
+        public String toString() {
+            return (file == null ? "x" : file + "+x") + address;
         }
     }
 }
