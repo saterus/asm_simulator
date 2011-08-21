@@ -61,13 +61,13 @@ public enum SimCodes implements ErrorCodes {
 
     LINK_PROG_TOO_LONG(601, "Linked program more than one page long", ErrorLevels.FATAL), // <--
 
-    LINK_UNDEF_EXT(601, "Unlinked externals", ErrorLevels.FATAL), // <--
+    LINK_UNDEF_EXT(602, "Unlinked externals", ErrorLevels.FATAL), // <--
 
     // messages
     MSG_SYNTAX(800, null, ErrorLevels.MSG),
 
     // unknown error
-    UNKNOWN(999, "Unknown Error", ErrorLevels.WARN);
+    UNKNOWN(999, "Unknown Error", ErrorLevels.FATAL);
 
     private int         code;
     private String      str;
