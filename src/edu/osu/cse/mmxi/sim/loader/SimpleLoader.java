@@ -9,11 +9,11 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import edu.osu.cse.mmxi.common.Location;
 import edu.osu.cse.mmxi.common.error.Error;
 import edu.osu.cse.mmxi.sim.error.SimCodes;
-import edu.osu.cse.mmxi.sim.loader.parser.Exec;
-import edu.osu.cse.mmxi.sim.loader.parser.Header;
 import edu.osu.cse.mmxi.sim.loader.parser.ObjectFile;
 import edu.osu.cse.mmxi.sim.loader.parser.Text;
 import edu.osu.cse.mmxi.sim.machine.Machine;
@@ -43,30 +43,23 @@ public class SimpleLoader {
         }
 
         if (errors.size() == 0) {
-            final ObjectFile parser = new ObjectFile(file.getName(),
-                fileReader);
+            final ObjectFile ofile = new ObjectFile(file.getName(), fileReader);
 
-            errors = parser.parse();
-            final Header header = parser.getParsedHeader();
-            final Exec exec = parser.getParsedExec();
-            final List<Text> text = parser.getParsedTexts();
-            symbols.putAll(parser.getParsedSymbols());
+            errors = ofile.parse();
+            final List<Text> text = ofile.getParsedTexts();
+            for (final Entry<String, Location> e : ofile.getParsedGlobals().entrySet()) {
+                assert !e.getValue().isRelative;
+                symbols.put(e.getKey(), (short) e.getValue().address);
+            }
+            assert ofile.getParsedExternals().size() == 0;
 
             if (errors.size() == 0) {
-
-                for (final Text t : text)
-                    if (!header.isWithinBounds(t.getAddress()))
-                        errors.add(new Error(t.getLine(), SimCodes.ADDR_OUT_BOUNDS));
-                    else {
-                        machine.setMemory(t.getAddress(), t.getValue());
-                        if (lines != null)
-                            lines.put(t.getAddress(), new SourceLine(file, t.getLine()));
-                    }
-
-                if (!header.isWithinBounds(exec.getAddress()))
-                    errors.add(new Error(exec.getLine(), SimCodes.ADDR_EXEC_OUT_BOUNDS));
-                else
-                    machine.getPCRegister().setValue(exec.getAddress());
+                for (final Text t : text) {
+                    machine.setMemory(t.getAddress(), t.getValue());
+                    if (lines != null)
+                        lines.put(t.getAddress(), new SourceLine(file, t.getLine()));
+                }
+                machine.getPCRegister().setValue(symbols.get(ofile.getSegName()));
 
             }
         }

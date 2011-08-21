@@ -1,12 +1,17 @@
 package edu.osu.cse.mmxi.sim;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import edu.osu.cse.mmxi.common.Utilities;
+import edu.osu.cse.mmxi.common.error.Error;
+import edu.osu.cse.mmxi.sim.loader.LinkingLoader;
 import edu.osu.cse.mmxi.sim.loader.SimpleLoader;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
@@ -15,7 +20,8 @@ public class Console {
     private final Machine             m;
     private int                       maxClock;
     private Short                     memTrack;
-    private String                    file;
+    private final Set<String>         file;
+    private LinkingLoader             loader;
     private final SortedSet<Short>    breakpoints;
     private final Map<Integer, Short> watchpoints;
     private final Map<String, Short>  symbols;
@@ -33,6 +39,7 @@ public class Console {
         maxClock = Simulator.MAX_CLOCK_COUNT;
         memTrack = null;
         file = null;
+        loader = null;
         breakpoints = new TreeSet<Short>();
         watchpoints = new TreeMap<Integer, Short>();
         symbols = new TreeMap<String, Short>();
@@ -472,15 +479,21 @@ public class Console {
     }
 
     private void load(final String... words) {
-        if (words.length < 2) {
+        if (words.length < 2)
             if (file == null) {
                 m.ui.print("No file loaded yet!\n");
                 help("help", "load");
                 return;
             }
-        } else
-            file = words[1];
-        m.ui.print("Loading file: " + file + "\n");
+        final List<Error> errors = new ArrayList<Error>();
+        for (int i = 1; i < words.length; i++)
+            if (loader == null) {
+                m.ui.print("Loading main: " + words[i] + "\n");
+                loader = new LinkingLoader(words[i], m, errors);
+            } else {
+                m.ui.print("Loading file: " + file + "\n");
+                loader.addFile(words[i], errors);
+            } // TODO
         lines.clear();
         symbols.clear();
         m.ui.printErrors(SimpleLoader.load(file, m, null, symbols)); // TODO
