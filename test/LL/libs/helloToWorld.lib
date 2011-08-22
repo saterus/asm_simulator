@@ -3,8 +3,14 @@ He2Wo	.ORIG
 		.EXT	Hello
 		.EXT	World
 		
+ptr		.BLKW	x1
+
+		ST		R7, ptr
+		
 		JSR		Hello
 		JSR		World
+		
+		LD		R7, ptr
 		
 		RET
 		.END
