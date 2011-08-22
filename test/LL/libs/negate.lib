@@ -1,0 +1,14 @@
+; Negate the R0 register
+; and store the negated value back into R0
+;
+Negat	.ORIG
+		.ENT	Out
+		
+Out		.FILL	x0
+x		.FILL	x0
+
+		NOT		R0, R2
+		ADD		R0, R0, #1
+		
+		RET
+		.END

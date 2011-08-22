@@ -1,0 +1,7 @@
+Hello	.ORIG
+msg		.STRZ "Hello."
+
+		LEA		R0, msg
+		TRAP	x22
+		RET
+		.END

@@ -1,0 +1,12 @@
+load test\LL\subtract\main.o test\LL\libs\negate.o test\LL\libs\subtract.o
+
+load test\LL\add\main.o test\LL\libs\adder.o
+
+load test\LL\subtract2\main.o test\LL\libs\adder.o test\LL\libs\negate.o
+
+load test\LL\link2ByPname\main.o test\LL\libs\hello.o test\LL\libs\world.o
+load test\LL\link3ByPname\main.o test\LL\libs\hello.o test\LL\libs\world.o test\LL\libs\cse560.o
+
+load test\LL\link2ByEnt\main.o test\LL\libs\helloEntry.o test\LL\libs\worldEntry.o
+
+load test\LL\link2libs\main.o test\LL\libs\helloToWorld.o test\LL\libs\hello.o test\LL\libs\world.o

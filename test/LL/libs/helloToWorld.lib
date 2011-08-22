@@ -1,0 +1,10 @@
+He2Wo	.ORIG
+
+		.EXT	Hello
+		.EXT	World
+		
+		JSR		Hello
+		JSR		World
+		
+		RET
+		.END

@@ -1,0 +1,7 @@
+World	.ORIG
+msg		.STRZ "World."
+
+		LEA		R0, msg
+		TRAP	x22
+		RET
+		.END

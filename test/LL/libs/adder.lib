@@ -1,0 +1,46 @@
+; SIMPLE ADDER
+; Takes Registers R1 and R2 and adds them together
+; printing the output as it goes in a "nicer" format
+;
+Adder	.ORIG
+		
+plus	.STRZ	"+"
+equal	.STRZ	"="
+newln	.FILL	xA ;ASCII newline
+		.FILL	x0 ;make sure when we run trap x22 we quit
+
+x		.FILL	x0
+y		.FILL	x0
+
+		;store vars
+		ST		R1, x
+		ST		R2, y
+
+		LD		R0, x
+		TRAP	x31
+		
+		LEA		R0, plus
+		TRAP	x22
+		
+		LEA		R0, newln
+		TRAP	x22
+		
+		LD		R0, y
+		TRAP	x31
+		
+		LEA		R0, equal
+		TRAP	x22
+		
+		LEA		R0, newln
+		TRAP	x22
+		
+		LD		R1, x
+		LD		R2, y
+		ADD		R0, R1, R2
+		
+		TRAP	x31
+		
+		RET
+		.END
+		
+		

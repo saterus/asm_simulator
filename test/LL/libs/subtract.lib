@@ -1,0 +1,50 @@
+; SIMPLE Subtracter
+; Subtracts R2 from R1....R1 - R2 by taking the negative of R2
+; printing the output as it goes in a "nicer" format
+;
+Subtr	.ORIG
+		.EXT	Rtn
+		.EXT	Negat
+		.ENT	Lib
+		
+plus	.STRZ	"-"
+equal	.STRZ	"="
+newln	.FILL	xA ;ASCII newline
+		.FILL	x0 ;make sure when we run trap x22 we quit
+
+x		.FILL	x0
+y		.FILL	x0
+
+		;store vars
+		ST		R1, x
+		ST		R2, y
+
+		LD		R0, x
+		TRAP	x31
+		
+		LEA		R0, plus
+		TRAP	x22
+		
+		LEA		R0, newln
+		TRAP	x22
+		
+		LD		R0, y
+		TRAP	x31
+		
+		LEA		R0, equal
+		TRAP	x22
+		
+		LEA		R0, newln
+		TRAP	x22
+		
+		LD		R1, x
+		LD		R0, y
+		JSR		Negat ;negate R0 (y)
+Lib		ADD		R0, R1, R0
+		
+		TRAP	x31
+		
+		RET
+		.END
+		
+		
