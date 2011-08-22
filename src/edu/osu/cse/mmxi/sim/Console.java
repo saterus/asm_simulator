@@ -528,8 +528,7 @@ public class Console {
         m.ui.printErrors(errors);
         symbLength = 0;
         for (final String k : symbols.keySet())
-            if (k.length() > symbLength)
-                symbLength = k.length();
+            symbLength = Math.max(symbLength, symbShortName(k).length());
         printInstruction();
     }
 
@@ -637,27 +636,30 @@ public class Console {
 
     private void symb(final String... words) {
         final int g = words.length >= 2 && words[1].equals("-g") ? 2 : 1;
+        boolean foundOne = false;
         if (g == 2 || words.length <= 2) {
             final String start = words.length > g ? words[g - 1] : "";
-            boolean foundOne = false;
             for (final String k : symbols.keySet())
                 if (k.startsWith(start) && (g == 1 || !k.contains("."))) {
                     foundOne = true;
-                    m.ui.print(padLeft(k, symbLength + 3, ' ') + " = 0x"
+                    m.ui.print(padLeft(symbShortName(k), symbLength + 3, ' ') + " = 0x"
                         + Utilities.uShortToHex(symbols.get(k)) + "\n");
                 }
             if (!foundOne)
                 m.ui.print("No symbols found matching the given criteria.");
-        } else if (words[1].equalsIgnoreCase("-d"))
-            if (symbols.containsKey(words[2])) {
-                symbols.remove(words[2]);
-                symbLength = 0;
-                for (final String k : symbols.keySet())
-                    if (k.length() > symbLength)
-                        symbLength = k.length();
-            } else
+        } else if (words[1].equalsIgnoreCase("-d")) {
+            for (final Entry<String, Short> e : symbols.entrySet())
+                if (e.getKey().equals(words[2])
+                    || symbShortName(e.getKey()).equals(words[2])) {
+                    foundOne = true;
+                    symbols.remove(e.getKey());
+                    symbLength = 0;
+                    for (final String k : symbols.keySet())
+                        symbLength = Math.max(symbLength, symbShortName(k).length());
+                }
+            if (!foundOne)
                 m.ui.print("Symbol '" + words[2] + "' is not defined.");
-        else {
+        } else {
             final Short v = readSymbAddr(words[2]);
             if (words[1].contains("+") || words[1].contains("-")
                 || words[1].contains(":") || readAddr(words[1]) != null)
@@ -668,8 +670,7 @@ public class Console {
                     + "' encountered. See 'help symb' for syntax.");
             else {
                 symbols.put(words[1], v);
-                if (words[1].length() > symbLength)
-                    symbLength = words[1].length();
+                symbLength = Math.max(symbLength, words[1].length());
             }
         }
     }
@@ -842,11 +843,10 @@ public class Console {
         }
         if (d == -1) {
             Short a = readAddr(s);
-            if (a == null && symbols.containsKey(s)) {
-                final Short v = symbols.get(s);
-                if (v != null)
-                    a = v;
-            }
+            if (a == null)
+                for (final Entry<String, Short> e : symbols.entrySet())
+                    if (e.getKey().equals(s) || symbShortName(e.getKey()).equals(s))
+                        a = e.getValue();
             return a;
         } else {
             final Short l = readSymbAddr(s.substring(0, d));
@@ -867,6 +867,20 @@ public class Console {
             return Utilities.parseShort(s);
     }
 
+    private String symbShortName(final String s) {
+        return symbShortName(s, symbols);
+    }
+
+    private static String symbShortName(final String s, final Map<String, Short> symb) {
+        if (s.indexOf('.') == -1)
+            return s;
+        final String shortName = s.substring(s.indexOf('.') + 1);
+        for (final String s2 : symb.keySet())
+            if (s2.substring(s2.indexOf('.') + 1).equals(shortName) && !s2.equals(s))
+                return s;
+        return shortName;
+    }
+
     private String toSymb(final short addr) {
         return toSymb(addr, symbols);
     }
@@ -885,7 +899,8 @@ public class Console {
         if (cSymb == null || uAddr - closest >= 512)
             return Utilities.uShortToHex(addr);
         else
-            return cSymb + (uAddr == closest ? "" : "+" + (uAddr - closest));
+            return symbShortName(cSymb, symb)
+                + (uAddr == closest ? "" : "+" + (uAddr - closest));
     }
 
     private String padLeft(final String s, int len, final char pad) {
