@@ -39,7 +39,7 @@ public class LinkingLoader {
 
 /**
  * 
- * Initializes the LinkingLoader
+ * Constructor for the LinkingLoader
  * 
  * @param path
  *          name of the path
