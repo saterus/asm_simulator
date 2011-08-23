@@ -24,6 +24,10 @@ import edu.osu.cse.mmxi.sim.loader.parser.ObjectFile;
 import edu.osu.cse.mmxi.sim.loader.parser.Text;
 import edu.osu.cse.mmxi.sim.machine.Machine;
 
+
+/**
+ * This is used to Link and Load
+ * /
 public class LinkingLoader {
     final Machine                           m;
     private final List<ObjectFile>          files;
@@ -32,6 +36,16 @@ public class LinkingLoader {
     private final String                    main;
     private short                           ipla;
 
+
+/**
+ * 
+ * Initializes the LinkingLoader
+ * 
+ * @param path
+ *          name of the path
+ * @param machine
+ *          the machine that is being used
+ * /
     public LinkingLoader(final String path, final Machine machine,
         final List<Error> errors) {
         m = machine;
@@ -43,6 +57,14 @@ public class LinkingLoader {
         main = files.size() == 0 ? null : files.get(0).getSegName();
     }
 
+    /**
+     * Essentially adds every file that the user inputs and converts to object file
+     * 
+     * @param path
+     *          The name of the path
+     * @param errors
+     *          The list of errors that will be used
+     * /
     public void addFile(final String path, final List<Error> errors) {
         List<Error> myerrors = new ArrayList<Error>();
 
@@ -99,10 +121,23 @@ public class LinkingLoader {
         errors.addAll(myerrors);
     }
 
+    /**
+     * Sets the ipla
+     * @param ipla
+     *      The ipla that will be set
+     * /
     public void setIPLA(final short ipla) {
         this.ipla = ipla;
     }
 
+
+    /**
+     * Links all the segment 
+     * @param errors
+     *          The lists of errors that will be added
+     * @param symbols
+     *          Map of all symbols that are being referenced
+     * /
     public void link(final List<Error> errors, final Map<String, Short> symbols) {
         assert undefined.size() == 0;
         symbols.clear();
@@ -158,6 +193,9 @@ public class LinkingLoader {
         return files;
     }
 
+    /**
+     * Class that deliver informations on location of the file
+     * /
     public static class FileLocation extends Location {
         public String file;
 
